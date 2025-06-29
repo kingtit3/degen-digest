@@ -7,4 +7,8 @@ openai>=0.27.0
 pypandoc>=1.12
 notion-client>=2.2.2
 sqlmodel>=0.0.16
-streamlit>=1.33.0 
+streamlit>=1.33.0
+scikit-learn==1.5.0
+joblib>=1.4.2
+pytest>=8.2.0
+pytest-httpx>=0.30.0 

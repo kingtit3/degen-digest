@@ -21,6 +21,8 @@ jobs:
           pip install ruff
       - name: Lint
         run: ruff .
+      - name: Run tests
+        run: pytest -q
       - name: Run dry digest (mock env)
         env:
           OPENROUTER_API_KEY: dummy
