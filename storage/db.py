@@ -1,0 +1,155 @@
+"""SQLite storage using SQLModel.
+
+Provides Tweet, RedditPost, Digest models and helper insert/query functions.
+"""
+
+from pathlib import Path
+from typing import List, Optional
+from datetime import datetime
+
+from sqlmodel import SQLModel, create_engine, Field, Session, select
+import logging
+
+logger = logging.getLogger(__name__)
+
+DB_PATH = Path("output/degen_digest.db")
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
+
+
+class Tweet(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    text: str
+    author: Optional[str] = None
+    created_at: Optional[str] = None
+    like_count: Optional[int] = 0
+    retweet_count: Optional[int] = 0
+    scraped_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class RedditPost(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    title: str
+    link: str
+    subreddit: Optional[str] = None
+    created_at: Optional[str] = None
+    scraped_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Digest(SQLModel, table=True):
+    date: str = Field(primary_key=True)
+    markdown_path: str
+    pdf_path: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# Track monthly LLM token usage
+class LLMUsage(SQLModel, table=True):
+    month: str = Field(primary_key=True)  # YYYY-MM
+    tokens: int = 0
+    cost_usd: float = 0.0
+
+
+# create tables
+SQLModel.metadata.create_all(engine)
+
+
+# Helper API -----------------------------------------------------
+
+def add_tweets(tweets: List[dict]):
+    if not tweets:
+        return
+    objs = []
+    for t in tweets:
+        tid = t.get("id") or t.get("tweetId")
+        if not tid:
+            continue
+        objs.append(
+            Tweet(
+                id=str(tid),
+                text=t.get("full_text") or t.get("text", ""),
+                author=t.get("userScreenName"),
+                created_at=t.get("createdAt"),
+                like_count=t.get("likeCount"),
+                retweet_count=t.get("retweetCount"),
+            )
+        )
+    with Session(engine) as session:
+        for obj in objs:
+            if session.get(Tweet, obj.id):
+                continue
+            session.add(obj)
+        session.commit()
+    logger.info("Stored %d new tweets", len(objs))
+
+
+def add_reddit_posts(posts: List[dict]):
+    if not posts:
+        return
+    objs = []
+    for p in posts:
+        pid = p.get("link")
+        if not pid:
+            continue
+        objs.append(
+            RedditPost(
+                id=pid,
+                title=p.get("title", ""),
+                link=pid,
+                subreddit=p.get("subreddit"),
+                created_at=p.get("published"),
+            )
+        )
+    with Session(engine) as session:
+        for obj in objs:
+            if session.get(RedditPost, obj.id):
+                continue
+            session.add(obj)
+        session.commit()
+    logger.info("Stored %d new reddit posts", len(objs))
+
+
+def record_digest(date_str: str, md_path: Path, pdf_path: Optional[Path] = None):
+    with Session(engine) as session:
+        if session.get(Digest, date_str):
+            logger.info("Digest for %s already recorded", date_str)
+            return
+        session.add(
+            Digest(
+                date=date_str,
+                markdown_path=str(md_path),
+                pdf_path=str(pdf_path) if pdf_path else None,
+            )
+        )
+        session.commit()
+
+
+def stats():
+    with Session(engine) as session:
+        tw = session.exec(select(Tweet).count()).one()
+        rd = session.exec(select(RedditPost).count()).one()
+        dg = session.exec(select(Digest).count()).one()
+    print(f"Tweets: {tw}\nReddit posts: {rd}\nDigests: {dg}")
+
+
+# LLM usage helpers ---------------------------------------------------
+
+def add_llm_tokens(tokens: int, cost: float):
+    from datetime import datetime
+
+    month = datetime.utcnow().strftime("%Y-%m")
+    with Session(engine) as session:
+        usage = session.get(LLMUsage, month)
+        if usage is None:
+            usage = LLMUsage(month=month, tokens=tokens, cost_usd=cost)
+            session.add(usage)
+        else:
+            usage.tokens += tokens
+            usage.cost_usd += cost
+        session.commit()
+
+
+def get_month_usage(month: str):
+    with Session(engine) as session:
+        return session.get(LLMUsage, month)
