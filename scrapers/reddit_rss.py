@@ -4,11 +4,12 @@ import logging
 from pathlib import Path
 from typing import List, Dict
 from utils.logger import setup_logging
+from utils.advanced_logging import get_logger
 from storage.db import add_reddit_posts
 import asyncio
 import httpx
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 logging.basicConfig(level=logging.INFO)
 setup_logging()
 
@@ -16,10 +17,30 @@ REDDIT_FEEDS = [
     "https://www.reddit.com/r/CryptoCurrency/new/.rss",
     "https://www.reddit.com/r/shitcoin/new/.rss",
     "https://www.reddit.com/r/Solana/new/.rss",
+    # Added mainstream and niche crypto subs (2025-06-29)
+    "https://www.reddit.com/r/Bitcoin/new/.rss",
+    "https://www.reddit.com/r/Ethereum/new/.rss",
+    "https://www.reddit.com/r/CryptoMarkets/new/.rss",
+    "https://www.reddit.com/r/defi/new/.rss",
+    "https://www.reddit.com/r/NFT/new/.rss",
+    # High-volume crypto subs
+    "https://www.reddit.com/r/cryptostreetbets/new/.rss",
+    "https://www.reddit.com/r/altcoin/new/.rss",
+    "https://www.reddit.com/r/cryptomoonshots/new/.rss",
+    "https://www.reddit.com/r/cryptonews/new/.rss",
+    "https://www.reddit.com/r/ethtrader/new/.rss",
+    "https://www.reddit.com/r/cryptocurrencymemes/new/.rss",
+    "https://www.reddit.com/r/cryptotrading/new/.rss",
+    "https://www.reddit.com/r/cryptosignals/new/.rss",
+    "https://www.reddit.com/r/cryptomemes/new/.rss",
+    "https://www.reddit.com/r/cryptocurrencynews/new/.rss",
+    "https://www.reddit.com/r/cryptocurrencytrading/new/.rss",
+    "https://www.reddit.com/r/cryptocurrencyinvesting/new/.rss",
 ]
 
 
 async def parse_reddit_feed_async(url: str, keyword_filters: List[str]) -> List[Dict]:
+    """Fetch RSS feed and filter entries by keywords (async)."""
     async with httpx.AsyncClient() as client:
         resp = await client.get(url, timeout=30)
         resp.raise_for_status()
@@ -35,14 +56,16 @@ async def parse_reddit_feed_async(url: str, keyword_filters: List[str]) -> List[
                 "link": item.get("link"),
                 "published": item.get("published"),
                 "summary": summary,
+                "subreddit": url.split("/")[4] if "/r/" in url else None,
             })
     return entries
 
 
 def scrape_reddit(keyword_filters: List[str]):
+    """Scrape multiple Reddit RSS feeds concurrently and return filtered items."""
     all_entries = []
     async def worker(url):
-        logger.info("Scraping %s", url)
+        logger.info("scrape start", url=url)
         return await parse_reddit_feed_async(url, keyword_filters)
 
     loop = asyncio.get_event_loop()
@@ -50,6 +73,7 @@ def scrape_reddit(keyword_filters: List[str]):
     for entries in results:
         all_entries.extend(entries)
     # Sort by published date (string) but there might be inconsistent format; keep as is
+    logger.info("scrape complete", total=len(all_entries))
     return all_entries[:20]
 
 
@@ -60,7 +84,7 @@ def main():
     out_path = Path("output/reddit_raw.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(items, indent=2))
-    logger.info("Saved %d Reddit items", len(items))
+    logger.info("reddit items saved", count=len(items))
 
 
 if __name__ == "__main__":

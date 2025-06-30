@@ -1681,3 +1681,5 @@ for installation options
 to your PATH or or call pypandoc.download_pandoc(...) or
 install pypandoc wheels with included pandoc.
 2025-06-29 00:27:38 | INFO     | utils.notion | Notion env vars not set; skipping publish
+2025-06-29 09:39:05 | INFO     | __main__ | Processing 1586 items from raw sources
+2025-06-29 09:40:41 | INFO     | __main__ | Processing 1586 items from raw sources

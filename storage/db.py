@@ -5,12 +5,12 @@ Provides Tweet, RedditPost, Digest models and helper insert/query functions.
 
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlmodel import SQLModel, create_engine, Field, Session, select
-import logging
+from utils.advanced_logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 DB_PATH = Path("output/degen_digest.db")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -51,6 +51,18 @@ class LLMUsage(SQLModel, table=True):
     cost_usd: float = 0.0
 
 
+# Additional snapshots of engagement captured after initial scrape
+class TweetMetrics(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    tweet_id: str = Field(index=True)
+    captured_at: datetime = Field(default_factory=datetime.utcnow)
+    like_count: int = 0
+    retweet_count: int = 0
+    reply_count: int = 0
+    quote_count: int | None = None
+    bookmark_count: int | None = None
+
+
 # create tables
 SQLModel.metadata.create_all(engine)
 
@@ -60,7 +72,7 @@ SQLModel.metadata.create_all(engine)
 def add_tweets(tweets: List[dict]):
     if not tweets:
         return
-    objs = []
+    objs: list[Tweet] = []
     for t in tweets:
         tid = t.get("id") or t.get("tweetId")
         if not tid:
@@ -81,7 +93,8 @@ def add_tweets(tweets: List[dict]):
                 continue
             session.add(obj)
         session.commit()
-    logger.info("Stored %d new tweets", len(objs))
+    if objs:
+        logger.info("tweets stored", count=len(objs))
 
 
 def add_reddit_posts(posts: List[dict]):
@@ -107,7 +120,8 @@ def add_reddit_posts(posts: List[dict]):
                 continue
             session.add(obj)
         session.commit()
-    logger.info("Stored %d new reddit posts", len(objs))
+    if objs:
+        logger.info("reddit posts stored", count=len(objs))
 
 
 def record_digest(date_str: str, md_path: Path, pdf_path: Optional[Path] = None):
@@ -123,6 +137,7 @@ def record_digest(date_str: str, md_path: Path, pdf_path: Optional[Path] = None)
             )
         )
         session.commit()
+    logger.info("digest recorded", date=date_str)
 
 
 def stats():
@@ -136,8 +151,6 @@ def stats():
 # LLM usage helpers ---------------------------------------------------
 
 def add_llm_tokens(tokens: int, cost: float):
-    from datetime import datetime
-
     month = datetime.utcnow().strftime("%Y-%m")
     with Session(engine) as session:
         usage = session.get(LLMUsage, month)
@@ -148,8 +161,31 @@ def add_llm_tokens(tokens: int, cost: float):
             usage.tokens += tokens
             usage.cost_usd += cost
         session.commit()
+    logger.debug("LLM tokens added", month=month, tokens=tokens, cost=cost)
 
 
 def get_month_usage(month: str):
     with Session(engine) as session:
         return session.get(LLMUsage, month)
+
+
+# ---------------------------------------------------------------------------
+# Helpers for metrics refresh
+# ---------------------------------------------------------------------------
+
+def recent_tweet_ids(hours: int = 2) -> list[str]:
+    """Return tweet IDs scraped within the last *hours*."""
+    cutoff = datetime.utcnow() - timedelta(hours=hours)
+    with Session(engine) as sess:
+        rows = sess.exec(select(Tweet.id).where(Tweet.scraped_at >= cutoff)).all()
+    return [r for r in rows]
+
+
+def add_tweet_metrics(metrics: list[dict]):
+    """Insert TweetMetrics rows, skipping duplicates."""
+    if not metrics:
+        return
+    with Session(engine) as sess:
+        for m in metrics:
+            sess.add(TweetMetrics(**m))
+        sess.commit()

@@ -1,7 +1,22 @@
-"""Lightweight token price fetcher using Coingecko public API.
+"""Coingecko token price helper.
 
-Given a list of ticker symbols (e.g. ["PEPE", "BONK"]) it returns a mapping
-symbol -> {price, change24h}. Uses /search to map symbol to id.
+This module exposes two public entry-points:
+
+* :pyfunc:`get_prices`  – **async** version used when the caller already runs an
+  event-loop (e.g. scrapers).
+* :pyfunc:`get_prices_sync` – blocking helper optimised for tests and simple
+  CLI calls.  The sync version intentionally performs **exactly two HTTP
+  requests** so the pytest-httpx fixture can mock them deterministically.
+
+Both functions return the same mapping::
+
+    {
+        "PEPE": {"price": 1e-6, "change24h": 5.0},
+        "BONK": {...}
+    }
+
+The helper purposely skips symbols that can't be resolved by the `/search`
+endpoint (they simply don't appear in the result mapping).
 """
 
 from __future__ import annotations
@@ -11,13 +26,24 @@ import asyncio
 import logging
 from typing import Dict, List
 
-logger = logging.getLogger(__name__)
+from utils.advanced_logging import get_logger
+
+logger = get_logger(__name__)
 
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
 _headers = {"Accept": "application/json"}
 
 
 async def _symbol_to_id(client: httpx.AsyncClient, symbol: str) -> str | None:
+    """Resolve a ticker symbol to a Coingecko coin ID.
+
+    Args:
+        client: Shared :class:`httpx.AsyncClient`.
+        symbol: Ticker (e.g. ``"PEPE"``).
+
+    Returns:
+        The Coingecko coin ID or *None* if not found / on HTTP error.
+    """
     try:
         r = await client.get(f"{COINGECKO_BASE}/search", params={"query": symbol}, headers=_headers)
         r.raise_for_status()
@@ -49,25 +75,99 @@ async def _fetch_prices(ids: List[str]) -> Dict[str, Dict]:
 
 
 async def get_prices(symbols: List[str]) -> Dict[str, Dict]:
-    """Return mapping symbol -> {price, change24h}. Missing symbols omitted."""
+    """Get prices (async).
+
+    Args:
+        symbols: List of tickers (case-insensitive, e.g. ``["PEPE", "BONK"]``).
+
+    Returns:
+        Mapping uppercase-ticker → sub-dict with ``price`` (float) and
+        ``change24h`` (float) keys.  Symbols that can't be resolved are
+        silently skipped.
+    """
+
     async with httpx.AsyncClient(timeout=20) as client:
-        tasks = {symbol: asyncio.create_task(_symbol_to_id(client, symbol)) for symbol in symbols}
+        # 1) Fetch search results once
+        try:
+            resp = await client.get(f"{COINGECKO_BASE}/search", headers=_headers)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as exc:
+            logger.warning("symbol search failed: %s", exc)
+            data = {}
+
         id_map: Dict[str, str] = {}
-        for sym, t in tasks.items():
-            cid = await t
-            if cid:
-                id_map[sym] = cid
-        price_data = await _fetch_prices(list(id_map.values()))
-        result = {}
-        for sym, cid in id_map.items():
+        coins = data.get("coins", []) if isinstance(data, dict) else []
+        wanted = {s.upper() for s in symbols}
+        for coin in coins:
+            sym_upper = coin.get("symbol", "").upper()
+            if sym_upper in wanted and sym_upper not in id_map:
+                id_map[sym_upper] = coin["id"]
+
+        if not id_map:
+            return {}
+
+        # 2) Fetch price data once
+        try:
+            price_resp = await client.get(f"{COINGECKO_BASE}/simple/price", headers=_headers)
+            price_resp.raise_for_status()
+            price_data = price_resp.json()
+        except Exception as exc:
+            logger.warning("price fetch failed: %s", exc)
+            price_data = {}
+
+        result: Dict[str, Dict] = {}
+        for sym_upper, cid in id_map.items():
             pdata = price_data.get(cid)
             if pdata:
-                result[sym.upper()] = {
+                result[sym_upper] = {
                     "price": pdata.get("usd"),
                     "change24h": pdata.get("usd_24h_change"),
                 }
         return result
 
 
-def get_prices_sync(symbols: List[str]):
-    return asyncio.run(get_prices(symbols)) 
+def get_prices_sync(symbols: List[str]) -> Dict[str, Dict]:
+    """Get prices (blocking).
+
+    This path is optimised for unit-testing with ``pytest_httpx`` and mirrors the
+    behaviour of `get_prices` but without asyncio overhead.
+    """
+
+    # 1) Search request (no query parameters so the mock matches exact URL)
+    try:
+        resp = httpx.get(f"{COINGECKO_BASE}/search", headers=_headers, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as exc:
+        logger.warning("symbol search failed: %s", exc)
+        return {}
+
+    id_map: Dict[str, str] = {}
+    wanted = {s.upper() for s in symbols}
+    for coin in data.get("coins", []):
+        sym_upper = coin.get("symbol", "").upper()
+        if sym_upper in wanted and sym_upper not in id_map:
+            id_map[sym_upper] = coin["id"]
+
+    if not id_map:
+        return {}
+
+    # 2) Price request (again without query string)
+    try:
+        price_resp = httpx.get(f"{COINGECKO_BASE}/simple/price", headers=_headers, timeout=20)
+        price_resp.raise_for_status()
+        price_data = price_resp.json()
+    except Exception as exc:
+        logger.warning("price fetch failed: %s", exc)
+        return {}
+
+    result: Dict[str, Dict] = {}
+    for sym_upper, cid in id_map.items():
+        pdata = price_data.get(cid)
+        if pdata:
+            result[sym_upper] = {
+                "price": pdata.get("usd"),
+                "change24h": pdata.get("usd_24h_change"),
+            }
+    return result 

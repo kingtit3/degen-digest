@@ -9,6 +9,7 @@ def test_price_parsing(httpx_mock):
     }
     price_resp = {"pepe": {"usd": 0.000001, "usd_24h_change": 5.0}}
 
+    # match any request to the search and price endpoints regardless of query-string
     httpx_mock.add_response(url="https://api.coingecko.com/api/v3/search", json=search_resp)
     httpx_mock.add_response(url="https://api.coingecko.com/api/v3/simple/price", json=price_resp)
 

@@ -6,8 +6,10 @@ from typing import List
 
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
+from telethon.errors.rpcerrorlist import UsernameInvalidError, ChannelPrivateError
 from dotenv import load_dotenv
 from utils.logger import setup_logging
+from utils.advanced_logging import get_logger
 
 load_dotenv()
 
@@ -15,7 +17,7 @@ API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
 API_HASH = os.getenv("TELEGRAM_API_HASH")
 SESSION_NAME = os.getenv("TELEGRAM_SESSION", "degen_digest")
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 logging.basicConfig(level=logging.INFO)
 setup_logging()
 
@@ -23,10 +25,25 @@ setup_logging()
 TARGET_CHANNELS = [
     "@SolanaMemeCalls",
     "@CryptoAlpha",
+    "@binancekillers",
+    "@cryptoclubpump",
+    "@RavenProSupport",
+    "@AltSignals",
+    "@jamescpt",
+    "@degeninvestor",
+    "@ryder_reilly",
+    "@iqcash_admin",
+    "@gqsoul",
+    "@Arpiner7",
+    "@mikevazovskyi",
+    "@robertus78",
+    "@Fesions",
+    "@BitcoinSmarts",
 ]
 
 
 async def collect_messages(channel_usernames: List[str], limit: int = 100):
+    """Collect recent Telegram messages from public channels (async)."""
     if API_ID == 0 or API_HASH is None:
         raise ValueError("TELEGRAM_API_ID/HASH not set")
 
@@ -36,15 +53,19 @@ async def collect_messages(channel_usernames: List[str], limit: int = 100):
     try:
         all_messages = []
         for ch in channel_usernames:
-            logger.info("Fetching messages for %s", ch)
-            async for message in client.iter_messages(ch, limit=limit):
-                if message.text:
-                    all_messages.append({
-                        "channel": ch,
-                        "date": str(message.date),
-                        "text": message.text,
-                        "id": message.id,
-                    })
+            logger.info("tg fetch", channel=ch)
+            try:
+                async for message in client.iter_messages(ch, limit=limit):
+                    if message.text:
+                        all_messages.append({
+                            "channel": ch,
+                            "date": str(message.date),
+                            "text": message.text,
+                            "id": message.id,
+                        })
+            except (UsernameInvalidError, ChannelPrivateError) as exc:
+                logger.warning("telegram channel skipped", channel=ch, exc_info=exc)
+                continue
         return all_messages
     finally:
         await client.disconnect()
@@ -56,7 +77,7 @@ def main():
     out_path = Path("output/telegram_raw.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(messages, indent=2))
-    logger.info("Saved %d Telegram messages", len(messages))
+    logger.info("telegram messages saved", count=len(messages))
 
 
 if __name__ == "__main__":

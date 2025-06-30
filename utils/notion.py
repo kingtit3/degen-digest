@@ -1,11 +1,11 @@
 """Notion integration helper."""
 
 from notion_client import Client
-import logging
 from pathlib import Path
 from utils.env import get
+from utils.advanced_logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def publish_page(title: str, markdown_path: Path):
@@ -16,7 +16,7 @@ def publish_page(title: str, markdown_path: Path):
     token = get("NOTION_TOKEN")
     db_id = get("NOTION_DATABASE_ID")
     if not token or not db_id:
-        logger.info("Notion env vars not set; skipping publish")
+        logger.info("notion skipped - env unset")
         return
 
     client = Client(auth=token)
@@ -36,6 +36,6 @@ def publish_page(title: str, markdown_path: Path):
                 }
             }]
         )
-        logger.info("Notion page created successfully")
+        logger.info("notion page created")
     except Exception as exc:
-        logger.error("Failed to publish to Notion: %s", exc) 
+        logger.error("notion publish failed", exc_info=exc) 

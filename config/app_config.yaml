@@ -1,0 +1,93 @@
+# Degen Digest Application Configuration
+
+# Data Sources
+sources:
+  twitter:
+    enabled: true
+    max_items: 1000
+    influencers_file: "config/influencers.json"
+    keywords_file: "config/keywords.json"
+  
+  reddit:
+    enabled: true
+    max_items: 500
+    subreddits:
+      - "cryptocurrency"
+      - "bitcoin"
+      - "ethereum"
+      - "defi"
+  
+  telegram:
+    enabled: false
+    max_items: 200
+    channels: []
+  
+  newsapi:
+    enabled: true
+    max_items: 100
+    categories:
+      - "business"
+      - "technology"
+  
+  coingecko:
+    enabled: true
+    max_items: 50
+    categories:
+      - "trending"
+      - "gainers"
+      - "losers"
+
+# Processing
+processing:
+  max_items_per_digest: 10
+  min_engagement_score: 50
+  enable_clustering: true
+  enable_viral_prediction: true
+  
+# LLM Settings
+llm:
+  model: "google/gemini-2.0-flash-001"
+  temperature: 0.9
+  max_tokens: 120
+  batch_size: 5
+  retry_attempts: 3
+  timeout_seconds: 30
+  
+# Budget Control
+budget:
+  monthly_usd: 10.0
+  cost_per_1k_tokens: 0.005
+  daily_limit_usd: 1.0
+  
+# Output Formats
+output:
+  markdown: true
+  pdf: true
+  html: true
+  json: false
+  
+# Dashboard
+dashboard:
+  port: 8501
+  host: "0.0.0.0"
+  auto_refresh_seconds: 300
+  max_display_items: 100
+  
+# Logging
+logging:
+  level: "INFO"
+  format: "json"  # or "console"
+  max_file_size_mb: 5
+  backup_count: 5
+  
+# Monitoring
+monitoring:
+  health_check_interval: 300
+  metrics_collection: true
+  alert_on_failure: true
+  
+# Security
+security:
+  rate_limit_requests_per_minute: 60
+  api_key_required: false
+  cors_origins: ["*"] 
