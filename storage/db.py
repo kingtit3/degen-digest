@@ -21,10 +21,21 @@ engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 class Tweet(SQLModel, table=True):
     id: str = Field(primary_key=True)
     text: str
+    full_text: Optional[str] = None
     author: Optional[str] = None
+    author_username: Optional[str] = None
+    tweet_id: Optional[str] = None
     created_at: Optional[str] = None
+    published: Optional[datetime] = None
     like_count: Optional[int] = 0
     retweet_count: Optional[int] = 0
+    reply_count: Optional[int] = 0
+    view_count: Optional[int] = 0
+    quote_count: Optional[int] = 0
+    bookmark_count: Optional[int] = 0
+    user_followers_count: Optional[int] = 0
+    user_verified: Optional[bool] = False
+    engagement_score: Optional[float] = 0.0
     scraped_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -81,10 +92,20 @@ def add_tweets(tweets: List[dict]):
             Tweet(
                 id=str(tid),
                 text=t.get("full_text") or t.get("text", ""),
+                full_text=t.get("full_text") or t.get("text", ""),
                 author=t.get("userScreenName"),
+                author_username=t.get("userScreenName"),
+                tweet_id=str(tid),
                 created_at=t.get("createdAt"),
+                published=datetime.fromisoformat(t.get("createdAt").replace('Z', '+00:00')) if t.get("createdAt") else None,
                 like_count=t.get("likeCount"),
                 retweet_count=t.get("retweetCount"),
+                reply_count=t.get("replyCount"),
+                view_count=t.get("viewCount"),
+                quote_count=t.get("quoteCount"),
+                bookmark_count=t.get("bookmarkCount"),
+                user_followers_count=t.get("userFollowersCount"),
+                user_verified=t.get("userVerified", False),
             )
         )
     with Session(engine) as session:

@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "2025-06-30T07:35:28.668648",
+    "system": {
+      "timestamp": "2025-06-30T07:35:29.671976",
+      "uptime_seconds": 1.0033459663391113,
+      "cpu_percent": 9.1,
+      "memory_percent": 82.9,
+      "memory_available_gb": 4.1152801513671875,
+      "disk_percent": 5.3,
+      "disk_free_gb": 186.63676834106445,
+      "process_count": 461
+    },
+    "data_freshness": {
+      "twitter_raw.json": {
+        "exists": true,
+        "age_hours": 0.39686267694444444,
+        "size_bytes": 8958585,
+        "is_fresh": true,
+        "has_content": true
+      },
+      "reddit_raw.json": {
+        "exists": true,
+        "age_hours": 0.3968654897222222,
+        "size_bytes": 47660,
+        "is_fresh": true,
+        "has_content": true
+      },
+      "telegram_raw.json": {
+        "exists": true,
+        "age_hours": 0.3968651719444445,
+        "size_bytes": 429066,
+        "is_fresh": true,
+        "has_content": true
+      },
+      "newsapi_raw.json": {
+        "exists": true,
+        "age_hours": 0.39686555472222224,
+        "size_bytes": 45954,
+        "is_fresh": true,
+        "has_content": true
+      },
+      "coingecko_raw.json": {
+        "exists": true,
+        "age_hours": 0.3968690902777778,
+        "size_bytes": 4580,
+        "is_fresh": true,
+        "has_content": true
+      }
+    },
+    "database": {
+      "connected": false,
+      "error": "unsupported operand type(s) for -: 'datetime.datetime' and 'str'"
+    },
+    "llm": {
+      "api_available": true,
+      "monthly_tokens": 137985,
+      "monthly_cost_usd": 0.6903149999999995,
+      "budget_remaining_usd": 9.309685
+    }
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "timestamp": "2025-06-30T07:35:29.861297",
+    "level": "error",
+    "category": "database",
+    "message": "Database connection failed"
+  }
+]

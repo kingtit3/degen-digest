@@ -53,8 +53,32 @@ OUTPUT_DIR = Path("output")
 DIGEST_MD = OUTPUT_DIR / "digest.md"
 SEEN_IDS_FILE = OUTPUT_DIR / "seen_tweet_ids.json"
 
-TEMPLATE_HEADER = "# 📰 Degen Digest – {date}\n\n"
+# New human-friendly template
+TEMPLATE_HEADER = """# 🚀 Degen Digest - Crypto Market Intelligence
 
+**Date:** {date} | **Edition:** Daily Market Report
+
+---
+
+## 📋 Executive Summary
+
+{executive_summary}
+
+---
+
+## 🎯 Key Takeaways
+
+{key_takeaways}
+
+---
+
+## 📊 Market Overview
+
+{market_overview}
+
+---
+
+"""
 
 def load_raw_sources():
     sources = {}
@@ -117,13 +141,107 @@ def process_items(items: List[Dict]) -> List[Dict]:
     return processed
 
 
+def create_executive_summary(chosen_items: List[Dict]) -> str:
+    """Create a human-friendly executive summary"""
+    try:
+        from processor.summarizer import client as _llm_client
+
+        # Create a structured summary prompt
+        stories = []
+        for i, item in enumerate(chosen_items[:5], 1):  # Top 5 stories
+            headline = item.get('headline', 'Unknown story')
+            stories.append(f"{i}. {headline}")
+        
+        prompt = f"""
+        Create a professional, concise executive summary (150-200 words) for a crypto market intelligence report.
+        
+        Focus on:
+        - Main market trends and themes
+        - Key developments and their potential impact
+        - Notable price movements or market shifts
+        - Emerging opportunities or risks
+        
+        Use clear, professional language that a financial analyst would understand.
+        Avoid jargon and make it accessible to both crypto veterans and newcomers.
+        
+        Top stories to summarize:
+        {chr(10).join(stories)}
+        
+        Format the summary with clear paragraphs and bullet points where appropriate.
+        """
+        
+        _resp = _llm_client.chat.completions.create(
+            model=os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001"),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=300,
+        )
+        return _resp.choices[0].message.content.strip()
+    except Exception as exc:
+        logger.warning("Executive summary generation failed: %s", exc)
+        return "Market analysis unavailable due to technical issues."
+
+
+def create_key_takeaways(chosen_items: List[Dict]) -> str:
+    """Create key takeaways from the top stories"""
+    takeaways = []
+    
+    # Extract key themes and insights
+    themes = {}
+    for item in chosen_items[:8]:  # Top 8 items
+        tag = item.get('tag', 'General')
+        if tag not in themes:
+            themes[tag] = []
+        themes[tag].append(item.get('headline', ''))
+    
+    # Create structured takeaways
+    for theme, headlines in themes.items():
+        if headlines:
+            takeaways.append(f"**{theme}:** {headlines[0]}")
+    
+    # Add market sentiment
+    sentiment = "bullish" if len([i for i in chosen_items if "bull" in i.get('headline', '').lower()]) > len([i for i in chosen_items if "bear" in i.get('headline', '').lower()]) else "bearish"
+    takeaways.append(f"**Market Sentiment:** Overall {sentiment} with mixed signals")
+    
+    return "\n".join(takeaways)
+
+
+def create_market_overview(processed_items: List[Dict]) -> str:
+    """Create a comprehensive market overview section"""
+    total_stories = len(processed_items)
+    top_engagement = max([item.get("_engagement_score", 0) for item in processed_items]) if processed_items else 0
+    avg_engagement = sum([item.get("_engagement_score", 0) for item in processed_items]) / len(processed_items) if processed_items else 0
+    
+    # Get source breakdown
+    sources = {}
+    for item in processed_items:
+        source = item.get('_source', 'unknown')
+        sources[source] = sources.get(source, 0) + 1
+    
+    source_breakdown = ", ".join([f"{source}: {count}" for source, count in sources.items()])
+    
+    return f"""
+### 📈 Data Insights
+- **Total Stories Analyzed:** {total_stories:,}
+- **Top Engagement Score:** {top_engagement:.1f}
+- **Average Engagement:** {avg_engagement:.1f}
+- **Data Sources:** {source_breakdown}
+
+### 🎯 Market Themes
+Based on our analysis of today's top crypto content, the market is showing:
+- **High Activity Areas:** {', '.join([item.get('tag', 'General') for item in processed_items[:3]])}
+- **Trending Topics:** {', '.join([item.get('headline', '')[:30] for item in processed_items[:2]])}
+- **Engagement Patterns:** {f"Peak engagement around {processed_items[0].get('tag', 'General') if processed_items else 'N/A'}"}
+"""
+
+
 def build_digest(processed_items):
-    # Select top 10 by score but only one per tag where possible
+    # Select top 12 by score but only one per tag where possible
     processed_items.sort(key=lambda x: x["_engagement_score"], reverse=True)
 
     tag_order = [
         "🔥 Top CT Story",
-        "💀 Rug of the Day",
+        "💀 Rug of the Day", 
         "🚀 Meme Launch",
         "🐳 Whale Move",
         "🧠 Alpha Thread",
@@ -136,210 +254,196 @@ def build_digest(processed_items):
         if item["tag"] not in used_tags:
             chosen.append(item)
             used_tags.add(item["tag"])
-        if len(chosen) >= 10:
+        if len(chosen) >= 12:  # Increased from 10 to 12
             break
 
     from datetime import date
 
-    # --- build TL;DR synopsis via LLM -----------------------------------
-    try:
-        from processor.summarizer import client as _llm_client  # reuse configured OpenAI/OpenRouter client
+    # Create executive summary
+    executive_summary = create_executive_summary(chosen)
+    
+    # Create key takeaways
+    key_takeaways = create_key_takeaways(chosen)
+    
+    # Create market overview
+    market_overview = create_market_overview(processed_items)
 
-        prompt = (
-            "Write a professional, concise (150-200 words) crypto market summary covering these headlines. "
-            "Use clear, professional language that a financial analyst would understand. "
-            "Focus on market trends, key developments, and their potential impact: \n"
-            + "\n".join([h['headline'] for h in chosen])
-        )
-        _resp = _llm_client.chat.completions.create(
-            model=os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001"),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=200,
-        )
-        synopsis = _resp.choices[0].message.content.strip()
-    except Exception as exc:
-        logger.warning("Synopsis generation failed: %s", exc)
-        synopsis = "*(Market summary unavailable)*"
+    # Build the main digest content
+    md = TEMPLATE_HEADER.format(
+        date=date.today().strftime("%B %d, %Y"),
+        executive_summary=executive_summary,
+        key_takeaways=key_takeaways,
+        market_overview=market_overview
+    )
 
-    md = TEMPLATE_HEADER.format(date=date.today().isoformat())
-    md += f"## 📋 Executive Summary\n\n{synopsis}\n\n---\n\n"
-
-    # Market Overview Section
-    md += "## 📊 Market Overview\n\n"
-    md += "**Date:** " + date.today().strftime("%B %d, %Y") + "\n\n"
-    md += "**Key Metrics:**\n"
-    md += "- Total Stories Analyzed: " + str(len(processed_items)) + "\n"
-    md += "- Top Engagement Score: " + str(max([item.get("_engagement_score", 0) for item in processed_items])) + "\n"
-    md += "- Average Engagement: " + str(round(sum([item.get("_engagement_score", 0) for item in processed_items]) / len(processed_items), 2)) + "\n\n"
-    md += "---\n\n"
-
-    # Headlines section with full context
+    # Top Stories section with improved organization
     md += "## 🔥 Top Stories of the Day\n\n"
-    for idx, item in enumerate(chosen, 1):
-        md += f"### {idx}. {item['tag']}\n\n"
-        md += f"**Headline:** {item['headline']}\n\n"
-        md += f"**Full Story:** {item['body']}\n\n"
-        
-        # Add engagement metrics if available
-        engagement_info = []
-        if item.get('likeCount'):
-            engagement_info.append(f"Likes: {item['likeCount']:,}")
-        if item.get('retweetCount'):
-            engagement_info.append(f"Retweets: {item['retweetCount']:,}")
-        if item.get('replyCount'):
-            engagement_info.append(f"Replies: {item['replyCount']:,}")
-        if item.get('viewCount'):
-            engagement_info.append(f"Views: {item['viewCount']:,}")
-        if item.get('_engagement_score'):
-            engagement_info.append(f"Engagement Score: {item['_engagement_score']:.1f}")
-        if item.get('_predicted_viral_score'):
-            engagement_info.append(f"Viral Prediction: {item['_predicted_viral_score']:.1f}")
-        
-        if engagement_info:
-            md += f"**Metrics:** {', '.join(engagement_info)}\n\n"
-        
-        # Add source information
-        source = item.get('_source', 'Unknown')
-        if source == 'twitter':
-            source = 'Twitter'
-        elif source == 'reddit':
-            source = 'Reddit'
-        elif source == 'telegram':
-            source = 'Telegram'
-        elif source == 'newsapi':
-            source = 'News API'
-        elif source == 'coingecko':
-            source = 'CoinGecko'
-        
-        md += f"**Source:** {source}\n\n"
-        
-        if item['link']:
-            md += f"**Link:** [{item['link']}]({item['link']})\n\n"
-        
-        md += "---\n\n"
+    
+    # Group stories by category for better organization
+    story_categories = {
+        "🔥 Market Movers": [],
+        "🚀 New Launches": [],
+        "🐳 Whale Activity": [],
+        "🧠 Alpha & Insights": [],
+        "💬 Community Highlights": []
+    }
+    
+    for item in chosen:
+        tag = item.get('tag', 'General')
+        if 'Top CT Story' in tag or 'Rug' in tag:
+            story_categories["🔥 Market Movers"].append(item)
+        elif 'Meme Launch' in tag:
+            story_categories["🚀 New Launches"].append(item)
+        elif 'Whale Move' in tag:
+            story_categories["🐳 Whale Activity"].append(item)
+        elif 'Alpha Thread' in tag:
+            story_categories["🧠 Alpha & Insights"].append(item)
+        else:
+            story_categories["💬 Community Highlights"].append(item)
+    
+    # Display stories by category
+    for category, stories in story_categories.items():
+        if stories:
+            md += f"### {category}\n\n"
+            for idx, item in enumerate(stories, 1):
+                md += f"**{idx}. {item['headline']}**\n\n"
+                md += f"{item['body']}\n\n"
+                
+                # Add engagement metrics in a clean format
+                engagement_info = []
+                if item.get('likeCount'):
+                    engagement_info.append(f"❤️ {item['likeCount']:,}")
+                if item.get('retweetCount'):
+                    engagement_info.append(f"🔄 {item['retweetCount']:,}")
+                if item.get('replyCount'):
+                    engagement_info.append(f"💬 {item['replyCount']:,}")
+                if item.get('viewCount'):
+                    engagement_info.append(f"👁️ {item['viewCount']:,}")
+                if item.get('_engagement_score'):
+                    engagement_info.append(f"📊 Score: {item['_engagement_score']:.1f}")
+                
+                if engagement_info:
+                    md += f"*Metrics: {' | '.join(engagement_info)}*\n\n"
+                
+                md += "---\n\n"
+    
+    # Add market analysis section
+    md += "## 📊 Market Analysis\n\n"
+    
+    # Price movements (if available)
+    try:
+        prices = get_prices_sync()
+        if prices:
+            md += "### 💰 Key Price Movements\n\n"
+            for symbol, data in list(prices.items())[:5]:  # Top 5
+                change_24h = data.get('price_change_percentage_24h', 0)
+                emoji = "🟢" if change_24h > 0 else "🔴" if change_24h < 0 else "⚪"
+                md += f"{emoji} **{symbol.upper()}:** ${data.get('current_price', 0):,.2f} ({change_24h:+.2f}%)\n\n"
+    except Exception as e:
+        logger.warning(f"Price data unavailable: {e}")
+        md += "*Price data temporarily unavailable*\n\n"
+    
+    # Add insights section
+    md += "### 💡 Market Insights\n\n"
+    md += "Based on today's analysis:\n\n"
+    
+    insights = []
+    if len([i for i in chosen if 'bull' in i.get('headline', '').lower()]) > len([i for i in chosen if 'bear' in i.get('headline', '').lower())]):
+        insights.append("• Market sentiment appears bullish with positive momentum")
+    else:
+        insights.append("• Market sentiment shows caution with mixed signals")
+    
+    if any('whale' in i.get('headline', '').lower() for i in chosen):
+        insights.append("• Significant whale activity detected, indicating institutional interest")
+    
+    if any('launch' in i.get('headline', '').lower() for i in chosen):
+        insights.append("• New project launches and token releases creating market opportunities")
+    
+    if not insights:
+        insights.append("• Market showing normal volatility with standard trading patterns")
+    
+    md += "\n".join(insights) + "\n\n"
+    
+    # Add footer
+    md += "---\n\n"
+    md += "## 📋 Report Information\n\n"
+    md += f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
+    md += "**Data Sources:** Twitter, Reddit, Telegram, NewsAPI, CoinGecko\n\n"
+    md += "**Analysis Method:** AI-powered content analysis with engagement scoring\n\n"
+    md += "---\n\n"
+    md += "*This report is generated automatically and should not be considered as financial advice. Always do your own research.*\n\n"
+    md += "🚀 **Degen Digest** - Your daily crypto intelligence companion"
 
-    # Market Analysis Section
-    md += "## 📈 Market Analysis\n\n"
-    
-    # Sentiment breakdown
-    positive_count = sum(1 for item in processed_items if item.get('_sentiment_score', 0) > 0.1)
-    negative_count = sum(1 for item in processed_items if item.get('_sentiment_score', 0) < -0.1)
-    neutral_count = len(processed_items) - positive_count - negative_count
-    
-    md += f"**Sentiment Distribution:**\n"
-    md += f"- Positive: {positive_count} stories ({positive_count/len(processed_items)*100:.1f}%)\n"
-    md += f"- Neutral: {neutral_count} stories ({neutral_count/len(processed_items)*100:.1f}%)\n"
-    md += f"- Negative: {negative_count} stories ({negative_count/len(processed_items)*100:.1f}%)\n\n"
-    
-    # Source breakdown
-    source_counts = {}
-    for item in processed_items:
-        source = item.get('_source', 'unknown')
-        source_counts[source] = source_counts.get(source, 0) + 1
-    
-    md += "**Content Sources:**\n"
-    for source, count in sorted(source_counts.items(), key=lambda x: x[1], reverse=True):
-        source_name = source.title()
-        md += f"- {source_name}: {count} stories\n"
-    md += "\n"
-
-    # Sources appendix (page break then list all links)
-    md += "\n\\newpage\n\n## 🌐 All Sources & References\n\n"
-    md += "**Note:** All links are provided for reference and verification purposes.\n\n"
-    
-    # Group sources by type
-    twitter_links = []
-    reddit_links = []
-    telegram_links = []
-    news_links = []
-    other_links = []
-    
-    for it in processed_items:
-        if it['link']:
-            if 'twitter.com' in it['link'] or 'x.com' in it['link']:
-                twitter_links.append(it['link'])
-            elif 'reddit.com' in it['link']:
-                reddit_links.append(it['link'])
-            elif 't.me' in it['link']:
-                telegram_links.append(it['link'])
-            elif any(domain in it['link'] for domain in ['cointelegraph.com', 'coindesk.com', 'decrypt.co', 'theblock.co']):
-                news_links.append(it['link'])
-            else:
-                other_links.append(it['link'])
-    
-    if twitter_links:
-        md += "**Twitter Sources:**\n"
-        for link in twitter_links:
-            md += f"- {link}\n"
-        md += "\n"
-    
-    if reddit_links:
-        md += "**Reddit Sources:**\n"
-        for link in reddit_links:
-            md += f"- {link}\n"
-        md += "\n"
-    
-    if telegram_links:
-        md += "**Telegram Sources:**\n"
-        for link in telegram_links:
-            md += f"- {link}\n"
-        md += "\n"
-    
-    if news_links:
-        md += "**News Sources:**\n"
-        for link in news_links:
-            md += f"- {link}\n"
-        md += "\n"
-    
-    if other_links:
-        md += "**Other Sources:**\n"
-        for link in other_links:
-            md += f"- {link}\n"
-        md += "\n"
-    
-    # Footer
-    md += "\n---\n\n"
-    md += "**Disclaimer:** This digest is for informational purposes only. It does not constitute financial advice. "
-    md += "Always conduct your own research before making investment decisions.\n\n"
-    md += f"*Generated on {date.today().strftime('%B %d, %Y at %H:%M UTC')}*\n"
-    
     return md
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    """Main orchestration function."""
+    logger.info("Starting digest generation")
+
+    # Load raw data
     sources = load_raw_sources()
-    all_raw = []
-    for items in sources.values():
-        all_raw.extend(items)
-    logger.info("Processing %d items from raw sources", len(all_raw))
-    processed = process_items(all_raw)
-    digest_md = build_digest(processed)
-    DIGEST_MD.write_text(digest_md)
-    # update seen ids with ones used in digest
-    new_ids = {str(item["id"]) for item in processed if item.get("id")}
-    if new_ids:
-        existing = load_seen_ids()
-        save_seen_ids(existing.union(new_ids))
-    logger.info("Digest saved to %s", DIGEST_MD)
+    all_items = []
+    for source_name, items in sources.items():
+        all_items.extend(items)
 
-    # Post-processing outputs
-    from datetime import date
-    from utils.pdf import md_to_pdf
-    from utils.notion import publish_page
+    logger.info(f"Processing {len(all_items)} items from raw sources")
 
-    pdf_path = OUTPUT_DIR / f"digest-{date.today().isoformat()}.pdf"
-    md_to_pdf(DIGEST_MD, pdf_path)
+    # Load seen IDs for deduplication
+    seen_ids = load_seen_ids()
 
-    publish_page(f"Degen Digest – {date.today().isoformat()}", DIGEST_MD)
+    # Filter out already processed items
+    new_items = []
+    for item in all_items:
+        item_id = item.get("id") or item.get("tweetId") or item.get("_id")
+        if item_id and str(item_id) not in seen_ids:
+            new_items.append(item)
 
-    from storage.db import record_digest
-    record_digest(date.today().isoformat(), DIGEST_MD, pdf_path)
+    logger.info(f"Found {len(new_items)} new items to process")
 
-    # buzz snapshot
-    from processor import buzz as _buzz
-    _buzz.make_snapshot(all_raw)
+    if not new_items:
+        logger.info("No new items to process")
+        return
+
+    # Process items
+    processed_items = process_items(new_items)
+
+    # Classify and rewrite content
+    for item in processed_items:
+        # Classify
+        item["tag"] = classify(item)
+        
+        # Rewrite content
+        rewritten = rewrite_content(item)
+        item["headline"] = rewritten["headline"]
+        item["body"] = rewritten["body"]
+
+    # Build digest
+    digest_content = build_digest(processed_items)
+
+    # Save digest
+    DIGEST_MD.write_text(digest_content)
+    logger.info(f"Digest saved to {DIGEST_MD}")
+
+    # Update seen IDs
+    new_seen_ids = set()
+    for item in processed_items:
+        item_id = item.get("id") or item.get("tweetId") or item.get("_id")
+        if item_id:
+            new_seen_ids.add(str(item_id))
+    
+    seen_ids.update(new_seen_ids)
+    save_seen_ids(seen_ids)
+
+    # Generate PDF
+    try:
+        from utils.pdf import generate_pdf
+        pdf_path = generate_pdf(digest_content, f"digest-{date.today().isoformat()}")
+        logger.info(f"PDF generated: {pdf_path}")
+    except Exception as e:
+        logger.error(f"PDF generation failed: {e}")
+
+    logger.info("Digest generation complete")
 
 
 if __name__ == "__main__":
