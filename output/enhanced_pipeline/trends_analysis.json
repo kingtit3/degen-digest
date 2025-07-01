@@ -1,0 +1,58 @@
+{
+  "twitter": {
+    "total_items": 100,
+    "avg_engagement_velocity": 0.536,
+    "avg_viral_coefficient": 0.00014000000000000001,
+    "top_categories": [
+      {
+        "category": "scam",
+        "count": 77
+      },
+      {
+        "category": "general",
+        "count": 7
+      },
+      {
+        "category": "airdrop",
+        "count": 5
+      },
+      {
+        "category": "meme",
+        "count": 3
+      },
+      {
+        "category": "defi",
+        "count": 2
+      }
+    ],
+    "viral_items": 9
+  },
+  "telegram": {
+    "total_items": 50,
+    "avg_engagement_velocity": 0.0,
+    "avg_viral_coefficient": 0.0,
+    "top_categories": [
+      {
+        "category": "general",
+        "count": 23
+      },
+      {
+        "category": "pump",
+        "count": 9
+      },
+      {
+        "category": "meme",
+        "count": 8
+      },
+      {
+        "category": "ethereum",
+        "count": 7
+      },
+      {
+        "category": "bitcoin",
+        "count": 2
+      }
+    ],
+    "viral_items": 0
+  }
+}

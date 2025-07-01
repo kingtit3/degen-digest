@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 import random
 import logging
 from utils.logger import setup_logging
@@ -7,6 +7,7 @@ from typing import Optional
 from utils.advanced_logging import get_logger
 import math
 import datetime
+import re
 
 from joblib import load
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -26,6 +27,23 @@ except Exception:
 
 setup_logging()
 logger = get_logger(__name__)
+
+def extract_tickers(text: str) -> List[str]:
+    """Extract cryptocurrency ticker symbols from text"""
+    # Common crypto ticker patterns
+    ticker_pattern = re.compile(r'\$[A-Z]{2,10}|[A-Z]{2,10}/USD|[A-Z]{2,10}/USDT')
+    return ticker_pattern.findall(text.upper())
+
+def get_sentiment_score(text: str) -> float:
+    """Get sentiment score from text using VADER"""
+    try:
+        scores = _analyzer.polarity_scores(text)
+        return scores['compound']
+    except Exception:
+        return 0.0
+
+# Ticker pattern for backward compatibility
+ticker_pattern = re.compile(r'\$[A-Z]{2,10}|[A-Z]{2,10}/USD|[A-Z]{2,10}/USDT')
 
 def _load_model():
     global _model

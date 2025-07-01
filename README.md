@@ -69,6 +69,9 @@ streamlit run app.py
 
 # 4. Generate a digest
 python main.py
+
+# Or use the automated wrapper (recommended)
+python generate_digest.py
 ```
 
 ## 📊 Dashboard Features
@@ -180,6 +183,28 @@ python main.py
 
 # Run health check
 python -c "from utils.health_monitor import health_monitor; print(health_monitor.get_health_summary())"
+```
+
+### **Automated Digest Workflow**
+```bash
+# Recommended: Use the automated wrapper
+python generate_digest.py
+
+# This will:
+# 1. Check environment variables
+# 2. Generate the digest
+# 3. Automatically rename with date (digest-YYYY-MM-DD.md)
+# 4. Show preview and status
+# 5. Handle errors gracefully
+```
+
+### **Scheduled Generation**
+```bash
+# Add to crontab for daily generation at 10 AM EST
+0 10 * * * cd /path/to/DegenDigest && python generate_digest.py >> logs/cron.log 2>&1
+
+# Or use the trigger script
+python trigger_digest.py
 ```
 
 ### **Docker Deployment**

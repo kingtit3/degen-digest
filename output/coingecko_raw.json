@@ -1,122 +1,122 @@
 [
   {
-    "title": "BTC +0.2% in 24h",
-    "summary": "Bitcoin pumped 0.2% in the last 24h. Price now $1.075e+05.",
+    "title": "BTC +0.1% in 24h",
+    "summary": "Bitcoin pumped 0.1% in the last 24h. Price now $1.076e+05.",
     "link": "https://www.coingecko.com/en/coins/bitcoin",
-    "published": "2025-06-29T20:24:36.497245+00:00"
+    "published": "2025-06-30T20:39:30.951910+00:00"
   },
   {
-    "title": "ETH +0.2% in 24h",
-    "summary": "Ethereum pumped 0.2% in the last 24h. Price now $2436.",
+    "title": "ETH +3.2% in 24h",
+    "summary": "Ethereum pumped 3.2% in the last 24h. Price now $2514.",
     "link": "https://www.coingecko.com/en/coins/ethereum",
-    "published": "2025-06-29T20:24:36.497268+00:00"
+    "published": "2025-06-30T20:39:30.951944+00:00"
   },
   {
-    "title": "USDT +-0.0% in 24h",
-    "summary": "Tether pumped -0.0% in the last 24h. Price now $1.",
+    "title": "USDT +0.0% in 24h",
+    "summary": "Tether pumped 0.0% in the last 24h. Price now $1.",
     "link": "https://www.coingecko.com/en/coins/tether",
-    "published": "2025-06-29T20:24:36.497275+00:00"
+    "published": "2025-06-30T20:39:30.951952+00:00"
   },
   {
-    "title": "XRP +0.1% in 24h",
-    "summary": "XRP pumped 0.1% in the last 24h. Price now $2.19.",
+    "title": "XRP +5.1% in 24h",
+    "summary": "XRP pumped 5.1% in the last 24h. Price now $2.29.",
     "link": "https://www.coingecko.com/en/coins/ripple",
-    "published": "2025-06-29T20:24:36.497279+00:00"
+    "published": "2025-06-30T20:39:30.951958+00:00"
   },
   {
-    "title": "BNB +0.1% in 24h",
-    "summary": "BNB pumped 0.1% in the last 24h. Price now $648.5.",
+    "title": "BNB +1.7% in 24h",
+    "summary": "BNB pumped 1.7% in the last 24h. Price now $659.5.",
     "link": "https://www.coingecko.com/en/coins/binancecoin",
-    "published": "2025-06-29T20:24:36.497285+00:00"
+    "published": "2025-06-30T20:39:30.951963+00:00"
   },
   {
-    "title": "SOL +0.5% in 24h",
-    "summary": "Solana pumped 0.5% in the last 24h. Price now $151.2.",
+    "title": "SOL +4.1% in 24h",
+    "summary": "Solana pumped 4.1% in the last 24h. Price now $157.2.",
     "link": "https://www.coingecko.com/en/coins/solana",
-    "published": "2025-06-29T20:24:36.497288+00:00"
+    "published": "2025-06-30T20:39:30.951967+00:00"
   },
   {
     "title": "USDC +0.0% in 24h",
     "summary": "USDC pumped 0.0% in the last 24h. Price now $0.9999.",
     "link": "https://www.coingecko.com/en/coins/usd-coin",
-    "published": "2025-06-29T20:24:36.497292+00:00"
+    "published": "2025-06-30T20:39:30.951971+00:00"
   },
   {
-    "title": "TRX +0.7% in 24h",
-    "summary": "TRON pumped 0.7% in the last 24h. Price now $0.2759.",
+    "title": "TRX +1.5% in 24h",
+    "summary": "TRON pumped 1.5% in the last 24h. Price now $0.28.",
     "link": "https://www.coingecko.com/en/coins/tron",
-    "published": "2025-06-29T20:24:36.497296+00:00"
+    "published": "2025-06-30T20:39:30.951975+00:00"
   },
   {
-    "title": "DOGE +0.4% in 24h",
-    "summary": "Dogecoin pumped 0.4% in the last 24h. Price now $0.1641.",
+    "title": "DOGE +1.9% in 24h",
+    "summary": "Dogecoin pumped 1.9% in the last 24h. Price now $0.1672.",
     "link": "https://www.coingecko.com/en/coins/dogecoin",
-    "published": "2025-06-29T20:24:36.497299+00:00"
+    "published": "2025-06-30T20:39:30.951979+00:00"
   },
   {
-    "title": "STETH +0.3% in 24h",
-    "summary": "Lido Staked Ether pumped 0.3% in the last 24h. Price now $2436.",
+    "title": "STETH +3.1% in 24h",
+    "summary": "Lido Staked Ether pumped 3.1% in the last 24h. Price now $2511.",
     "link": "https://www.coingecko.com/en/coins/staked-ether",
-    "published": "2025-06-29T20:24:36.497303+00:00"
+    "published": "2025-06-30T20:39:30.951983+00:00"
   },
   {
-    "title": "ADA +-0.9% in 24h",
-    "summary": "Cardano pumped -0.9% in the last 24h. Price now $0.5583.",
+    "title": "ADA +4.5% in 24h",
+    "summary": "Cardano pumped 4.5% in the last 24h. Price now $0.5837.",
     "link": "https://www.coingecko.com/en/coins/cardano",
-    "published": "2025-06-29T20:24:36.497306+00:00"
+    "published": "2025-06-30T20:39:30.951987+00:00"
   },
   {
-    "title": "WBTC +0.3% in 24h",
-    "summary": "Wrapped Bitcoin pumped 0.3% in the last 24h. Price now $1.073e+05.",
+    "title": "WBTC +0.2% in 24h",
+    "summary": "Wrapped Bitcoin pumped 0.2% in the last 24h. Price now $1.075e+05.",
     "link": "https://www.coingecko.com/en/coins/wrapped-bitcoin",
-    "published": "2025-06-29T20:24:36.497310+00:00"
+    "published": "2025-06-30T20:39:30.951992+00:00"
   },
   {
-    "title": "HYPE +1.6% in 24h",
-    "summary": "Hyperliquid pumped 1.6% in the last 24h. Price now $38.13.",
+    "title": "HYPE +7.1% in 24h",
+    "summary": "Hyperliquid pumped 7.1% in the last 24h. Price now $40.76.",
     "link": "https://www.coingecko.com/en/coins/hyperliquid",
-    "published": "2025-06-29T20:24:36.497314+00:00"
+    "published": "2025-06-30T20:39:30.951996+00:00"
   },
   {
-    "title": "WSTETH +0.3% in 24h",
-    "summary": "Wrapped stETH pumped 0.3% in the last 24h. Price now $2941.",
+    "title": "WSTETH +3.3% in 24h",
+    "summary": "Wrapped stETH pumped 3.3% in the last 24h. Price now $3036.",
     "link": "https://www.coingecko.com/en/coins/wrapped-steth",
-    "published": "2025-06-29T20:24:36.497317+00:00"
+    "published": "2025-06-30T20:39:30.952000+00:00"
   },
   {
-    "title": "BCH +-0.2% in 24h",
-    "summary": "Bitcoin Cash pumped -0.2% in the last 24h. Price now $490.6.",
+    "title": "BCH +4.7% in 24h",
+    "summary": "Bitcoin Cash pumped 4.7% in the last 24h. Price now $515.2.",
     "link": "https://www.coingecko.com/en/coins/bitcoin-cash",
-    "published": "2025-06-29T20:24:36.497321+00:00"
+    "published": "2025-06-30T20:39:30.952004+00:00"
   },
   {
-    "title": "SUI +1.4% in 24h",
-    "summary": "Sui pumped 1.4% in the last 24h. Price now $2.8.",
+    "title": "SUI +0.6% in 24h",
+    "summary": "Sui pumped 0.6% in the last 24h. Price now $2.81.",
     "link": "https://www.coingecko.com/en/coins/sui",
-    "published": "2025-06-29T20:24:36.497324+00:00"
+    "published": "2025-06-30T20:39:30.952008+00:00"
   },
   {
-    "title": "LINK +0.1% in 24h",
-    "summary": "Chainlink pumped 0.1% in the last 24h. Price now $13.34.",
+    "title": "LINK +2.0% in 24h",
+    "summary": "Chainlink pumped 2.0% in the last 24h. Price now $13.6.",
     "link": "https://www.coingecko.com/en/coins/chainlink",
-    "published": "2025-06-29T20:24:36.497328+00:00"
+    "published": "2025-06-30T20:39:30.952011+00:00"
   },
   {
-    "title": "LEO +-0.4% in 24h",
-    "summary": "LEO Token pumped -0.4% in the last 24h. Price now $9.04.",
+    "title": "LEO +0.7% in 24h",
+    "summary": "LEO Token pumped 0.7% in the last 24h. Price now $9.11.",
     "link": "https://www.coingecko.com/en/coins/leo-token",
-    "published": "2025-06-29T20:24:36.497331+00:00"
+    "published": "2025-06-30T20:39:30.952015+00:00"
   },
   {
-    "title": "AVAX +0.4% in 24h",
-    "summary": "Avalanche pumped 0.4% in the last 24h. Price now $18.02.",
+    "title": "AVAX +0.6% in 24h",
+    "summary": "Avalanche pumped 0.6% in the last 24h. Price now $18.15.",
     "link": "https://www.coingecko.com/en/coins/avalanche-2",
-    "published": "2025-06-29T20:24:36.497334+00:00"
+    "published": "2025-06-30T20:39:30.952019+00:00"
   },
   {
-    "title": "XLM +-0.8% in 24h",
-    "summary": "Stellar pumped -0.8% in the last 24h. Price now $0.2357.",
+    "title": "XLM +2.1% in 24h",
+    "summary": "Stellar pumped 2.1% in the last 24h. Price now $0.2404.",
     "link": "https://www.coingecko.com/en/coins/stellar",
-    "published": "2025-06-29T20:24:36.497337+00:00"
+    "published": "2025-06-30T20:39:30.952023+00:00"
   }
 ]

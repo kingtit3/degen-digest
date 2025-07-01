@@ -23,7 +23,7 @@ st.set_page_config(page_title="🧠 Advanced Analytics", layout="wide")
 st.title("🧠 Advanced Analytics & ML Insights")
 
 # Load data
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60)  # Reduced cache time to force refresh
 def load_analytics_data():
     with Session(engine) as session:
         # Get recent data
@@ -52,17 +52,17 @@ def load_analytics_data():
             items.append({
                 'text': post.title,
                 'title': post.title,
-                'summary': post.selftext,
-                'published': post.published.isoformat() if post.published else None,
-                'likeCount': post.score,
+                'summary': post.title,  # Use title as summary since no selftext field
+                'published': post.created_at,
+                'likeCount': 0,  # Reddit posts don't have these fields in our model
                 'retweetCount': 0,
-                'replyCount': post.num_comments,
+                'replyCount': 0,
                 'viewCount': 0,
                 'userFollowersCount': 0,
                 'userVerified': False,
                 '_source': 'reddit',
-                '_engagement_score': post.engagement_score or 0,
-                'link': post.url
+                '_engagement_score': 0,  # No engagement score in current model
+                'link': post.link
             })
         
         return items

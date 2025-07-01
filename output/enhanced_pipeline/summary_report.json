@@ -1,0 +1,100 @@
+{
+  "pipeline_run": {
+    "timestamp": "2025-06-30T20:39:33.423681",
+    "total_items_processed": 0,
+    "viral_items_detected": 0,
+    "processing_time": 0,
+    "data_sources": 5
+  },
+  "data_sources_summary": {
+    "twitter": {
+      "count": 100,
+      "timestamp": "2025-06-30T20:39:30.329105",
+      "error": null
+    },
+    "reddit": {
+      "count": 0,
+      "timestamp": "2025-06-30T20:39:30.333884",
+      "error": null
+    },
+    "telegram": {
+      "count": 50,
+      "timestamp": "2025-06-30T20:39:30.335515",
+      "error": null
+    },
+    "news": {
+      "count": 0,
+      "timestamp": "unknown",
+      "error": "'NoneType' object is not iterable"
+    },
+    "market": {
+      "count": 0,
+      "timestamp": "unknown",
+      "error": "'NoneType' object is not iterable"
+    }
+  },
+  "viral_predictions_summary": {
+    "total_predictions": 150,
+    "high_viral_score": 7,
+    "medium_viral_score": 9,
+    "low_viral_score": 134
+  },
+  "trends_summary": {
+    "twitter": {
+      "total_items": 100,
+      "avg_engagement_velocity": 0.536,
+      "avg_viral_coefficient": 0.00014000000000000001,
+      "top_categories": [
+        {
+          "category": "scam",
+          "count": 77
+        },
+        {
+          "category": "general",
+          "count": 7
+        },
+        {
+          "category": "airdrop",
+          "count": 5
+        },
+        {
+          "category": "meme",
+          "count": 3
+        },
+        {
+          "category": "defi",
+          "count": 2
+        }
+      ],
+      "viral_items": 9
+    },
+    "telegram": {
+      "total_items": 50,
+      "avg_engagement_velocity": 0.0,
+      "avg_viral_coefficient": 0.0,
+      "top_categories": [
+        {
+          "category": "general",
+          "count": 23
+        },
+        {
+          "category": "pump",
+          "count": 9
+        },
+        {
+          "category": "meme",
+          "count": 8
+        },
+        {
+          "category": "ethereum",
+          "count": 7
+        },
+        {
+          "category": "bitcoin",
+          "count": 2
+        }
+      ],
+      "viral_items": 0
+    }
+  }
+}

@@ -177,7 +177,7 @@ def main():
                             data.append({
                                 'id': post.id,
                                 'source': 'Reddit',
-                                'content': f"{post.title}\n\n{post.selftext or ''}",
+                                'content': f"{post.title}",
                                 'engagement': engagement,
                                 'likes': post.score or 0,
                                 'retweets': 0,

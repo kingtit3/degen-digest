@@ -270,7 +270,7 @@ def show_sentiment_analysis(start_date, end_date, sources):
                 ).all()
                 
                 for post in posts:
-                    text = f"{post.title} {post.selftext or ''}"
+                    text = f"{post.title}"
                     sentiment = analyze_sentiment(text)
                     data.append({
                         'date': post.created_at.date(),
@@ -568,7 +568,7 @@ def show_market_insights(start_date, end_date, sources):
                 ).all()
                 
                 for post in posts:
-                    text = f"{post.title} {post.selftext or ''}"
+                    text = f"{post.title}"
                     engagement = (post.score or 0) + (post.numComments or 0) * 2
                     sentiment = analyze_sentiment(text)
                     data.append({

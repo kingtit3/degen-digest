@@ -11,7 +11,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 from storage.db import engine, Tweet, RedditPost, Digest, get_month_usage, LLMUsage
 from sqlmodel import Session, select, func
@@ -116,7 +116,7 @@ with st.sidebar:
     st.markdown("### 📊 Navigation")
     page = st.selectbox(
         "Choose a page:",
-        ["Dashboard", "Live Feed", "Analytics", "Health Monitor", "Digests", "Sources"],
+        ["Dashboard", "Live Feed", "Analytics", "Health Monitor", "Digests", "Digest Archive", "Sources"],
         label_visibility="collapsed"
     )
     
@@ -124,8 +124,8 @@ with st.sidebar:
     st.markdown("### 🔍 Filters")
     date_range = st.date_input(
         "Date Range",
-        value=(datetime.now() - timedelta(days=7), datetime.now()),
-        max_value=datetime.now()
+        value=(datetime.now(timezone.utc) - timedelta(days=7), datetime.now(timezone.utc)),
+        max_value=datetime.now(timezone.utc)
     )
     
     source_filter = st.multiselect(
@@ -202,7 +202,7 @@ if page == "Dashboard":
         """.format(digest_count), unsafe_allow_html=True)
     
     # LLM spend metric
-    month_str = datetime.utcnow().strftime("%Y-%m")
+    month_str = datetime.now(timezone.utc).strftime("%Y-%m")
     usage = get_month_usage(month_str)
     spend = usage.cost_usd if usage else 0.0
     
@@ -319,47 +319,34 @@ if page == "Dashboard":
     st.markdown('</div>', unsafe_allow_html=True)
 
 elif page == "Live Feed":
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 class="gradient-text">📡 Live Feed</h1>
-        <p style="color: #888; font-size: 18px;">Real-time crypto content and market updates</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Live feed implementation
-    st.info("Live feed functionality coming soon...")
+    # Import and run the live feed page
+    import pages.Live_Feed as live_feed_page
+    live_feed_page.main()
 
 elif page == "Analytics":
     # Import and run the analytics page
-    import dashboard.pages.Analytics as analytics_page
+    import pages.Analytics as analytics_page
     analytics_page.main()
 
 elif page == "Health Monitor":
     # Import and run the health monitor page
-    import dashboard.pages.Health_Monitor as health_page
+    import pages.Health_Monitor as health_page
     health_page.main()
 
 elif page == "Digests":
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 class="gradient-text">📋 Digests</h1>
-        <p style="color: #888; font-size: 18px;">Generated reports and summaries</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Digests implementation
-    st.info("Digest management coming soon...")
+    # Import and run the digests page
+    import pages.Digests as digests_page
+    digests_page.main()
+
+elif page == "Digest Archive":
+    # Import the digest archive functionality
+    import pages.Digest_Archive as digest_archive_page
+    digest_archive_page.main()
 
 elif page == "Sources":
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 class="gradient-text">🔗 Data Sources</h1>
-        <p style="color: #888; font-size: 18px;">Manage and monitor data sources</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Sources implementation
-    st.info("Source management coming soon...")
+    # Import and run the sources page
+    import pages.Sources as sources_page
+    sources_page.main()
 
 # Footer
 st.markdown("""
@@ -368,4 +355,13 @@ st.markdown("""
         🚀 Degen Digest v2.0 | Powered by AI | Real-time Crypto Intelligence
     </p>
 </div>
-""", unsafe_allow_html=True) 
+""", unsafe_allow_html=True)
+
+def main():
+    """Main function to run the Streamlit app"""
+    # The app code is already structured to run when imported
+    # This function is for compatibility
+    pass
+
+if __name__ == "__main__":
+    main() 

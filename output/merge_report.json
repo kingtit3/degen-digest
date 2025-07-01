@@ -1,0 +1,22 @@
+{
+  "merge_timestamp": "2025-06-30T15:57:22.046352",
+  "local_data": {
+    "Tweet": 0,
+    "RedditPost": 20,
+    "Digest": 0,
+    "LLMUsage": 0,
+    "TweetMetrics": 0,
+    "twitter_raw.json": "8.54 MB",
+    "reddit_raw.json": "0.05 MB",
+    "telegram_raw.json": "0.41 MB",
+    "newsapi_raw.json": "0.04 MB",
+    "coingecko_raw.json": "0.00 MB",
+    "consolidated_data.json": "9.73 MB"
+  },
+  "cloud_data": {},
+  "merge_summary": {},
+  "recommendations": [
+    "Low tweet count - consider running Twitter scraper",
+    "Low Reddit post count - consider running Reddit scraper"
+  ]
+}
