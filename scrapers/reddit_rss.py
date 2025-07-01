@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import feedparser
 import json
 import logging
@@ -8,6 +12,7 @@ from utils.advanced_logging import get_logger
 from storage.db import add_reddit_posts
 import asyncio
 import httpx
+from dateutil import parser as dateparser
 
 logger = get_logger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -33,32 +38,46 @@ REDDIT_FEEDS = [
     "https://www.reddit.com/r/cryptotrading/new/.rss",
     "https://www.reddit.com/r/cryptosignals/new/.rss",
     "https://www.reddit.com/r/cryptomemes/new/.rss",
-    "https://www.reddit.com/r/cryptocurrencynews/new/.rss",
-    "https://www.reddit.com/r/cryptocurrencytrading/new/.rss",
-    "https://www.reddit.com/r/cryptocurrencyinvesting/new/.rss",
 ]
 
 
 async def parse_reddit_feed_async(url: str, keyword_filters: List[str]) -> List[Dict]:
     """Fetch RSS feed and filter entries by keywords (async)."""
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(url, timeout=30)
-        resp.raise_for_status()
-    feed = feedparser.parse(resp.content)
-    entries = []
-    for item in feed.entries:
-        title = item.get("title", "")
-        summary = item.get("summary", "")
-        content = f"{title} {summary}".lower()
-        if any(k.lower() in content for k in keyword_filters):
-            entries.append({
-                "title": title,
-                "link": item.get("link"),
-                "published": item.get("published"),
-                "summary": summary,
-                "subreddit": url.split("/")[4] if "/r/" in url else None,
-            })
-    return entries
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url, timeout=30)
+            resp.raise_for_status()
+        feed = feedparser.parse(resp.content)
+        entries = []
+        for item in feed.entries:
+            title = item.get("title", "")
+            summary = item.get("summary", "")
+            content = f"{title} {summary}".lower()
+            if any(k.lower() in content for k in keyword_filters):
+                # Parse published date to datetime
+                published_str = item.get("published")
+                published_dt = None
+                if published_str:
+                    try:
+                        published_dt = dateparser.parse(published_str)
+                        if published_dt.tzinfo is None:
+                            from datetime import timezone
+                            published_dt = published_dt.replace(tzinfo=timezone.utc)
+                        else:
+                            published_dt = published_dt.astimezone(dateparser.tz.UTC)
+                    except Exception:
+                        published_dt = None
+                entries.append({
+                    "title": title,
+                    "link": item.get("link"),
+                    "published": published_dt,
+                    "summary": summary,
+                    "subreddit": url.split("/")[4] if "/r/" in url else None,
+                })
+        return entries
+    except Exception as e:
+        logger.warning(f"Failed to fetch {url}: {e}")
+        return []
 
 
 def scrape_reddit(keyword_filters: List[str]):

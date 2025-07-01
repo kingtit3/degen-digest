@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlmodel import SQLModel, create_engine, Field, Session, select
 from utils.advanced_logging import get_logger
+from dateutil import parser as dateparser
 
 logger = get_logger(__name__)
 
@@ -127,13 +128,19 @@ def add_reddit_posts(posts: List[dict]):
         pid = p.get("link")
         if not pid:
             continue
+        created_at = p.get("published")
+        if isinstance(created_at, str):
+            try:
+                created_at = dateparser.parse(created_at)
+            except Exception:
+                created_at = None
         objs.append(
             RedditPost(
                 id=pid,
                 title=p.get("title", ""),
                 link=pid,
                 subreddit=p.get("subreddit"),
-                created_at=p.get("published"),
+                created_at=created_at,
             )
         )
     with Session(engine) as session:
