@@ -1,0 +1,80 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: requirements-txt-fixer
+
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: [--line-length=88]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=88]
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.1.11
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-PyYAML]
+        args: [--ignore-missing-imports]
+
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: [-r, ., -f, json, -o, bandit-report.json]
+        exclude: ^tests/
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.0
+    hooks:
+      - id: pyupgrade
+        args: [--py312-plus]
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types_or: [javascript, jsx, ts, tsx, json, css, scss, html, yaml, yml, markdown, md]
+
+  - repo: local
+    hooks:
+      - id: check-env-file
+        name: Check .env file
+        entry: bash -c 'if [ -f .env ]; then echo "Warning: .env file detected. Make sure it is not committed."; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: check-secrets
+        name: Check for secrets in code
+        entry: bash -c 'if grep -r "sk-|api_key|password|secret" . --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=.venv --exclude=*.pyc | grep -v ".env.example" | grep -v "CHANGELOG.md" | grep -v "README.md"; then echo "Potential secrets found in code!"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: validate-requirements
+        name: Validate requirements.txt
+        entry: bash -c 'pip check -r requirements.txt'
+        language: system
+        pass_filenames: false
+        stages: [manual]

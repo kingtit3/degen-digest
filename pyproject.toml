@@ -1,0 +1,207 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "degen-digest"
+version = "2.0.0"
+description = "AI-powered crypto market intelligence platform"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Degen Digest Team", email = "team@degendigest.com"}
+]
+maintainers = [
+    {name = "Degen Digest Team", email = "team@degendigest.com"}
+]
+keywords = ["crypto", "ai", "market-intelligence", "blockchain", "trading"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit>=1.28.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "requests>=2.31.0",
+    "httpx>=0.24.0",
+    "python-dotenv>=1.0.0",
+    "sqlmodel>=0.0.8",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.19.0",
+    "humanize>=4.8.0",
+    "scikit-learn>=1.3.0",
+    "joblib>=1.3.0",
+    "textblob>=0.17.1",
+    "nltk>=3.8.1",
+    "emoji>=2.8.0",
+    "xgboost>=1.7.0",
+    "lightgbm>=4.0.0",
+    "plotly>=5.15.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "feedparser>=6.0.10",
+    "telethon>=1.28.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=4.9.0",
+    "reportlab>=4.0.0",
+    "PyPDF2>=3.0.0",
+    "notion-client>=2.0.0",
+    "structlog>=23.1.0",
+    "aiohttp>=3.8.0",
+    "asyncio-mqtt>=0.13.0",
+    "nest-asyncio>=1.5.0",
+    "python-dateutil>=2.8.2",
+    "pytz>=2023.3",
+    "pypandoc>=1.12",
+    "streamlit-autorefresh>=0.0.2",
+    "psutil>=5.9.0",
+    "pyyaml>=6.0",
+    "asyncio-throttle>=1.0.0",
+    "rich>=13.7.0",
+    "google-cloud-storage>=3.1.1",
+    "google-auth>=2.40.3",
+    "google-api-core>=2.25.1",
+    "Pillow>=10.0.0",
+    "altair>=5.0.0",
+    "openai>=1.0.0",
+    "anthropic>=0.7.0",
+    "google-generativeai>=0.3.0",
+    "vaderSentiment==3.3.2",
+    "transformers>=4.30.0",
+    "torch>=2.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "selenium>=4.15.0",
+    "webdriver-manager>=4.0.0",
+    "discord.py>=2.3.0",
+    "weasyprint>=60.0",
+    "tqdm>=4.65.0",
+    "click>=8.1.0",
+    "colorama>=0.4.6",
+    "google-cloud-functions>=1.8.0",
+    "google-cloud-scheduler>=2.8.0",
+    "functions-framework>=3.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-httpx>=0.30.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "black>=23.7.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
+    "ruff>=0.1.0",
+]
+dashboard = [
+    "streamlit>=1.28.0",
+    "streamlit-autorefresh>=0.0.2",
+]
+cloud = [
+    "google-cloud-storage>=3.1.1",
+    "google-cloud-functions>=1.8.0",
+    "google-cloud-scheduler>=2.8.0",
+    "functions-framework>=3.4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/degen-digest"
+Documentation = "https://github.com/yourusername/degen-digest#readme"
+Repository = "https://github.com/yourusername/degen-digest"
+Issues = "https://github.com/yourusername/degen-digest/issues"
+Changelog = "https://github.com/yourusername/degen-digest/blob/main/CHANGELOG.md"
+
+[project.scripts]
+degen-digest = "main:main"
+degen-dashboard = "dashboard.app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = ["tests*", "docs*", "scripts*", "output*", "logs*", ".venv*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.json", "*.md"]
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["degen_digest"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/output/*",
+    "*/logs/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+] 
