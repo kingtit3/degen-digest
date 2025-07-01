@@ -35,13 +35,13 @@ class Tweet(SQLModel, table=True):
 
 class RedditPost(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    post_id: str = Field(unique=True, index=True)
+    post_id: Optional[str] = Field(default=None, unique=True, index=True)
     title: str
-    author: str
-    subreddit: str
-    score: int
-    num_comments: int
-    created_at: datetime
+    author: Optional[str] = Field(default=None)
+    subreddit: Optional[str] = Field(default=None)
+    score: Optional[int] = Field(default=None)
+    num_comments: Optional[int] = Field(default=None)
+    created_at: Optional[datetime] = Field(default=None)
     link: str
     scraped_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
