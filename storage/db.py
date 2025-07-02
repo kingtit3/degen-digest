@@ -3,13 +3,13 @@
 Provides Tweet, RedditPost, Digest models and helper insert/query functions.
 """
 
-from pathlib import Path
-from typing import List, Optional
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
-from sqlmodel import SQLModel, create_engine, Field, Session, select
-from utils.advanced_logging import get_logger
 from dateutil import parser as dateparser
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+
+from utils.advanced_logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -20,7 +20,7 @@ engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 
 
 class Tweet(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     tweet_id: str = Field(unique=True, index=True)
     full_text: str
     user_screen_name: str
@@ -29,38 +29,38 @@ class Tweet(SQLModel, table=True):
     like_count: int
     retweet_count: int
     reply_count: int
-    view_count: Optional[int] = Field(default=None)
-    quote_count: Optional[int] = Field(default=None)
-    bookmark_count: Optional[int] = Field(default=None)
-    created_at: Optional[datetime] = Field(default=None)
+    view_count: int | None = Field(default=None)
+    quote_count: int | None = Field(default=None)
+    bookmark_count: int | None = Field(default=None)
+    created_at: datetime | None = Field(default=None)
     scraped_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class RedditPost(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    post_id: Optional[str] = Field(default=None, unique=True, index=True)
+    id: int | None = Field(default=None, primary_key=True)
+    post_id: str | None = Field(default=None, unique=True, index=True)
     title: str
-    author: Optional[str] = Field(default=None)
-    subreddit: Optional[str] = Field(default=None)
-    score: Optional[int] = Field(default=None)
-    num_comments: Optional[int] = Field(default=None)
-    created_at: Optional[datetime] = Field(default=None)
+    author: str | None = Field(default=None)
+    subreddit: str | None = Field(default=None)
+    score: int | None = Field(default=None)
+    num_comments: int | None = Field(default=None)
+    created_at: datetime | None = Field(default=None)
     link: str
     scraped_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class Digest(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     digest_id: str = Field(unique=True, index=True)
     content: str
     summary: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    file_path: Optional[str] = None
+    file_path: str | None = None
 
 
 # Track monthly LLM token usage
 class LLMUsage(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     month: str = Field(index=True)
     model: str
     tokens_used: int
@@ -86,7 +86,73 @@ SQLModel.metadata.create_all(engine)
 
 # Helper API -----------------------------------------------------
 
-def add_tweets(tweets: List[dict]):
+
+def _parse_tweet_date(date_str: str) -> datetime | None:
+    """Parse tweet date from various formats"""
+    if not date_str:
+        return None
+
+    try:
+        # Try ISO format first
+        if "T" in date_str and ("Z" in date_str or "+" in date_str):
+            return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+
+        # Try parsing with dateutil
+        try:
+            import dateutil.parser
+
+            return dateutil.parser.parse(date_str)
+        except ImportError:
+            # Fallback to manual parsing for common Twitter format
+            import re
+
+            # Parse format like "Tue Jul 01 23:13:29 +0000 2025"
+            pattern = r"(\w{3})\s+(\w{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})\s+([+-]\d{4})\s+(\d{4})"
+            match = re.match(pattern, date_str)
+            if match:
+                (
+                    day_name,
+                    month_name,
+                    day,
+                    hour,
+                    minute,
+                    second,
+                    tz_offset,
+                    year,
+                ) = match.groups()
+                # Convert to datetime (simplified - assumes UTC)
+                from datetime import datetime, timezone
+
+                return datetime(
+                    int(year),
+                    {
+                        "Jan": 1,
+                        "Feb": 2,
+                        "Mar": 3,
+                        "Apr": 4,
+                        "May": 5,
+                        "Jun": 6,
+                        "Jul": 7,
+                        "Aug": 8,
+                        "Sep": 9,
+                        "Oct": 10,
+                        "Nov": 11,
+                        "Dec": 12,
+                    }[month_name],
+                    int(day),
+                    int(hour),
+                    int(minute),
+                    int(second),
+                    tzinfo=timezone.utc,
+                )
+            return None
+
+    except Exception as e:
+        logger.warning(f"Failed to parse tweet date '{date_str}': {e}")
+        return None
+
+
+def add_tweets(tweets: list[dict]):
     if not tweets:
         return
     objs: list[Tweet] = []
@@ -107,13 +173,17 @@ def add_tweets(tweets: List[dict]):
                 view_count=t.get("viewCount"),
                 quote_count=t.get("quoteCount"),
                 bookmark_count=t.get("bookmarkCount"),
-                created_at=datetime.fromisoformat(t.get("createdAt").replace('Z', '+00:00')) if t.get("createdAt") else None,
+                created_at=_parse_tweet_date(t.get("createdAt"))
+                if t.get("createdAt")
+                else None,
             )
         )
     with Session(engine) as session:
         for obj in objs:
             # Check if tweet already exists by tweet_id
-            existing = session.exec(select(Tweet).where(Tweet.tweet_id == obj.tweet_id)).first()
+            existing = session.exec(
+                select(Tweet).where(Tweet.tweet_id == obj.tweet_id)
+            ).first()
             if existing:
                 continue
             session.add(obj)
@@ -122,7 +192,7 @@ def add_tweets(tweets: List[dict]):
         logger.info("tweets stored", count=len(objs))
 
 
-def add_reddit_posts(posts: List[dict]):
+def add_reddit_posts(posts: list[dict]):
     if not posts:
         return
     objs = []
@@ -148,7 +218,9 @@ def add_reddit_posts(posts: List[dict]):
     with Session(engine) as session:
         for obj in objs:
             # Check if post already exists by post_id
-            existing = session.exec(select(RedditPost).where(RedditPost.post_id == obj.post_id)).first()
+            existing = session.exec(
+                select(RedditPost).where(RedditPost.post_id == obj.post_id)
+            ).first()
             if existing:
                 continue
             session.add(obj)
@@ -157,10 +229,12 @@ def add_reddit_posts(posts: List[dict]):
         logger.info("reddit posts stored", count=len(objs))
 
 
-def record_digest(date_str: str, md_path: Path, pdf_path: Optional[Path] = None):
+def record_digest(date_str: str, md_path: Path, pdf_path: Path | None = None):
     with Session(engine) as session:
         # Check if digest already exists by digest_id
-        existing = session.exec(select(Digest).where(Digest.digest_id == date_str)).first()
+        existing = session.exec(
+            select(Digest).where(Digest.digest_id == date_str)
+        ).first()
         if existing:
             logger.info("Digest for %s already recorded", date_str)
             return
@@ -186,13 +260,18 @@ def stats():
 
 # LLM usage helpers ---------------------------------------------------
 
+
 def add_llm_tokens(tokens: int, cost: float, model: str = "default"):
     month = datetime.now(timezone.utc).strftime("%Y-%m")
     with Session(engine) as session:
         # Check if usage record exists for this month and model
-        existing = session.exec(select(LLMUsage).where(LLMUsage.month == month, LLMUsage.model == model)).first()
+        existing = session.exec(
+            select(LLMUsage).where(LLMUsage.month == month, LLMUsage.model == model)
+        ).first()
         if existing is None:
-            usage = LLMUsage(month=month, model=model, tokens_used=tokens, cost_usd=cost)
+            usage = LLMUsage(
+                month=month, model=model, tokens_used=tokens, cost_usd=cost
+            )
             session.add(usage)
         else:
             existing.tokens_used += tokens
@@ -203,12 +282,15 @@ def add_llm_tokens(tokens: int, cost: float, model: str = "default"):
 
 def get_month_usage(month: str, model: str = "default"):
     with Session(engine) as session:
-        return session.exec(select(LLMUsage).where(LLMUsage.month == month, LLMUsage.model == model)).first()
+        return session.exec(
+            select(LLMUsage).where(LLMUsage.month == month, LLMUsage.model == model)
+        ).first()
 
 
 # ---------------------------------------------------------------------------
 # Helpers for metrics refresh
 # ---------------------------------------------------------------------------
+
 
 def recent_tweet_ids(hours: int = 2) -> list[str]:
     """Return tweet IDs scraped within the last *hours*."""

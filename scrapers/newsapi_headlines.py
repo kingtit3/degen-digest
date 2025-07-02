@@ -1,14 +1,17 @@
 import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict
 
 import requests
 from dotenv import load_dotenv
 
-from utils.logger import setup_logging
 from utils.advanced_logging import get_logger
+from utils.logger import setup_logging
 
 # DB insertion optional – only if table/model exists. Import guarded.
 try:
@@ -18,7 +21,9 @@ except ImportError:
 
 load_dotenv()
 
-NEWSAPI_KEY = os.getenv("NEWSAPI_KEY") or os.getenv("NEWSAPI_API_KEY") or os.getenv("NEWSAPI")
+NEWSAPI_KEY = (
+    os.getenv("NEWSAPI_KEY") or os.getenv("NEWSAPI_API_KEY") or os.getenv("NEWSAPI")
+)
 
 logger = get_logger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -37,7 +42,7 @@ PARAMS = {
 }
 
 
-def fetch_headlines() -> List[Dict]:
+def fetch_headlines() -> list[dict]:
     if not NEWSAPI_KEY:
         raise ValueError("NEWSAPI_KEY not set in environment (.env)")
 
@@ -49,15 +54,17 @@ def fetch_headlines() -> List[Dict]:
     if data.get("status") != "ok":
         raise RuntimeError(f"NewsAPI error: {data}")
 
-    items: List[Dict] = []
+    items: list[dict] = []
     for art in data.get("articles", []):
-        items.append({
-            "title": art.get("title"),
-            "summary": art.get("description") or "",  # "summary" for downstream
-            "published": art.get("publishedAt"),
-            "link": art.get("url"),
-            "source": art.get("source", {}).get("name"),
-        })
+        items.append(
+            {
+                "title": art.get("title"),
+                "summary": art.get("description") or "",  # "summary" for downstream
+                "published": art.get("publishedAt"),
+                "link": art.get("url"),
+                "source": art.get("source", {}).get("name"),
+            }
+        )
     logger.info("newsapi items", count=len(items))
     return items
 
@@ -78,4 +85,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

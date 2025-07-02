@@ -1,67 +1,35 @@
 #!/bin/bash
 
-# Deploy Cloud Function with full codebase
-echo "🚀 Deploying Cloud Function with full codebase..."
+# Deploy updated cloud function
+echo "🚀 Deploying updated cloud function..."
 
-# Set project
+# Set project and region
 PROJECT_ID="lucky-union-463615-t3"
 REGION="us-central1"
-FUNCTION_NAME="farmchecker-data-refresh"
 
-# Create a temporary directory for deployment
-TEMP_DIR=$(mktemp -d)
-echo "📁 Created temp directory: $TEMP_DIR"
+# Deploy the function
+cd cloud_function
 
-# Copy the entire codebase to temp directory
-echo "📋 Copying codebase..."
-cp -r . "$TEMP_DIR/"
-cd "$TEMP_DIR"
+echo "📦 Deploying cloud function..."
+gcloud functions deploy refresh_data \
+  --runtime python311 \
+  --trigger-http \
+  --allow-unauthenticated \
+  --memory 2GB \
+  --timeout 540s \
+  --source . \
+  --project $PROJECT_ID \
+  --region $REGION
 
-# Remove unnecessary files for cloud function
-echo "🧹 Cleaning up unnecessary files..."
-rm -rf .git
-rm -rf logs/*
-rm -rf output/*
-rm -rf __pycache__
-rm -rf */__pycache__
-rm -rf .streamlit
-rm -rf degen_digest.session
+if [ $? -eq 0 ]; then
+    echo "✅ Cloud function deployed successfully!"
+    echo "🌐 Function URL: https://${REGION}-${PROJECT_ID}.cloudfunctions.net/refresh_data"
+else
+    echo "❌ Cloud function deployment failed!"
+    exit 1
+fi
 
-# Create a .gcloudignore file
-echo "📝 Creating .gcloudignore..."
-cat > .gcloudignore << EOF
-.git
-.gitignore
-logs/
-output/
-__pycache__/
-*.session
-.streamlit/
-*.log
-*.db
-*.sqlite
-*.pdf
-*.md
-EOF
-
-# Deploy the cloud function
-echo "🚀 Deploying cloud function..."
-gcloud functions deploy "$FUNCTION_NAME" \
-    --gen2 \
-    --runtime=python311 \
-    --region="$REGION" \
-    --source=. \
-    --entry-point=refresh_data \
-    --trigger-http \
-    --allow-unauthenticated \
-    --memory=4GB \
-    --timeout=540s \
-    --set-env-vars="LOG_EXECUTION_ID=true"
-
-# Clean up
-echo "🧹 Cleaning up..."
 cd ..
-rm -rf "$TEMP_DIR"
 
-echo "✅ Cloud function deployment completed!"
-echo "🌐 Function URL: https://$REGION-$PROJECT_ID.cloudfunctions.net/$FUNCTION_NAME" 
+echo "🎉 Deployment complete!"
+echo "💡 You can now run: python manual_data_refresh.py"

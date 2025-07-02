@@ -1,21 +1,28 @@
 import os
-from typing import List, Dict, Any
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import hashlib
+import json
 import logging
-from utils.logger import setup_logging
-from utils.advanced_logging import get_logger
-from storage.db import add_tweets
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
-import hashlib
-import json
-from pathlib import Path
-from datetime import datetime, timedelta
+
+from storage.db import add_tweets
+from utils.advanced_logging import get_logger
+from utils.logger import setup_logging
 
 load_dotenv()
 
 APIFY_API_TOKEN = os.getenv("APIFY_API_TOKEN")
-APIFY_TWEET_SCRAPER_ACTOR = "kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest"
+APIFY_TWEET_SCRAPER_ACTOR = (
+    "kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest"
+)
 
 logger = get_logger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -28,16 +35,25 @@ setup_logging()
 CACHE_FILE = Path("output/apify_cache.json")
 
 
-def _cache_key(accounts: List[str], search_terms: List[str], max_tweets: int, min_likes: int, min_retweets: int) -> str:
+def _cache_key(
+    accounts: list[str],
+    search_terms: list[str],
+    max_tweets: int,
+    min_likes: int,
+    min_retweets: int,
+) -> str:
     """Return an md5 hash that uniquely represents the scraper parameters."""
     h = hashlib.md5()
-    payload = json.dumps({
-        "accounts": sorted(accounts),
-        "keywords": sorted(search_terms),
-        "max": max_tweets,
-        "likes": min_likes,
-        "rts": min_retweets,
-    }, sort_keys=True).encode()
+    payload = json.dumps(
+        {
+            "accounts": sorted(accounts),
+            "keywords": sorted(search_terms),
+            "max": max_tweets,
+            "likes": min_likes,
+            "rts": min_retweets,
+        },
+        sort_keys=True,
+    ).encode()
     h.update(payload)
     return h.hexdigest()
 
@@ -55,8 +71,14 @@ def _save_cache(cache: dict):
     CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
     CACHE_FILE.write_text(json.dumps(cache, indent=2))
 
-def run_tweet_scraper(accounts: List[str], search_terms: List[str], max_tweets: int = 200,
-                      min_likes: int = 50, min_retweets: int = 20) -> List[Dict[str, Any]]:
+
+def run_tweet_scraper(
+    accounts: list[str],
+    search_terms: list[str],
+    max_tweets: int = 200,
+    min_likes: int = 50,
+    min_retweets: int = 20,
+) -> list[dict[str, Any]]:
     """Run Apify Twitter tweet scraper.
 
     Args:
@@ -98,8 +120,14 @@ def run_tweet_scraper(accounts: List[str], search_terms: List[str], max_tweets: 
         if datetime.utcnow() - ts < timedelta(hours=2):  # still fresh
             dataset_id = cached_entry["dataset_id"]
             logger.info("Using cached Apify dataset", dataset_id=dataset_id)
-            dataset_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items?format=json"
-            dataset_resp = httpx.get(dataset_url, headers={"Authorization": f"Bearer {APIFY_API_TOKEN}"}, timeout=60)
+            dataset_url = (
+                f"https://api.apify.com/v2/datasets/{dataset_id}/items?format=json"
+            )
+            dataset_resp = httpx.get(
+                dataset_url,
+                headers={"Authorization": f"Bearer {APIFY_API_TOKEN}"},
+                timeout=60,
+            )
             dataset_resp.raise_for_status()
             tweets = dataset_resp.json()
             logger.info("tweets retrieved (cached)", count=len(tweets))
@@ -110,7 +138,10 @@ def run_tweet_scraper(accounts: List[str], search_terms: List[str], max_tweets: 
 
     # Create actor run (token in Authorization header)
     url = f"https://api.apify.com/v2/acts/{APIFY_TWEET_SCRAPER_ACTOR}/runs"
-    headers = {"Authorization": f"Bearer {APIFY_API_TOKEN}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {APIFY_API_TOKEN}",
+        "Content-Type": "application/json",
+    }
     response = httpx.post(url, json=input_payload, headers=headers, timeout=60)
     response.raise_for_status()
     run_info = response.json()
@@ -127,6 +158,7 @@ def run_tweet_scraper(accounts: List[str], search_terms: List[str], max_tweets: 
             break
         logger.debug("apify run poll", run_id=run_id, status=status)
         import time
+
         time.sleep(10)
 
     if status != "SUCCEEDED":
@@ -157,7 +189,9 @@ def main():
     influencers = json.loads(Path("config/influencers.json").read_text())
     keywords = json.loads(Path("config/keywords.json").read_text())
 
-    tweets = run_tweet_scraper(accounts=influencers, search_terms=keywords["twitter_search"], max_tweets=200)
+    tweets = run_tweet_scraper(
+        accounts=influencers, search_terms=keywords["twitter_search"], max_tweets=200
+    )
     out_path = Path("output/twitter_raw.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(tweets, indent=2))
@@ -165,4 +199,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
