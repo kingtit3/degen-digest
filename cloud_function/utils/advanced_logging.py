@@ -25,13 +25,14 @@ from __future__ import annotations
 import logging
 import os
 import sys
-from typing import Any, Dict
-import json
 import time
 import traceback
+import types
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
+from typing import Any, Dict
+from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Optional structlog import.  If the dependency isn't available (e.g. in a
@@ -39,10 +40,10 @@ from pathlib import Path
 # not crash with ``ModuleNotFoundError``.
 # ---------------------------------------------------------------------------
 
-import sys, types, logging
 
 try:
     import structlog  # type: ignore
+
     _STRUCTLOG_AVAILABLE = True
 except ModuleNotFoundError:  # pragma: no cover
     # ------------------------------------------------------------------
@@ -83,7 +84,9 @@ if _STRUCTLOG_AVAILABLE:
     # Public helpers
     # ---------------------------------------------------------------------------
 
-    def configure_logging(*, json: bool | None = None, level: str | int = "INFO") -> None:
+    def configure_logging(
+        *, json: bool | None = None, level: str | int = "INFO"
+    ) -> None:
         """Configure structlog + stdlib logging.
 
         Args:
@@ -97,7 +100,10 @@ if _STRUCTLOG_AVAILABLE:
         # Decide on output format
         # ------------------------------------------------------------------
         if json is None:
-            json = os.getenv("LOG_FORMAT", "console").lower() == "json" or not sys.stdout.isatty()
+            json = (
+                os.getenv("LOG_FORMAT", "console").lower() == "json"
+                or not sys.stdout.isatty()
+            )
 
         timestamper = structlog.processors.TimeStamper(fmt="iso", utc=True)
 
@@ -113,17 +119,17 @@ if _STRUCTLOG_AVAILABLE:
         else:
             try:
                 from rich.console import Console
-                from rich.syntax import Syntax
-                from rich.traceback import Traceback
 
                 console = Console(force_terminal=True, color_system="auto")
 
-                def _rich_renderer(_: str, __: str, event_dict: Dict[str, Any]) -> str:  # type: ignore[override]
+                def _rich_renderer(_: str, __: str, event_dict: dict[str, Any]) -> str:  # type: ignore[override]
                     level = event_dict.pop("level", "info").upper()
                     ts = event_dict.pop("timestamp", "-")
                     msg = event_dict.pop("event", "")
                     rest = " ".join(f"{k}={v!r}" for k, v in event_dict.items())
-                    console.print(f"[bold cyan]{ts}[/] | [bold]{level:<8}[/] | {msg} {rest}")
+                    console.print(
+                        f"[bold cyan]{ts}[/] | [bold]{level:<8}[/] | {msg} {rest}"
+                    )
                     return ""
 
                 renderer = _rich_renderer  # type: ignore[assignment]
@@ -137,7 +143,9 @@ if _STRUCTLOG_AVAILABLE:
                 structlog.processors.UnicodeDecoder(),
                 renderer,
             ],
-            wrapper_class=structlog.make_filtering_bound_logger(getattr(logging, str(level).upper(), level)),
+            wrapper_class=structlog.make_filtering_bound_logger(
+                getattr(logging, str(level).upper(), level)
+            ),
             logger_factory=structlog.PrintLoggerFactory(),
             cache_logger_on_first_use=True,
         )
@@ -149,6 +157,7 @@ if _STRUCTLOG_AVAILABLE:
         """Return a structlog logger bound with module name."""
         return structlog.get_logger(name=name)
 
+
 # ---------------------------------------------------------------------------
 # Fallback implementation when structlog is absent
 # ---------------------------------------------------------------------------
@@ -158,7 +167,9 @@ if not _STRUCTLOG_AVAILABLE:
     # Public helpers
     # ---------------------------------------------------------------------------
 
-    def configure_logging(*, json: bool | None = None, level: str | int = "INFO") -> None:  # type: ignore[override]
+    def configure_logging(
+        *, json: bool | None = None, level: str | int = "INFO"
+    ) -> None:  # type: ignore[override]
         """Fallback basicConfig when structlog is absent."""
 
         logging.basicConfig(
@@ -172,46 +183,46 @@ if not _STRUCTLOG_AVAILABLE:
 
         return logging.getLogger(name)
 
+
 def setup_logging(level: str = "INFO", log_file: str = "logs/degen_digest.log"):
     """Setup comprehensive logging for the entire application"""
-    
+
     # Create logs directory
     Path("logs").mkdir(exist_ok=True)
-    
+
     # Configure root logger
     logging.basicConfig(
         level=getattr(logging, level.upper()),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler(sys.stdout)
-        ]
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(log_file), logging.StreamHandler(sys.stdout)],
     )
-    
+
     # Set specific loggers
     loggers_to_configure = [
-        'storage.db',
-        'processor.scorer',
-        'processor.classifier',
-        'processor.summarizer',
-        'processor.viral_predictor',
-        'processor.content_clustering',
-        'scrapers',
-        'utils',
-        'dashboard',
-        'cloud_function'
+        "storage.db",
+        "processor.scorer",
+        "processor.classifier",
+        "processor.summarizer",
+        "processor.viral_predictor",
+        "processor.content_clustering",
+        "scrapers",
+        "utils",
+        "dashboard",
+        "cloud_function",
     ]
-    
+
     for logger_name in loggers_to_configure:
         logger = logging.getLogger(logger_name)
         logger.setLevel(getattr(logging, level.upper()))
 
+
 def log_function_call(func: Callable) -> Callable:
     """Decorator to log function calls with parameters and timing"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         logger = get_logger(func.__module__)
-        
+
         # Log function entry
         start_time = time.time()
         logger.info(
@@ -220,12 +231,12 @@ def log_function_call(func: Callable) -> Callable:
             module=func.__module__,
             args_count=len(args),
             kwargs_keys=list(kwargs.keys()),
-            timestamp=datetime.now(timezone.utc).isoformat()
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
-        
+
         try:
             result = func(*args, **kwargs)
-            
+
             # Log successful completion
             execution_time = time.time() - start_time
             logger.info(
@@ -233,11 +244,11 @@ def log_function_call(func: Callable) -> Callable:
                 function_name=func.__name__,
                 execution_time_seconds=execution_time,
                 result_type=type(result).__name__,
-                timestamp=datetime.now(timezone.utc).isoformat()
+                timestamp=datetime.now(timezone.utc).isoformat(),
             )
-            
+
             return result
-            
+
         except Exception as e:
             # Log error with full context
             execution_time = time.time() - start_time
@@ -248,30 +259,32 @@ def log_function_call(func: Callable) -> Callable:
                 error_message=str(e),
                 execution_time_seconds=execution_time,
                 traceback=traceback.format_exc(),
-                timestamp=datetime.now(timezone.utc).isoformat()
+                timestamp=datetime.now(timezone.utc).isoformat(),
             )
             raise
-    
+
     return wrapper
+
 
 def log_database_operation(operation: str):
     """Decorator to log database operations"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             logger = get_logger("storage.db")
-            
+
             start_time = time.time()
             logger.info(
                 "database_operation_start",
                 operation=operation,
                 function_name=func.__name__,
-                timestamp=datetime.now(timezone.utc).isoformat()
+                timestamp=datetime.now(timezone.utc).isoformat(),
             )
-            
+
             try:
                 result = func(*args, **kwargs)
-                
+
                 execution_time = time.time() - start_time
                 logger.info(
                     "database_operation_success",
@@ -279,11 +292,11 @@ def log_database_operation(operation: str):
                     function_name=func.__name__,
                     execution_time_seconds=execution_time,
                     result_type=type(result).__name__,
-                    timestamp=datetime.now(timezone.utc).isoformat()
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 execution_time = time.time() - start_time
                 logger.error(
@@ -294,32 +307,35 @@ def log_database_operation(operation: str):
                     error_message=str(e),
                     execution_time_seconds=execution_time,
                     traceback=traceback.format_exc(),
-                    timestamp=datetime.now(timezone.utc).isoformat()
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
                 raise
-        
+
         return wrapper
+
     return decorator
+
 
 def log_api_call(api_name: str, endpoint: str = None):
     """Decorator to log API calls"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             logger = get_logger("api")
-            
+
             start_time = time.time()
             logger.info(
                 "api_call_start",
                 api_name=api_name,
                 endpoint=endpoint,
                 function_name=func.__name__,
-                timestamp=datetime.now(timezone.utc).isoformat()
+                timestamp=datetime.now(timezone.utc).isoformat(),
             )
-            
+
             try:
                 result = func(*args, **kwargs)
-                
+
                 execution_time = time.time() - start_time
                 logger.info(
                     "api_call_success",
@@ -328,11 +344,11 @@ def log_api_call(api_name: str, endpoint: str = None):
                     function_name=func.__name__,
                     execution_time_seconds=execution_time,
                     result_type=type(result).__name__,
-                    timestamp=datetime.now(timezone.utc).isoformat()
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 execution_time = time.time() - start_time
                 logger.error(
@@ -344,42 +360,45 @@ def log_api_call(api_name: str, endpoint: str = None):
                     error_message=str(e),
                     execution_time_seconds=execution_time,
                     traceback=traceback.format_exc(),
-                    timestamp=datetime.now(timezone.utc).isoformat()
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
                 raise
-        
+
         return wrapper
+
     return decorator
+
 
 def log_cloud_function_execution(function_name: str):
     """Decorator to log cloud function executions"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             logger = get_logger("cloud_function")
-            
+
             start_time = time.time()
             logger.info(
                 "cloud_function_start",
                 function_name=function_name,
                 execution_id=os.environ.get("K_REVISION", "unknown"),
-                timestamp=datetime.now(timezone.utc).isoformat()
+                timestamp=datetime.now(timezone.utc).isoformat(),
             )
-            
+
             try:
                 result = func(*args, **kwargs)
-                
+
                 execution_time = time.time() - start_time
                 logger.info(
                     "cloud_function_success",
                     function_name=function_name,
                     execution_time_seconds=execution_time,
                     result_type=type(result).__name__,
-                    timestamp=datetime.now(timezone.utc).isoformat()
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 execution_time = time.time() - start_time
                 logger.error(
@@ -389,12 +408,14 @@ def log_cloud_function_execution(function_name: str):
                     error_message=str(e),
                     execution_time_seconds=execution_time,
                     traceback=traceback.format_exc(),
-                    timestamp=datetime.now(timezone.utc).isoformat()
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
                 raise
-        
+
         return wrapper
+
     return decorator
+
 
 def log_performance_metrics(operation: str, **metrics):
     """Log performance metrics"""
@@ -403,10 +424,11 @@ def log_performance_metrics(operation: str, **metrics):
         "performance_metrics",
         operation=operation,
         metrics=metrics,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
-def log_system_health(component: str, status: str, details: Dict[str, Any] = None):
+
+def log_system_health(component: str, status: str, details: dict[str, Any] = None):
     """Log system health status"""
     logger = get_logger("health")
     logger.info(
@@ -414,10 +436,11 @@ def log_system_health(component: str, status: str, details: Dict[str, Any] = Non
         component=component,
         status=status,
         details=details or {},
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
-def log_data_quality_issue(issue_type: str, severity: str, details: Dict[str, Any]):
+
+def log_data_quality_issue(issue_type: str, severity: str, details: dict[str, Any]):
     """Log data quality issues"""
     logger = get_logger("data_quality")
     logger.warning(
@@ -425,10 +448,11 @@ def log_data_quality_issue(issue_type: str, severity: str, details: Dict[str, An
         issue_type=issue_type,
         severity=severity,
         details=details,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
-def log_security_event(event_type: str, severity: str, details: Dict[str, Any]):
+
+def log_security_event(event_type: str, severity: str, details: dict[str, Any]):
     """Log security events"""
     logger = get_logger("security")
     logger.warning(
@@ -436,31 +460,33 @@ def log_security_event(event_type: str, severity: str, details: Dict[str, Any]):
         event_type=event_type,
         severity=severity,
         details=details,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
-def log_business_event(event_type: str, details: Dict[str, Any]):
+
+def log_business_event(event_type: str, details: dict[str, Any]):
     """Log business events"""
     logger = get_logger("business")
     logger.info(
         "business_event",
         event_type=event_type,
         details=details,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
+
 
 # Export for use in other modules
 __all__ = [
-    'setup_logging',
-    'get_logger',
-    'log_function_call',
-    'log_database_operation',
-    'log_api_call',
-    'log_cloud_function_execution',
-    'log_performance_metrics',
-    'log_system_health',
-    'log_data_quality_issue',
-    'log_security_event',
-    'log_business_event',
-    '_STRUCTLOG_AVAILABLE'
-] 
+    "setup_logging",
+    "get_logger",
+    "log_function_call",
+    "log_database_operation",
+    "log_api_call",
+    "log_cloud_function_execution",
+    "log_performance_metrics",
+    "log_system_health",
+    "log_data_quality_issue",
+    "log_security_event",
+    "log_business_event",
+    "_STRUCTLOG_AVAILABLE",
+]

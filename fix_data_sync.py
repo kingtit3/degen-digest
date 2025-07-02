@@ -285,7 +285,7 @@ def main():
     run_local_scrapers()
 
     # Step 4: Try cloud function
-    cloud_data = trigger_cloud_function()
+    trigger_cloud_function()
 
     # Step 5: Generate digest locally
     if not generate_local_digest():

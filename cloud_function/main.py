@@ -537,7 +537,7 @@ def refresh_data(request):
             logger.info("Digest generated successfully")
 
         # Step 5: Save data
-        temp_dir = save_data(processed_data, digest_content)
+        save_data(processed_data, digest_content)
 
         # Step 6: Prepare response
         total_time = time.time() - start_time

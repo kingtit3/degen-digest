@@ -7,7 +7,7 @@ event coming from this process can be correlated end-to-end.
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from dotenv import load_dotenv
 
@@ -554,7 +554,6 @@ def build_digest(processed_items):
     md += "## 💡 **What This Means for You**\n\n"
 
     # Generate actionable insights
-    insights = []
 
     # Price movements (if available)
     try:
