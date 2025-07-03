@@ -8,6 +8,7 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+from typing import Any
 
 from flask import Flask, jsonify
 
@@ -23,7 +24,7 @@ crawler_running = False
 crawler_thread = None
 
 
-def run_crawler():
+def run_crawler() -> None:
     """Run the continuous crawler in a separate thread"""
     global crawler_process, crawler_running
 
@@ -93,7 +94,7 @@ def run_crawler():
 
 
 @app.route("/")
-def health_check():
+def health_check() -> Any:
     """Health check endpoint"""
     return jsonify(
         {
@@ -105,28 +106,26 @@ def health_check():
 
 
 @app.route("/start", methods=["POST"])
-def start_crawler():
+def start_crawler() -> Any:
     """Start the crawler"""
     global crawler_thread, crawler_running
 
     if crawler_running:
-        return jsonify(
-            {"status": "already_running", "message": "Crawler is already running"}
-        )
+        return jsonify({"status": "running", "message": "Crawler is already running"})
 
     crawler_thread = threading.Thread(target=run_crawler, daemon=True)
     crawler_thread.start()
 
-    return jsonify({"status": "started", "message": "Crawler started successfully"})
+    return jsonify({"status": "running", "message": "Crawler started successfully"})
 
 
 @app.route("/stop", methods=["POST"])
-def stop_crawler():
+def stop_crawler() -> Any:
     """Stop the crawler"""
     global crawler_process, crawler_running
 
     if not crawler_running or not crawler_process:
-        return jsonify({"status": "not_running", "message": "Crawler is not running"})
+        return jsonify({"status": "stopped", "message": "Crawler is not running"})
 
     try:
         crawler_process.terminate()
@@ -136,16 +135,24 @@ def stop_crawler():
     except subprocess.TimeoutExpired:
         crawler_process.kill()
         crawler_running = False
-        return jsonify({"status": "force_stopped", "message": "Crawler force stopped"})
+        return jsonify({"status": "stopped", "message": "Crawler force stopped"})
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error stopping crawler: {e}"})
 
 
 @app.route("/status")
-def get_status():
+def get_status() -> Any:
     """Get crawler status"""
+    if crawler_running and crawler_process and crawler_process.poll() is None:
+        status = "running"
+    elif crawler_process and crawler_process.returncode is not None:
+        status = "stopped"
+    else:
+        status = "stopped"
+
     return jsonify(
         {
+            "status": status,
             "crawler_running": crawler_running,
             "crawler_pid": crawler_process.pid if crawler_process else None,
             "crawler_returncode": crawler_process.returncode
