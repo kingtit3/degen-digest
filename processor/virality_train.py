@@ -1,14 +1,13 @@
-import json, math
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 
 import numpy as np
-from sklearn.ensemble import GradientBoostingRegressor
 from joblib import dump
-
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from sklearn.ensemble import GradientBoostingRegressor
 from sqlmodel import Session, select
-from storage.db import engine, Tweet, TweetMetrics
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+from storage.db import Tweet, TweetMetrics, engine
 from utils.advanced_logging import get_logger
 
 logger = get_logger(__name__)
@@ -17,6 +16,7 @@ MODEL_PATH = Path("models/virality_gb.joblib")
 MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 analyzer = SentimentIntensityAnalyzer()
+
 
 def build_dataset():
     X, y = [], []
@@ -46,13 +46,14 @@ def build_dataset():
                 tw.like_count or 0,
                 tw.retweet_count or 0,
                 tw.reply_count or 0,
-                (first.like_count - (tw.like_count or 0)) or 0,  # growth likes (target alt?)
+                (first.like_count - (tw.like_count or 0))
+                or 0,  # growth likes (target alt?)
                 len(text),
                 text.count("🚀") + text.count("moon"),
                 analyzer.polarity_scores(text)["compound"],
             ]
             growth = first.like_count - (tw.like_count or 0)
-            if growth <0:
+            if growth < 0:
                 continue
             X.append(feat)
             y.append(growth)
@@ -69,5 +70,6 @@ def main():
     dump(model, MODEL_PATH)
     logger.info("virality model trained", samples=len(X), path=str(MODEL_PATH))
 
+
 if __name__ == "__main__":
-    main() 
+    main()

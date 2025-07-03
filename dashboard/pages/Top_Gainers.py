@@ -1,12 +1,14 @@
 import sys
 from pathlib import Path
+
 root = Path(__file__).resolve().parents[2]
 if str(root) not in sys.path:
     sys.path.append(str(root))
 
-import streamlit as st
 import json
-import humanize
+
+import streamlit as st
+
 from utils.advanced_logging import get_logger
 
 logger = get_logger(__name__)
@@ -41,8 +43,8 @@ for itm in data[:20]:
     table["Symbol"].append(sym)
     table["Name"].append(itm["summary"].split()[0])
     price_part = itm["summary"].split("$")[-1].split()[0]
-    table["Price $"] .append(price_part)
+    table["Price $"].append(price_part)
     table["% 24h"].append(pct.replace("+", ""))
     table["Link"].append(itm["link"])
 
-st.table(table) 
+st.table(table)

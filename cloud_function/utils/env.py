@@ -3,14 +3,13 @@
 Provides typed access to environment variables loaded via python-dotenv (already called in various modules).
 """
 
-import os
-from typing import Optional
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
 
-def get(key: str, default: Optional[str] = None, *, required: bool = False) -> Optional[str]:
+def get(key: str, default: str | None = None, *, required: bool = False) -> str | None:
     """Return env var or default.
 
     Args:
@@ -27,4 +26,4 @@ def get(key: str, default: Optional[str] = None, *, required: bool = False) -> O
 def require(keys: list[str]):
     """Ensure a list of keys are present, raising if any missing."""
     for k in keys:
-        get(k, required=True) 
+        get(k, required=True)

@@ -1,6 +1,6 @@
 # 🚀 Degen Digest - Your Daily Crypto Intelligence
 
-**Date:** July 02, 2025 | **What's Hot in Crypto Today**
+**Date:** July 03, 2025 | **What's Hot in Crypto Today**
 
 ---
 
@@ -12,9 +12,9 @@ Here's what's shaking up the crypto world today - we've got some interesting dev
 
 ## 🔥 **Today's Hottest Stories**
 
-**⚠️ Risk Alert:** It's official. $LAIKA has officially passed up $BLAZE
+**⚠️ Risk Alert:** "Yappers who don't yap a project post TGE are bad"
 
-**🚀 Opportunity:** Excited to see what happens with this new MEME coin $BILLIONS.
+**🚀 Opportunity:** These faggot kols sell you new "narratives" they bundled everyday and can't trade for shit
 
 **📊 Overall Mood:** The crypto community is feeling optimistic and bullish today
 
@@ -27,154 +27,130 @@ Here's what's shaking up the crypto world today - we've got some interesting dev
 
 ### 📊 **What We're Seeing Today**
 
-**Market Activity:** 🔥 Super Active - We analyzed 2,622 stories from across the crypto space
+**Market Activity:** 😴 Quiet - We analyzed 17 stories from across the crypto space
 
 **Engagement Levels:**
-- Highest scoring story: 100.0/100
-- Average engagement: 21.7/100
+- Highest scoring story: 20.0/100
+- Average engagement: 17.4/100
 
-**Where the Action Is:** Most engagement is coming from 🔥 solana meme token content
+**Where the Action Is:** Most engagement is coming from 🔷 ethereum update content
 
-**Trending Topics:** Don’t look at the $MASK market cap. Just..., It's official. $LAIKA has officially pas..., 💸 Splitting 1 SOL between 4 winners in t...
+**Trending Topics:** ETH is a really bad stablecoin chain., Automated crypto portfolios >>>>>>>, "Yappers who don't yap a project post TG...
 
 ### 🎯 **Content Creator Insights**
 
-**Best Performing Content:** 🔥 Solana Meme Token is getting the most love today
+**Best Performing Content:** 🔷 Ethereum Update is getting the most love today
 
-**Engagement Sweet Spot:** Stories scoring above 31.7 are performing well
+**Engagement Sweet Spot:** Stories scoring above 27.4 are performing well
 
-**Source Breakdown:** twitter (1653), telegram (969)
+**Source Breakdown:** twitter (17)
 
-**Pro Tip:** Focus on 🔥 solana meme token content for maximum reach today
+**Pro Tip:** Focus on 🔷 ethereum update content for maximum reach today
 
 
 ---
 
 ## 📰 **Deep Dive: Today's Top Stories**
 
-### 🌞 **Solana Spotlight** (Solana Ecosystem & Tokens)
-
-**1. Don’t look at the $MASK market cap. Just get in early. It’s better to be early than wait for a certain market cap entry in this one. It’s rug free.**
-
-Here's what's happening: @thecatwifmask
-https://t.co/TXwDiGUvMG https://t.co/XK1gChZdbU
-
-*Engagement: ❤️ 28 likes | 🔄 11 shares | 💬 4 comments | 👁️ 157 views | 🔥 Viral (100.0/100)*
-
----
-
-**2. It's official. $LAIKA has officially passed up $BLAZE**
-
-Here's what's happening:
-LOL I am having so much fun with this talking shit but I legit feel bad to everyone who top blasted @blazedogbase and sold good projects to chase a rug.
-
-There shouldn't be room for rugs on @base, but we all have to DYOR and be careful.
-
-As I said idk if @youpbl will go up, down, or sideways but I do think the team is here for the right reasons.
-
-Join the AMA tonight to give me your opinion!
-
-*Engagement: ❤️ 20 likes | 🔄 11 shares | 💬 12 comments | 👁️ 266 views | 🔥 Viral (100.0/100)*
-
----
-
-**3. 💸 Splitting 1 SOL between 4 winners in the next 24 hours!**
-
-Here's what's happening: To enter:
-1️⃣ Follow @TrollianSol
-2️⃣ Repost this tweet
-
-Winners picked at random — don’t miss out ⚡️
-
-#Solana #CryptoGiveaway #Airdrop #SOL #GiveawayAlert #Web3
-
-*Engagement: ❤️ 31 likes | 🔄 26 shares | 💬 26 comments | 👁️ 129 views | 🔥 Viral (100.0/100)*
-
----
-
-**4. i felt like today was a good day to degen a little and find new plays since sol was bouncing nicely but turns out i might have walked myself into some shitty trades.**
-
-Here's what's happening:
-gonna take a LONG nap.
-
-unstable coin looking good here though... nothing ever wrong with swapping all of it into quality.
-
-*Engagement: ❤️ 41 likes | 🔄 1 shares | 💬 35 comments | 👁️ 3,033 views | 🔥 Viral (100.0/100)*
-
----
-
-**5. $TRUMP PUMP & DUMP 🚨: Don't Be A Bagholder!**
-
-Here's what's happening:
-Normies rekt on $TRUMP? 🤣 Classic exit liquidity. Skip the rug, build with @campnetworkxyz. Earn tokens, not tears. Wen moon? 🚀🌕 #memecoins #crypto #degen
-
-*Engagement: ❤️ 60 likes | 🔄 1 shares | 💬 60 comments | 👁️ 573 views | 🔥 Viral (100.0/100)*
-
----
-
-**6. @SolportTom hearing things**
-
-Here's what's happening:
-big if true
-
-*Engagement: ❤️ 26 likes | 💬 8 comments | 👁️ 878 views | 🔥 Viral (88.0/100)*
-
----
-
 ### 🔥 **The Big Stories** (Everyone's Talking About)
 
-**1. 🚨**SAHIL'S RUG PULL RAIN!** 💀🧵**
+**1. "Yappers who don't yap a project post TGE are bad"**
 
 Here's what's happening:
-2021: FDO token pumped by SouljaBoy = 🔥🗑️. ZelaaPayAE & Zeela NFT also 📉📉📉. Users rekt! Stay safe out there, fren. DYOR! 🤡
+I think this is a terrible take and metric
 
-*Engagement: ❤️ 67 likes | 🔄 2 shares | 💬 1 comments | 👁️ 30,187 views | 🔥 Viral (100.0/100)*
+What if a project:
+- rugs
+- suddenly goes silent
+- avoids or mistreats the community
+
+Then its more than fair to mute and block them post TGE, regardless of what rewards you got
+
+You
+
+*Engagement: 📊 Score: 20.0/100*
 
 ---
 
 ### 🚀 **New Opportunities** (Projects & Launches)
 
-**1. Excited to see what happens with this new MEME coin $BILLIONS.**
+**1. These faggot kols sell you new "narratives" they bundled everyday and can't trade for shit  **
 
 Here's what's happening:
-The crypto space is a lot more fun when MEME coins are making moves.
+I'd rather lose millions on perps than move like these cuntbags
 
-Will tariff man see the billions? #BILLIONS #tariffman #ad
-
-*Engagement: ❤️ 17 likes | 🔄 17 shares | 💬 18 comments | 👁️ 681 views | 🔥 Viral (100.0/100)*
+*Engagement: 📊 Score: 20.0/100*
 
 ---
 
-**2. 2026: Peak Euphoria = Exit Liquidity. 🤡**
+**2. Being kind is FREE**
 
 Here's what's happening:
-$242k BTC?! Celeb shitcoins mooning?! Taxi drivers shilling?! 🚩 U remember Terra, FTX, 3AC? This ain't lambo time, it's dump time. Stay rekt or stay BASED. Choose wisely. 😎
+Help others and smile more
 
-*Engagement: ❤️ 52 likes | 🔄 6 shares | 💬 9 comments | 👁️ 2,049 views | 🔥 Viral (100.0/100)*
+Spread love unconditionally
+
+*Engagement: 📊 Score: 5.0/100*
 
 ---
 
 ### 💬 **Community Vibes** (What People Are Saying)
 
-**1. **Revolut: Moar Fiat Grabs!** 💸**
+**1. ETH is a really bad stablecoin chain.**
 
-Here's what's happening: Degens still holding fiat? 🤡 Revolut gives u extra % back to gamble with. NFA, but maybe consider DCA'ing into $SHIB instead? 🤔🚀
+Here's what's happening:
+@PlasmaFDN
+ will disrupt it
 
-*Engagement: ❤️ 227 likes | 🔄 11 shares | 👁️ 19,629,547 views | 🔥 Viral (100.0/100)*
-
----
-
-**2. **GM SER, NEED THAT ALPHA RN!** ☀️🌧️❄️**
-
-Here's what's happening: Bagging tendies depends on the WX. Is your weather app based? 🤡 Or are you gonna get rekt by the forecast? 🤔
-
-*Engagement: ❤️ 214 likes | 🔄 13 shares | 💬 4 comments | 👁️ 1,664,236 views | 🔥 Viral (100.0/100)*
+*Engagement: 📊 Score: 20.0/100*
 
 ---
 
-**3. When the thermometer explodes, instant weather alerts keep you cool and informed.🌡️**
+**2. Automated crypto portfolios >>>>>>>**
 
-*Engagement: ❤️ 34 likes | 🔄 1 shares | 💬 4 comments | 👁️ 1,869,470 views | 🔥 Viral (92.0/100)*
+Here's what's happening:
+DTFs built on Reserve work 24/7 in the background — no stress, no manual trades, just silent, smooth diversification
+
+Diversify & chill at https://app.reserve.org/?twclid=21y4qyq5bbfhhfxaqkpi35xtee
+
+*Engagement: 📊 Score: 20.0/100*
+
+---
+
+**3. One day at a time.**
+
+*Engagement: 📊 Score: 20.0/100*
+
+---
+
+**4. Scaling your startup is great, but it's also where most fail.**
+
+Here's what's happening:
+They die from growing into chaos.
+
+- Standardize systems early
+- Automate the boring stuff
+- Obsess over feedback from day 1
+- Think like a builder, not a firefighter
+
+Your systems will either make you or kill you.
+
+*Engagement: 📊 Score: 20.0/100*
+
+---
+
+**5. Legit all you have to is take $100 and hit a 100x to make your first million **
+
+Here's what's happening:
+It’s not that hard
+
+*Engagement: 📊 Score: 20.0/100*
+
+---
+
+**6. There’s a fair chance of BTC ATH today**
+
+*Engagement: 📊 Score: 20.0/100*
 
 ---
 
@@ -182,29 +158,80 @@ Here's what's happening: Bagging tendies depends on the WX. Is your weather app 
 
 ### 🎯 **Content Creation Opportunities**
 
-**🔥 Viral Topic:** Don’t look at the $MASK market cap. Just get in early. It’s better to be early than wait for a certain market cap entry in this one. It’s rug free.
-
-**Content Ideas:**
-• Create a deep dive video on this topic
-• Make a reaction video to the community response
-• Write a thread explaining the implications
-• Host a Twitter Space discussion
-
-**🌞 Solana Focus:** 6 Solana stories featured today
-
-**🌞 Solana Sentiment:** Mixed signals in Solana ecosystem
-
 **📈 General Market Sentiment:** Bullish vibes today - focus on opportunities and positive developments
 
 ---
 
 ## 📋 **About This Report**
 
-**Generated:** 2025-07-02 16:55:49 UTC
+**Generated:** 2025-07-03 09:14:55 UTC
 
 **Data Sources:** Twitter, Reddit, Telegram, NewsAPI, CoinGecko
 
 **Analysis Method:** AI-powered content analysis with engagement scoring
+
+---
+
+## 🎬 **Daily Degen Digest Script Template**
+
+Here's a daily script generation template for Daily Degen Digest — designed to give you a fast, repeatable way to plug in new data each day and generate short-form video scripts that hit hard and stay on brand:
+
+⸻
+
+🧠 **Daily Degen Digest Script Template**
+
+⏱ **Target Length:** ~60–90 seconds
+📆 **Use:** Reusable daily for your crypto Solana video content
+
+⸻
+
+🎬 **Prompt Template (for AI or manual scripting):**
+
+**Prompt:**
+Write a 60–90 second script for a short-form video episode of "Daily Degen Digest", a fast-paced Solana-focused series.
+
+The tone should be casual, sharp, and crypto-native — filled with memes, slang, and sarcasm, like a Twitter degen giving the daily rundown.
+
+Include the following sections:
+
+⸻
+
+**1. Cold Open / Hook (1–2 lines):**
+Grab attention fast with something wild, funny, or stats-based.
+
+**2. Top 3 Memecoin Movers (3–4 sentences):**
+For each coin, give the name, % change, market cap, and vibe.
+Optional: Mention a tweet, community reaction, or rug warning.
+Example format:
+
+*"$PEEPORUG did a 45x from 3k to 140k before dumping harder than SBF's PR team. Classic."*
+
+**3. Launch Radar (1–2 new tokens):**
+Mention new launches from Pump.fun or LetsBonk.fun.
+Call out launch speed, wallet count, or any signs of going viral.
+
+**4. Solana Ecosystem Update (1 highlight):**
+Cover any dev news, dapp/tool releases, partnerships, or weird events.
+Keep it snappy — you're talking to degens, not VCs.
+
+**5. Outro Call-to-Action:**
+Sign off in-character with a strong closer.
+
+*"That's your hit of hopium for today — like, follow, and stay wrecked."*
+
+⸻
+
+✅ **Example Inputs**
+- **Top movers:**
+  - $RIBBIT: +230%, 9k mcap
+  - $FUDGOD: +120%, rugged at 20k
+  - $JANKDOG: +80%, still climbing
+- **New launches:** $LICKCOIN, $420WAGMI
+- **Ecosystem news:** Phantom adds multi-wallet drag feature
+
+⸻
+
+*Let me know if you want a version that pulls real data from your Cabal ECA Alerts bot or Twitter scrapers — I can auto-fill this daily.*
 
 ---
 

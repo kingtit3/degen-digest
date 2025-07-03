@@ -1,0 +1,23 @@
+[Unit]
+Description=DegenDigest Solana Twitter Crawler
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=king
+WorkingDirectory=/Users/king/DegenDigest
+ExecStart=/Users/king/DegenDigest/start_continuous_crawler.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+Environment=PYTHONPATH=/Users/king/DegenDigest
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,367 +1,736 @@
-import sys
-from pathlib import Path
-# Ensure project root is on PYTHONPATH when Streamlit launches from inside dashboard/
-root_path = Path(__file__).resolve().parents[1]
-if str(root_path) not in sys.path:
-    sys.path.append(str(root_path))
-
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta, timezone
 import json
-from storage.db import engine, Tweet, RedditPost, Digest, get_month_usage, LLMUsage
-from sqlmodel import Session, select, func
-from sqlalchemy import desc, and_
-import humanize
-from utils.health_monitor import health_monitor
-from utils.advanced_logging import get_logger
+import time
+from pathlib import Path
 
-logger = get_logger(__name__)
+import pandas as pd
+import plotly.express as px
+import requests
+import streamlit as st
 
-# Page configuration with modern theme
+# Google Cloud Storage imports
+try:
+    from google.cloud import storage
+    from google.cloud.exceptions import NotFound
+
+    GCS_AVAILABLE = True
+except ImportError:
+    GCS_AVAILABLE = False
+    print(
+        "Warning: Google Cloud Storage not available. Install with: pip install google-cloud-storage"
+    )
+
+# Page config
 st.set_page_config(
-    page_title="Degen Digest - Crypto Intelligence Hub",
+    page_title="Degen Digest - Crypto Intelligence",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed",
 )
 
-# Custom CSS for futuristic design
-st.markdown("""
+# Custom CSS for clean design
+st.markdown(
+    """
 <style>
-    /* Modern futuristic theme */
-    .main {
-        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-        color: #ffffff;
+    .main-header {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+        color: white;
     }
-    
-    .stApp {
-        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-    }
-    
-    /* Custom metric cards */
+
     .metric-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+        margin: 0.5rem 0;
     }
-    
-    /* Gradient text */
-    .gradient-text {
-        background: linear-gradient(45deg, #00d4ff, #ff6b6b, #4ecdc4);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+
+    .metric-value {
+        font-size: 2rem;
         font-weight: bold;
+        color: #667eea;
     }
-    
-    /* Animated cards */
-    .animated-card {
+
+    .metric-label {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .digest-container {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+
+    .tweet-card {
+        background: white;
+        border: 1px solid #e1e8ed;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         transition: all 0.3s ease;
     }
-    
-    .animated-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+
+    .tweet-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
     }
-    
-    /* Custom sidebar */
-    .css-1d391kg {
-        background: rgba(15, 15, 35, 0.9);
+
+    .engagement-stats {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #666;
     }
-    
-    /* Data table styling */
-    .dataframe {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border-radius: 10px !important;
+
+    .engagement-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
     }
-    
-    .dataframe th {
-        background: rgba(0, 212, 255, 0.2) !important;
-        color: #00d4ff !important;
-        font-weight: bold !important;
+
+    .viral-badge {
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
     }
-    
-    .dataframe td {
-        color: #ffffff !important;
+
+    .stButton > button {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
     }
-    
-    /* Chart containers */
-    .chart-container {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 15px;
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .tab-container {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .crawler-status {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .crawler-controls {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+
+    .log-entry {
+        background: #f8f9fa;
+        border-left: 3px solid #667eea;
+        padding: 0.5rem;
+        margin: 0.25rem 0;
+        font-family: monospace;
+        font-size: 0.9rem;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-# Sidebar configuration
-with st.sidebar:
-    st.markdown("""
-    <div style="text-align: center; padding: 20px 0;">
-        <h1 class="gradient-text">🚀 Degen Digest</h1>
-        <p style="color: #888; font-size: 14px;">Crypto Intelligence Hub</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Navigation
-    st.markdown("### 📊 Navigation")
-    page = st.selectbox(
-        "Choose a page:",
-        ["Dashboard", "Live Feed", "Analytics", "Health Monitor", "Digests", "Digest Archive", "Sources"],
-        label_visibility="collapsed"
-    )
-    
-    # Filters
-    st.markdown("### 🔍 Filters")
-    date_range = st.date_input(
-        "Date Range",
-        value=(datetime.now(timezone.utc) - timedelta(days=7), datetime.now(timezone.utc)),
-        max_value=datetime.now(timezone.utc)
-    )
-    
-    source_filter = st.multiselect(
-        "Data Sources",
-        ["Twitter", "Reddit", "Telegram", "NewsAPI", "CoinGecko"],
-        default=["Twitter", "Reddit"]
-    )
-    
-    # Sort options
-    st.markdown("### 📈 Sort Options")
-    sort_by = st.selectbox(
-        "Sort by",
-        ["Engagement Score", "Date", "Source", "Viral Prediction"]
-    )
-    
-    # Display options
-    st.markdown("### ⚙️ Display")
-    show_duplicates = st.checkbox("Show Duplicates", value=False)
-    items_per_page = st.slider("Items per page", 10, 100, 25)
 
-# Main content based on selected page
-if page == "Dashboard":
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 class="gradient-text">🚀 Degen Digest Dashboard</h1>
-        <p style="color: #888; font-size: 18px;">Real-time crypto intelligence and market insights</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Key metrics row
-    with Session(engine) as sess:
-        tweet_count = sess.exec(select(func.count()).select_from(Tweet)).one()
-        reddit_count = sess.exec(select(func.count()).select_from(RedditPost)).one()
-        digest_count = sess.exec(select(func.count()).select_from(Digest)).one()
-        
-        # Get recent activity
-        recent_tweets = sess.exec(
-            select(Tweet).order_by(desc(Tweet.created_at)).limit(1)
-        ).first()
-        
-        # Calculate engagement metrics
-        avg_engagement = sess.exec(
-            select(func.avg(Tweet.like_count + Tweet.retweet_count * 2 + Tweet.reply_count * 3))
-        ).one() or 0
+def get_latest_digest():
+    """Get the latest digest content"""
+    output_dir = Path("output")
 
-    # Metrics cards with modern design
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown("""
-        <div class="metric-card animated-card">
-            <h3 style="color: #00d4ff; margin: 0;">📊 Total Data</h3>
-            <h2 style="color: #ffffff; margin: 10px 0;">{:,}</h2>
-            <p style="color: #888; margin: 0;">Tweets & Posts</p>
-        </div>
-        """.format(tweet_count + reddit_count), unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="metric-card animated-card">
-            <h3 style="color: #ff6b6b; margin: 0;">📈 Engagement</h3>
-            <h2 style="color: #ffffff; margin: 10px 0;">{:.0f}</h2>
-            <p style="color: #888; margin: 0;">Avg Engagement</p>
-        </div>
-        """.format(avg_engagement), unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div class="metric-card animated-card">
-            <h3 style="color: #4ecdc4; margin: 0;">📋 Digests</h3>
-            <h2 style="color: #ffffff; margin: 10px 0;">{}</h2>
-            <p style="color: #888; margin: 0;">Generated Reports</p>
-        </div>
-        """.format(digest_count), unsafe_allow_html=True)
-    
-    # LLM spend metric
-    month_str = datetime.now(timezone.utc).strftime("%Y-%m")
-    usage = get_month_usage(month_str)
-    spend = usage.cost_usd if usage else 0.0
-    
-    with col4:
-        st.markdown("""
-        <div class="metric-card animated-card">
-            <h3 style="color: #f39c12; margin: 0;">💰 LLM Cost</h3>
-            <h2 style="color: #ffffff; margin: 10px 0;">${:.2f}</h2>
-            <p style="color: #888; margin: 0;">This Month</p>
-        </div>
-        """.format(spend), unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Charts section
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("📊 Data Source Distribution")
-        
-        # Create pie chart for data sources
-        source_data = {
-            'Twitter': tweet_count,
-            'Reddit': reddit_count,
-            'Telegram': 0,  # Add actual count when available
-            'NewsAPI': 0,   # Add actual count when available
-        }
-        
-        fig = px.pie(
-            values=list(source_data.values()),
-            names=list(source_data.keys()),
-            color_discrete_sequence=['#00d4ff', '#ff6b6b', '#4ecdc4', '#f39c12']
+    # Look for the most recent digest file
+    digest_files = list(output_dir.glob("digest*.md"))
+    if not digest_files:
+        return None, "No digest found"
+
+    latest_digest = max(digest_files, key=lambda x: x.stat().st_mtime)
+
+    try:
+        with open(latest_digest, encoding="utf-8") as f:
+            content = f.read()
+        return content, latest_digest.name
+    except Exception as e:
+        return None, f"Error reading {latest_digest.name}: {str(e)}"
+
+
+def get_raw_data():
+    """Get raw data for analytics and trending content from both local and GCS"""
+    output_dir = Path("output")
+    data = {}
+
+    # Load different data sources
+    sources = [
+        "twitter_raw.json",
+        "reddit_raw.json",
+        "telegram_raw.json",
+        "newsapi_raw.json",
+    ]
+
+    # Try to load from Google Cloud Storage first
+    if GCS_AVAILABLE:
+        try:
+            client = storage.Client(project="lucky-union-463615-t3")
+            bucket = client.bucket("degen-digest-data")
+
+            for source in sources:
+                cloud_path = f"data/{source}"
+                blob = bucket.blob(cloud_path)
+
+                if blob.exists():
+                    try:
+                        # Download to memory and parse
+                        content = blob.download_as_text()
+                        data[source.replace("_raw.json", "")] = json.loads(content)
+                        st.sidebar.success(f"✅ Loaded {source} from GCS")
+                    except Exception as e:
+                        st.sidebar.warning(f"⚠️ Error loading {source} from GCS: {e}")
+                        data[source.replace("_raw.json", "")] = []
+                else:
+                    data[source.replace("_raw.json", "")] = []
+
+        except Exception as e:
+            st.sidebar.warning(f"⚠️ GCS not available: {e}")
+            # Fall back to local files
+
+    # Fall back to local files if GCS failed or not available
+    for source in sources:
+        if (
+            source.replace("_raw.json", "") not in data
+            or not data[source.replace("_raw.json", "")]
+        ):
+            file_path = output_dir / source
+            if file_path.exists():
+                try:
+                    with open(file_path, encoding="utf-8") as f:
+                        data[source.replace("_raw.json", "")] = json.load(f)
+                except:
+                    data[source.replace("_raw.json", "")] = []
+            else:
+                data[source.replace("_raw.json", "")] = []
+
+    return data
+
+
+def generate_fresh_digest():
+    """Generate a fresh digest"""
+    try:
+        # Import and run main digest generation
+        from main import main as run_digest
+
+        run_digest()
+        return True, "Digest generated successfully!"
+    except Exception as e:
+        return False, f"Error generating digest: {str(e)}"
+
+
+def create_analytics_charts(data):
+    """Create analytics charts"""
+    charts = {}
+
+    # Source distribution
+    source_counts = {}
+    for source, items in data.items():
+        if isinstance(items, list):
+            source_counts[source.title()] = len(items)
+
+    if source_counts:
+        fig_source = px.pie(
+            values=list(source_counts.values()),
+            names=list(source_counts.keys()),
+            title="Data Source Distribution",
+            color_discrete_sequence=px.colors.qualitative.Set3,
         )
-        fig.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white'),
-            showlegend=True
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("📈 Engagement Trends")
-        
-        # Get engagement data over time
-        with Session(engine) as sess:
-            engagement_data = sess.exec(
-                select(
-                    Tweet.created_at,
-                    func.sum(Tweet.like_count + Tweet.retweet_count * 2 + Tweet.reply_count * 3).label('engagement')
-                )
-                .group_by(func.date(Tweet.created_at))
-                .order_by(func.date(Tweet.created_at))
-                .limit(30)
-            ).all()
-        
-        if engagement_data:
-            dates = [str(row[0].date()) for row in engagement_data]
-            engagement = [row[1] for row in engagement_data]
-            
-            fig = px.line(
-                x=dates,
-                y=engagement,
-                title="Daily Engagement",
-                color_discrete_sequence=['#00d4ff']
+        fig_source.update_layout(height=400)
+        charts["source_distribution"] = fig_source
+
+    # Engagement analysis (if available)
+    all_items = []
+    for source, items in data.items():
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict):
+                    item["source"] = source
+                    all_items.append(item)
+
+    if all_items:
+        # Engagement scores
+        engagement_scores = [
+            item.get("engagement_score", 0)
+            for item in all_items
+            if item.get("engagement_score")
+        ]
+        if engagement_scores:
+            fig_engagement = px.histogram(
+                x=engagement_scores,
+                title="Engagement Score Distribution",
+                nbins=20,
+                color_discrete_sequence=["#667eea"],
             )
-            fig.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                xaxis=dict(gridcolor='rgba(255,255,255,0.1)'),
-                yaxis=dict(gridcolor='rgba(255,255,255,0.1)')
+            fig_engagement.update_layout(
+                height=400, xaxis_title="Engagement Score", yaxis_title="Count"
             )
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("No engagement data available yet")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Recent activity section
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.subheader("🕒 Recent Activity")
-    
-    # Get recent tweets with engagement
-    with Session(engine) as sess:
-        recent_activity = sess.exec(
-            select(Tweet)
-            .order_by(desc(Tweet.created_at))
-            .limit(10)
-        ).all()
-    
-    if recent_activity:
-        activity_data = []
-        for tweet in recent_activity:
-            engagement = (tweet.like_count or 0) + (tweet.retweet_count or 0) * 2 + (tweet.reply_count or 0) * 3
-            activity_data.append({
-                'Content': tweet.full_text[:100] + "..." if len(tweet.full_text) > 100 else tweet.full_text,
-                'Engagement': engagement,
-                'Likes': tweet.like_count or 0,
-                'Retweets': tweet.retweet_count or 0,
-                'Replies': tweet.reply_count or 0,
-                'Date': tweet.created_at.strftime("%Y-%m-%d %H:%M")
-            })
-        
-        df = pd.DataFrame(activity_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
-    else:
-        st.info("No recent activity available")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+            charts["engagement_distribution"] = fig_engagement
 
-elif page == "Live Feed":
-    # Import and run the live feed page
-    import pages.Live_Feed as live_feed_page
-    live_feed_page.main()
+    return charts
 
-elif page == "Analytics":
-    # Import and run the analytics page
-    import pages.Analytics as analytics_page
-    analytics_page.main()
 
-elif page == "Health Monitor":
-    # Import and run the health monitor page
-    import pages.Health_Monitor as health_page
-    health_page.main()
+def get_trending_content(data, limit=20):
+    """Get trending content in Twitter-style format"""
+    trending = []
 
-elif page == "Digests":
-    # Import and run the digests page
-    import pages.Digests as digests_page
-    digests_page.main()
+    for source, items in data.items():
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict):
+                    # Extract relevant information
+                    text = item.get("text", item.get("title", item.get("content", "")))
+                    if text:
+                        trending.append(
+                            {
+                                "source": source,
+                                "text": text[:200] + "..." if len(text) > 200 else text,
+                                "engagement_score": item.get("engagement_score", 0),
+                                "like_count": item.get(
+                                    "likeCount", item.get("score", 0)
+                                ),
+                                "timestamp": item.get(
+                                    "created_at", item.get("timestamp", "")
+                                ),
+                                "author": item.get("user", {}).get(
+                                    "screen_name", item.get("author", "Unknown")
+                                ),
+                                "url": item.get("url", ""),
+                                "sentiment": item.get("sentiment", {}).get(
+                                    "compound", 0
+                                ),
+                            }
+                        )
 
-elif page == "Digest Archive":
-    # Import the digest archive functionality
-    import pages.Digest_Archive as digest_archive_page
-    digest_archive_page.main()
+    # Sort by engagement score
+    trending.sort(key=lambda x: x["engagement_score"], reverse=True)
+    return trending[:limit]
 
-elif page == "Sources":
-    # Import and run the sources page
-    import pages.Sources as sources_page
-    sources_page.main()
-
-# Footer
-st.markdown("""
-<div style="text-align: center; margin-top: 50px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-    <p style="color: #888; font-size: 12px;">
-        🚀 Degen Digest v2.0 | Powered by AI | Real-time Crypto Intelligence
-    </p>
-</div>
-""", unsafe_allow_html=True)
 
 def main():
-    """Main function to run the Streamlit app"""
-    # The app code is already structured to run when imported
-    # This function is for compatibility
-    pass
+    # Header
+    st.markdown(
+        """
+    <div class="main-header">
+        <h1>🚀 Degen Digest</h1>
+        <p>Your Daily Crypto Intelligence Dashboard</p>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    # Get current digest
+    digest_content, digest_filename = get_latest_digest()
+
+    # Main tabs
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["📰 Current Digest", "📊 Analytics", "🔥 Trending", "🕷️ Solana Crawler Control"]
+    )
+
+    with tab1:
+        st.markdown("### 📰 Current Digest")
+
+        if digest_content:
+            # Digest info
+            col1, col2, col3 = st.columns([2, 1, 1])
+
+            with col1:
+                st.info(f"📄 **Current Digest:** {digest_filename}")
+
+            with col2:
+                if st.button("🔄 Generate Fresh Digest", key="fresh_digest"):
+                    with st.spinner("Generating fresh digest..."):
+                        success, message = generate_fresh_digest()
+                        if success:
+                            st.success(message)
+                            st.rerun()
+                        else:
+                            st.error(message)
+
+            with col3:
+                if st.button("📥 Download Digest"):
+                    st.download_button(
+                        "Download",
+                        digest_content,
+                        file_name=digest_filename,
+                        mime="text/markdown",
+                    )
+
+            # Display digest content
+            st.markdown("---")
+            st.markdown(
+                """
+            <div class="digest-container">
+            """,
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(digest_content)
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        else:
+            st.error(f"❌ {digest_filename}")
+            st.info("💡 Click 'Generate Fresh Digest' to create a new digest.")
+
+    with tab2:
+        st.markdown("### 📊 Analytics Dashboard")
+
+        # Get raw data for analytics
+        data = get_raw_data()
+
+        # Metrics row
+        col1, col2, col3, col4 = st.columns(4)
+
+        total_items = sum(
+            len(items) if isinstance(items, list) else 0 for items in data.values()
+        )
+
+        with col1:
+            st.markdown(
+                f"""
+            <div class="metric-card">
+                <div class="metric-value">{total_items:,}</div>
+                <div class="metric-label">Total Items</div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                f"""
+            <div class="metric-card">
+                <div class="metric-value">{len([k for k, v in data.items() if v])}</div>
+                <div class="metric-label">Active Sources</div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        with col3:
+            st.markdown(
+                f"""
+            <div class="metric-card">
+                <div class="metric-value">{len(data.get('twitter', []))}</div>
+                <div class="metric-label">Twitter Posts</div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        with col4:
+            st.markdown(
+                f"""
+            <div class="metric-card">
+                <div class="metric-value">{len(data.get('reddit', []))}</div>
+                <div class="metric-label">Reddit Posts</div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        # Charts
+        charts = create_analytics_charts(data)
+
+        if charts:
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if "source_distribution" in charts:
+                    st.plotly_chart(
+                        charts["source_distribution"], use_container_width=True
+                    )
+
+            with col2:
+                if "engagement_distribution" in charts:
+                    st.plotly_chart(
+                        charts["engagement_distribution"], use_container_width=True
+                    )
+
+        # Data quality metrics
+        st.markdown("### 📈 Data Quality Metrics")
+
+        quality_metrics = []
+        for source, items in data.items():
+            if isinstance(items, list) and items:
+                valid_items = len(
+                    [
+                        item
+                        for item in items
+                        if isinstance(item, dict) and item.get("text")
+                    ]
+                )
+                quality_metrics.append(
+                    {
+                        "Source": source.title(),
+                        "Total Items": len(items),
+                        "Valid Items": valid_items,
+                        "Quality %": round((valid_items / len(items)) * 100, 1),
+                    }
+                )
+
+        if quality_metrics:
+            df_quality = pd.DataFrame(quality_metrics)
+            st.dataframe(df_quality, use_container_width=True)
+
+    with tab3:
+        st.markdown("### 🔥 Trending Content")
+
+        # Get trending content
+        data = get_raw_data()
+        trending = get_trending_content(data, limit=30)
+
+        if trending:
+            # Filter options
+            col1, col2 = st.columns([1, 3])
+
+            with col1:
+                source_filter = st.selectbox(
+                    "Filter by source:",
+                    ["All"] + list({item["source"] for item in trending}),
+                )
+
+            with col2:
+                min_engagement = st.slider(
+                    "Minimum engagement score:", min_value=0, max_value=100, value=0
+                )
+
+            # Filter content
+            filtered_trending = trending
+            if source_filter != "All":
+                filtered_trending = [
+                    item for item in trending if item["source"] == source_filter
+                ]
+
+            filtered_trending = [
+                item
+                for item in filtered_trending
+                if item["engagement_score"] >= min_engagement
+            ]
+
+            # Display trending content
+            for i, item in enumerate(filtered_trending):
+                # Determine if viral
+                is_viral = item["engagement_score"] > 80
+
+                st.markdown(
+                    f"""
+                <div class="tweet-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div>
+                            <strong>@{item['author']}</strong>
+                            <span style="color: #666; font-size: 0.9rem;"> • {item['source'].title()}</span>
+                        </div>
+                        {'<span class="viral-badge">🔥 VIRAL</span>' if is_viral else ''}
+                    </div>
+                    <p style="margin: 1rem 0; line-height: 1.5;">{item['text']}</p>
+                    <div class="engagement-stats">
+                        <div class="engagement-stat">
+                            <span>❤️</span>
+                            <span>{item['like_count']:,}</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span>📊</span>
+                            <span>Score: {item['engagement_score']:.1f}</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span>📈</span>
+                            <span>Sentiment: {item['sentiment']:.2f}</span>
+                        </div>
+                    </div>
+                </div>
+                """,
+                    unsafe_allow_html=True,
+                )
+
+            if not filtered_trending:
+                st.info("No content matches your filters. Try adjusting the criteria.")
+
+        else:
+            st.info(
+                "No trending content available. Generate a fresh digest to see trending items."
+            )
+
+    with tab4:
+        st.markdown("### 🕷️ Solana Crawler Control")
+
+        # Info about the cloud deployment
+        st.info(
+            """
+        🌐 **Cloud Crawler Status**
+
+        The Solana crawler is deployed on Google Cloud Run and runs automatically for 18 hours per day.
+        Use the controls below to manually start or stop the crawler.
+
+        **Schedule:** 18 hours/day (6 hours off for maintenance)
+        **Credentials:** Pre-configured in cloud deployment
+        **Target:** Solana-focused content from followed accounts
+        """
+        )
+
+        # Crawler controls
+        st.markdown('<div class="crawler-controls">', unsafe_allow_html=True)
+
+        # Get current status
+        status_data = get_cloud_crawler_status()
+
+        # Status display
+        if status_data.get("status") == "running":
+            st.success("🟢 **Crawler Status: RUNNING**")
+            if "last_crawl" in status_data:
+                st.info(f"📈 Last crawl: {status_data['last_crawl']}")
+            if "total_tweets" in status_data:
+                st.info(f"📊 Total tweets collected: {status_data['total_tweets']}")
+        elif status_data.get("status") == "stopped":
+            st.warning("🔴 **Crawler Status: STOPPED**")
+        else:
+            st.error(
+                f"❌ **Status Error:** {status_data.get('message', 'Unknown error')}"
+            )
+
+        # Control buttons
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("🚀 Start Crawler", key="start_cloud_crawler", type="primary"):
+                with st.spinner("Starting crawler..."):
+                    success, message = start_cloud_crawler()
+                    if success:
+                        st.success(message)
+                        time.sleep(2)  # Give time for status to update
+                        st.rerun()
+                    else:
+                        st.error(message)
+
+        with col2:
+            if st.button("⏹️ Stop Crawler", key="stop_cloud_crawler"):
+                with st.spinner("Stopping crawler..."):
+                    success, message = stop_cloud_crawler()
+                    if success:
+                        st.success(message)
+                        time.sleep(2)  # Give time for status to update
+                        st.rerun()
+                    else:
+                        st.error(message)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Auto-refresh status
+        if st.button("🔄 Refresh Status", key="refresh_status"):
+            st.rerun()
+
+        # Crawler information
+        st.markdown("#### 📋 Crawler Information")
+
+        st.markdown(
+            """
+        **🌐 Cloud Deployment Details:**
+        - **Service URL:** https://solana-crawler-128671663649.us-central1.run.app
+        - **Region:** us-central1
+        - **Platform:** Google Cloud Run
+        - **Architecture:** linux/amd64
+
+        **🎯 Crawler Features:**
+        - Solana-focused content collection
+        - Followed accounts monitoring
+        - For You page scanning
+        - Saved post comments
+        - Discovered user content
+
+        **⏰ Automatic Schedule:**
+        - Runs 18 hours per day
+        - 6-hour maintenance window
+        - Automatic restart on failure
+        - Health monitoring enabled
+        """
+        )
+
+        # Recent activity (if available)
+        if status_data.get("status") == "running" and "recent_activity" in status_data:
+            st.markdown("#### 📝 Recent Activity")
+
+            for activity in status_data["recent_activity"][:5]:
+                st.markdown(
+                    f"""
+                <div class="log-entry">
+                    <strong>{activity.get('timestamp', 'Unknown')}</strong>: {activity.get('message', 'No message')}
+                </div>
+                """,
+                    unsafe_allow_html=True,
+                )
+
+
+def get_cloud_crawler_status():
+    """Get crawler status from Cloud Run service"""
+    try:
+        response = requests.get(
+            "https://solana-crawler-128671663649.us-central1.run.app/status", timeout=10
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"status": "error", "message": f"HTTP {response.status_code}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+def start_cloud_crawler():
+    """Start the crawler on Cloud Run"""
+    try:
+        response = requests.post(
+            "https://solana-crawler-128671663649.us-central1.run.app/start", timeout=10
+        )
+        if response.status_code == 200:
+            return True, "Crawler started successfully!"
+        else:
+            return False, f"Failed to start crawler: HTTP {response.status_code}"
+    except Exception as e:
+        return False, f"Error starting crawler: {str(e)}"
+
+
+def stop_cloud_crawler():
+    """Stop the crawler on Cloud Run"""
+    try:
+        response = requests.post(
+            "https://solana-crawler-128671663649.us-central1.run.app/stop", timeout=10
+        )
+        if response.status_code == 200:
+            return True, "Crawler stopped successfully!"
+        else:
+            return False, f"Failed to stop crawler: HTTP {response.status_code}"
+    except Exception as e:
+        return False, f"Error stopping crawler: {str(e)}"
+
 
 if __name__ == "__main__":
-    main() 
+    main()

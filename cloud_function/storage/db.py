@@ -3,11 +3,11 @@
 Provides Tweet, RedditPost, Digest models and helper insert/query functions.
 """
 
-from pathlib import Path
-from typing import List, Optional
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
-from sqlmodel import SQLModel, create_engine, Field, Session, select
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+
 from utils.advanced_logging import get_logger
 
 logger = get_logger(__name__)
@@ -19,7 +19,7 @@ engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 
 
 class Tweet(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     tweet_id: str = Field(unique=True, index=True)
     full_text: str
     user_screen_name: str
@@ -33,7 +33,7 @@ class Tweet(SQLModel, table=True):
 
 
 class RedditPost(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     post_id: str = Field(unique=True, index=True)
     title: str
     author: str
@@ -46,17 +46,17 @@ class RedditPost(SQLModel, table=True):
 
 
 class Digest(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     digest_id: str = Field(unique=True, index=True)
     content: str
     summary: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    file_path: Optional[str] = None
+    file_path: str | None = None
 
 
 # Track monthly LLM token usage
 class LLMUsage(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     month: str = Field(index=True)
     model: str
     tokens_used: int
@@ -82,7 +82,8 @@ SQLModel.metadata.create_all(engine)
 
 # Helper API -----------------------------------------------------
 
-def add_tweets(tweets: List[dict]):
+
+def add_tweets(tweets: list[dict]):
     if not tweets:
         return
     objs: list[Tweet] = []
@@ -98,7 +99,11 @@ def add_tweets(tweets: List[dict]):
                 author=t.get("userScreenName"),
                 author_username=t.get("userScreenName"),
                 tweet_id=str(tid),
-                created_at=datetime.fromisoformat(t.get("createdAt").replace('Z', '+00:00')) if t.get("createdAt") else None,
+                created_at=datetime.fromisoformat(
+                    t.get("createdAt").replace("Z", "+00:00")
+                )
+                if t.get("createdAt")
+                else None,
                 like_count=t.get("likeCount"),
                 retweet_count=t.get("retweetCount"),
                 reply_count=t.get("replyCount"),
@@ -119,7 +124,7 @@ def add_tweets(tweets: List[dict]):
         logger.info("tweets stored", count=len(objs))
 
 
-def add_reddit_posts(posts: List[dict]):
+def add_reddit_posts(posts: list[dict]):
     if not posts:
         return
     objs = []
@@ -146,7 +151,7 @@ def add_reddit_posts(posts: List[dict]):
         logger.info("reddit posts stored", count=len(objs))
 
 
-def record_digest(date_str: str, md_path: Path, pdf_path: Optional[Path] = None):
+def record_digest(date_str: str, md_path: Path, pdf_path: Path | None = None):
     with Session(engine) as session:
         if session.get(Digest, date_str):
             logger.info("Digest for %s already recorded", date_str)
@@ -172,6 +177,7 @@ def stats():
 
 # LLM usage helpers ---------------------------------------------------
 
+
 def add_llm_tokens(tokens: int, cost: float):
     month = datetime.now(timezone.utc).strftime("%Y-%m")
     with Session(engine) as session:
@@ -194,6 +200,7 @@ def get_month_usage(month: str):
 # ---------------------------------------------------------------------------
 # Helpers for metrics refresh
 # ---------------------------------------------------------------------------
+
 
 def recent_tweet_ids(hours: int = 2) -> list[str]:
     """Return tweet IDs scraped within the last *hours*."""

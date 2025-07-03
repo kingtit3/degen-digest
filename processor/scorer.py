@@ -1,22 +1,20 @@
-from typing import Dict, Any, List
-import random
-import logging
-from utils.logger import setup_logging
-from pathlib import Path
-from typing import Optional
-from utils.advanced_logging import get_logger
-import math
 import datetime
+import math
 import re
+from pathlib import Path
+from typing import Any
 
+import numpy as np
 from joblib import load
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
 from processor import buzz as _buzz
-import numpy as np
+from utils.advanced_logging import get_logger
+from utils.logger import setup_logging
 
 MODEL_PATH = Path("models/meme_lr.joblib")
 
-_model: Optional[object] = None
+_model: object | None = None
 _analyzer = SentimentIntensityAnalyzer()
 _virality_model = None
 
@@ -28,22 +26,26 @@ except Exception:
 setup_logging()
 logger = get_logger(__name__)
 
-def extract_tickers(text: str) -> List[str]:
+
+def extract_tickers(text: str) -> list[str]:
     """Extract cryptocurrency ticker symbols from text"""
     # Common crypto ticker patterns
-    ticker_pattern = re.compile(r'\$[A-Z]{2,10}|[A-Z]{2,10}/USD|[A-Z]{2,10}/USDT')
+    ticker_pattern = re.compile(r"\$[A-Z]{2,10}|[A-Z]{2,10}/USD|[A-Z]{2,10}/USDT")
     return ticker_pattern.findall(text.upper())
+
 
 def get_sentiment_score(text: str) -> float:
     """Get sentiment score from text using VADER"""
     try:
         scores = _analyzer.polarity_scores(text)
-        return scores['compound']
+        return scores["compound"]
     except Exception:
         return 0.0
 
+
 # Ticker pattern for backward compatibility
-ticker_pattern = re.compile(r'\$[A-Z]{2,10}|[A-Z]{2,10}/USD|[A-Z]{2,10}/USDT')
+ticker_pattern = re.compile(r"\$[A-Z]{2,10}|[A-Z]{2,10}/USD|[A-Z]{2,10}/USDT")
+
 
 def _load_model():
     global _model
@@ -54,9 +56,13 @@ def _load_model():
         except Exception as exc:
             logger.warning("ml model load failed", exc_info=exc)
 
+
 _load_model()
 
-def _engagement_score(likes: int, retweets: int, replies: int, follower_count: int | None = None) -> float:
+
+def _engagement_score(
+    likes: int, retweets: int, replies: int, follower_count: int | None = None
+) -> float:
     """Compute a 0-100 engagement score from raw metrics using a log scale.
 
     If ``follower_count`` is provided, engagement is normalised per-follower to
@@ -69,11 +75,12 @@ def _engagement_score(likes: int, retweets: int, replies: int, follower_count: i
     # Log scale to compress extreme values
     return min(math.log1p(weight_sum) * 25, 100)  # log1p(≈1500) ≈ 7.3 → 100
 
-def degen_score(item: Dict[str, Any]) -> int:
+
+def degen_score(item: dict[str, Any]) -> int:
     """Return an approximate viral-hype score in the 0-100 range.
 
     Priority order:
-    1. Probability from the optional ML meme classifier (if 
+    1. Probability from the optional ML meme classifier (if
        ``models/meme_lr.joblib`` is available).
     2. Engagement metrics (likes, retweets, replies) with log scaling.
     3. Fallback constant (20) when no signals are present.
@@ -138,14 +145,20 @@ def degen_score(item: Dict[str, Any]) -> int:
     # virality model prediction
     if _virality_model:
         try:
-            feat_vec = np.array([
-                likes, retweets, replies, len(text_content), _analyzer.polarity_scores(text_content)["compound"],
-            ]).reshape(1, -1)
+            feat_vec = np.array(
+                [
+                    likes,
+                    retweets,
+                    replies,
+                    len(text_content),
+                    _analyzer.polarity_scores(text_content)["compound"],
+                ]
+            ).reshape(1, -1)
             pred = _virality_model.predict(feat_vec)[0]
-            base_score = 0.5 * base_score + 0.5 * min(pred/10, 100)  # normalise
+            base_score = 0.5 * base_score + 0.5 * min(pred / 10, 100)  # normalise
         except Exception:
             pass
 
     score = int(min(base_score, 100))
     logger.debug("degen score", score=score)
-    return score 
+    return score

@@ -1,13 +1,18 @@
-import sys, subprocess, json
+import json
+import subprocess
+import sys
 from pathlib import Path
+
 root_path = Path(__file__).resolve().parents[2]
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
+import pandas as pd
 import streamlit as st
 from sqlmodel import Session, select
-from storage.db import engine, Tweet, RedditPost
-import pandas as pd
+
+from storage.db import RedditPost, Tweet, engine
+
 
 def main():
     st.set_page_config(page_title="⛓️ Sources Browser", layout="wide")
@@ -27,19 +32,26 @@ def main():
     with source_tabs[0]:
         st.subheader("Twitter Items")
         with Session(engine) as sess:
-            rows = sess.exec(select(Tweet).order_by(Tweet.scraped_at.desc()).limit(1000)).all()
+            rows = sess.exec(
+                select(Tweet).order_by(Tweet.scraped_at.desc()).limit(1000)
+            ).all()
         if rows:
-            df = pd.DataFrame([{
-                "Date": t.created_at,
-                "User": t.author,
-                "Likes": t.like_count,
-                "Retweets": t.retweet_count,
-                "Quotes": t.quote_count,
-                "Replies": t.reply_count,
-                "Followers": t.follower_count,
-                "Text": t.text,
-                "Link": f"https://twitter.com/i/web/status/{t.tweet_id}",
-            } for t in rows])
+            df = pd.DataFrame(
+                [
+                    {
+                        "Date": t.created_at,
+                        "User": t.author,
+                        "Likes": t.like_count,
+                        "Retweets": t.retweet_count,
+                        "Quotes": t.quote_count,
+                        "Replies": t.reply_count,
+                        "Followers": t.follower_count,
+                        "Text": t.text,
+                        "Link": f"https://twitter.com/i/web/status/{t.tweet_id}",
+                    }
+                    for t in rows
+                ]
+            )
             st.dataframe(df, use_container_width=True)
         else:
             st.info("No tweets in database.")
@@ -48,15 +60,22 @@ def main():
     with source_tabs[1]:
         st.subheader("Reddit Posts")
         with Session(engine) as sess:
-            rows = sess.exec(select(RedditPost).order_by(RedditPost.published.desc()).limit(1000)).all()
+            rows = sess.exec(
+                select(RedditPost).order_by(RedditPost.published.desc()).limit(1000)
+            ).all()
         if rows:
-            df = pd.DataFrame([{
-                "Date": r.published,
-                "Title": r.title,
-                "Subreddit": r.subreddit,
-                "Link": r.link,
-                "Summary": r.summary,
-            } for r in rows])
+            df = pd.DataFrame(
+                [
+                    {
+                        "Date": r.published,
+                        "Title": r.title,
+                        "Subreddit": r.subreddit,
+                        "Link": r.link,
+                        "Summary": r.summary,
+                    }
+                    for r in rows
+                ]
+            )
             st.dataframe(df, use_container_width=True)
         else:
             st.info("No reddit data.")
@@ -92,4 +111,4 @@ def main():
             df = pd.DataFrame(coins)
             st.dataframe(df, use_container_width=True)
         else:
-            st.info("No CoinGecko data yet.") 
+            st.info("No CoinGecko data yet.")

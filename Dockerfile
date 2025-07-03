@@ -1,14 +1,31 @@
-# Degen Digest Docker image
-FROM python:3.12-slim
+# Use official Python image
+FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV STREAMLIT_SERVER_PORT=8080
+ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
+# Set workdir
 WORKDIR /app
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements-streamlit.txt ./
+RUN pip install --upgrade pip && pip install -r requirements-streamlit.txt
+
+# Copy all code
 COPY . .
 
-# Default command builds digest (scrapers can be run via make/cron)
-CMD ["python", "main.py"] 
+# Expose port for Cloud Run
+EXPOSE 8080
+
+# Entrypoint
+CMD ["python3", "start_dashboard.py"]

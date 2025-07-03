@@ -21,10 +21,8 @@ endpoint (they simply don't appear in the result mapping).
 
 from __future__ import annotations
 
+
 import httpx
-import asyncio
-import logging
-from typing import Dict, List
 
 from utils.advanced_logging import get_logger
 
@@ -45,7 +43,9 @@ async def _symbol_to_id(client: httpx.AsyncClient, symbol: str) -> str | None:
         The Coingecko coin ID or *None* if not found / on HTTP error.
     """
     try:
-        r = await client.get(f"{COINGECKO_BASE}/search", params={"query": symbol}, headers=_headers)
+        r = await client.get(
+            f"{COINGECKO_BASE}/search", params={"query": symbol}, headers=_headers
+        )
         r.raise_for_status()
         data = r.json()
         for coin in data.get("coins", []):
@@ -56,7 +56,7 @@ async def _symbol_to_id(client: httpx.AsyncClient, symbol: str) -> str | None:
     return None
 
 
-async def _fetch_prices(ids: List[str]) -> Dict[str, Dict]:
+async def _fetch_prices(ids: list[str]) -> dict[str, dict]:
     if not ids:
         return {}
     try:
@@ -66,7 +66,12 @@ async def _fetch_prices(ids: List[str]) -> Dict[str, Dict]:
             "include_24hr_change": "true",
         }
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"{COINGECKO_BASE}/simple/price", params=params, headers=_headers, timeout=20)
+            r = await client.get(
+                f"{COINGECKO_BASE}/simple/price",
+                params=params,
+                headers=_headers,
+                timeout=20,
+            )
             r.raise_for_status()
             return r.json()
     except Exception as exc:
@@ -74,7 +79,7 @@ async def _fetch_prices(ids: List[str]) -> Dict[str, Dict]:
         return {}
 
 
-async def get_prices(symbols: List[str]) -> Dict[str, Dict]:
+async def get_prices(symbols: list[str]) -> dict[str, dict]:
     """Get prices (async).
 
     Args:
@@ -96,7 +101,7 @@ async def get_prices(symbols: List[str]) -> Dict[str, Dict]:
             logger.warning("symbol search failed: %s", exc)
             data = {}
 
-        id_map: Dict[str, str] = {}
+        id_map: dict[str, str] = {}
         coins = data.get("coins", []) if isinstance(data, dict) else []
         wanted = {s.upper() for s in symbols}
         for coin in coins:
@@ -109,14 +114,16 @@ async def get_prices(symbols: List[str]) -> Dict[str, Dict]:
 
         # 2) Fetch price data once
         try:
-            price_resp = await client.get(f"{COINGECKO_BASE}/simple/price", headers=_headers)
+            price_resp = await client.get(
+                f"{COINGECKO_BASE}/simple/price", headers=_headers
+            )
             price_resp.raise_for_status()
             price_data = price_resp.json()
         except Exception as exc:
             logger.warning("price fetch failed: %s", exc)
             price_data = {}
 
-        result: Dict[str, Dict] = {}
+        result: dict[str, dict] = {}
         for sym_upper, cid in id_map.items():
             pdata = price_data.get(cid)
             if pdata:
@@ -127,7 +134,7 @@ async def get_prices(symbols: List[str]) -> Dict[str, Dict]:
         return result
 
 
-def get_prices_sync(symbols: List[str]) -> Dict[str, Dict]:
+def get_prices_sync(symbols: list[str]) -> dict[str, dict]:
     """Get prices (blocking).
 
     This path is optimised for unit-testing with ``pytest_httpx`` and mirrors the
@@ -143,7 +150,7 @@ def get_prices_sync(symbols: List[str]) -> Dict[str, Dict]:
         logger.warning("symbol search failed: %s", exc)
         return {}
 
-    id_map: Dict[str, str] = {}
+    id_map: dict[str, str] = {}
     wanted = {s.upper() for s in symbols}
     for coin in data.get("coins", []):
         sym_upper = coin.get("symbol", "").upper()
@@ -155,14 +162,16 @@ def get_prices_sync(symbols: List[str]) -> Dict[str, Dict]:
 
     # 2) Price request (again without query string)
     try:
-        price_resp = httpx.get(f"{COINGECKO_BASE}/simple/price", headers=_headers, timeout=20)
+        price_resp = httpx.get(
+            f"{COINGECKO_BASE}/simple/price", headers=_headers, timeout=20
+        )
         price_resp.raise_for_status()
         price_data = price_resp.json()
     except Exception as exc:
         logger.warning("price fetch failed: %s", exc)
         return {}
 
-    result: Dict[str, Dict] = {}
+    result: dict[str, dict] = {}
     for sym_upper, cid in id_map.items():
         pdata = price_data.get(cid)
         if pdata:
@@ -170,4 +179,4 @@ def get_prices_sync(symbols: List[str]) -> Dict[str, Dict]:
                 "price": pdata.get("usd"),
                 "change24h": pdata.get("usd_24h_change"),
             }
-    return result 
+    return result

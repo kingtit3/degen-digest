@@ -28,11 +28,11 @@ import sys
 import time
 import traceback
 import types
+from collections.abc import Callable
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Any, Dict
-from collections.abc import Callable
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Optional structlog import.  If the dependency isn't available (e.g. in a

@@ -1,0 +1,32 @@
+
+# Async support
+aiohttp>=3.8.0
+asyncio-throttle>=1.0.0
+beautifulsoup4>=4.12.0
+colorama>=0.4.6
+
+# Web server for Cloud Run
+flask>=2.3.0
+
+# Google Cloud Storage
+google-cloud-storage>=2.10.0
+lxml>=4.9.0
+
+# Data processing
+pandas>=2.0.0
+# Essential web scraping and browser automation
+playwright>=1.40.0
+python-dateutil>=2.8.2
+
+# Utilities
+python-dotenv>=1.0.0
+pytz>=2023.3
+pyyaml>=6.0
+requests>=2.31.0
+
+# Database
+sqlalchemy>=2.0.0
+sqlmodel>=0.0.8
+
+# Logging and monitoring
+structlog>=23.1.0

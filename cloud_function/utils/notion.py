@@ -1,9 +1,11 @@
 """Notion integration helper."""
 
-from notion_client import Client
 from pathlib import Path
-from utils.env import get
+
+from notion_client import Client
+
 from utils.advanced_logging import get_logger
+from utils.env import get
 
 logger = get_logger(__name__)
 
@@ -28,14 +30,16 @@ def publish_page(title: str, markdown_path: Path):
             properties={
                 "Name": {"title": [{"text": {"content": title}}]},
             },
-            children=[{
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [{"type": "text", "text": {"content": md_content}}]
+            children=[
+                {
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {
+                        "rich_text": [{"type": "text", "text": {"content": md_content}}]
+                    },
                 }
-            }]
+            ],
         )
         logger.info("notion page created")
     except Exception as exc:
-        logger.error("notion publish failed", exc_info=exc) 
+        logger.error("notion publish failed", exc_info=exc)

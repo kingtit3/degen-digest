@@ -1,4 +1,6 @@
-import subprocess, sys, pathlib, time
+import subprocess
+import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,4 +21,4 @@ for cmd in commands:
         print("Command failed", cmd, ret)
         sys.exit(ret)
     time.sleep(1)
-print("All tasks completed successfully") 
+print("All tasks completed successfully")

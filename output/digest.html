@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Degen Digest - Crypto Intelligence</title>
+    <style>
+      /* Reset and base styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: #f8f9fa;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
+
+      .header h1 {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .header .subtitle {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+      }
+
+      .header .meta {
+        color: #868e96;
+        font-size: 0.9rem;
+      }
+
+      /* Content container */
+      .content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
+
+      /* Typography */
+      h1 {
+        color: #2c3e50;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+
+      h2 {
+        color: #34495e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3498db;
+      }
+
+      h3 {
+        color: #495057;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 1.5rem 0 0.5rem 0;
+      }
+
+      p {
+        margin-bottom: 1rem;
+        color: #495057;
+      }
+
+      /* Lists */
+      ul,
+      ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+        color: #495057;
+      }
+
+      /* Emphasis */
+      strong {
+        color: #2c3e50;
+        font-weight: 600;
+      }
+
+      em {
+        color: #6c757d;
+        font-style: italic;
+      }
+
+      /* Alerts and highlights */
+      .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        border-left: 4px solid;
+      }
+
+      .alert-warning {
+        background: #fff3cd;
+        border-color: #ffc107;
+        color: #856404;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        border-color: #28a745;
+        color: #155724;
+      }
+
+      .alert-info {
+        background: #d1ecf1;
+        border-color: #17a2b8;
+        color: #0c5460;
+      }
+
+      /* Metrics */
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+
+      .metric {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+      }
+
+      .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #3498db;
+        margin-bottom: 0.5rem;
+      }
+
+      .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+        padding: 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .content {
+          padding: 1.5rem;
+        }
+
+        .metrics {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Loading state */
+      .loading {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>🚀 Degen Digest</h1>
+      <div class="subtitle">Latest Crypto Intelligence</div>
+      <div class="meta">
+        Generated: July 02, 2025 | Auto-refresh every 5 minutes
+      </div>
+    </div>
+
+    <div id="content" class="content">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading latest digest...</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>🚀 Degen Digest - Your daily crypto intelligence companion</p>
+      <p>Generated automatically | Not financial advice</p>
+    </div>
+
+    <script>
+      // Auto-refresh every 5 minutes
+      setTimeout(
+        function () {
+          location.reload();
+        },
+        5 * 60 * 1000,
+      );
+
+      // Load content from digest.md
+      fetch("digest.md")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to load digest");
+          }
+          return response.text();
+        })
+        .then((content) => {
+          // Convert markdown to HTML (basic conversion)
+          let html = content
+            // Headers
+            .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+            .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+            .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+            // Bold and italic
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+            // Line breaks
+            .replace(/\n\n/g, "</p><p>")
+            // Emojis with colors
+            .replace(/⚠️/g, '<span style="color: #ffc107;">⚠️</span>')
+            .replace(/🚀/g, '<span style="color: #3498db;">🚀</span>')
+            .replace(/📊/g, '<span style="color: #28a745;">📊</span>')
+            .replace(/🎯/g, '<span style="color: #e74c3c;">🎯</span>')
+            .replace(/🔥/g, '<span style="color: #e67e22;">🔥</span>')
+            .replace(/💡/g, '<span style="color: #9b59b6;">💡</span>');
+
+          // Wrap in paragraphs
+          html = "<p>" + html + "</p>";
+
+          // Clean up empty paragraphs
+          html = html.replace(/<p><\/p>/g, "");
+
+          document.getElementById("content").innerHTML = html;
+        })
+        .catch((error) => {
+          document.getElementById("content").innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>Error loading digest:</strong> ${error.message}
+                        <br><br>
+                        <button onclick="location.reload()" style="background: #ffc107; color: #856404; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                            🔄 Refresh Page
+                        </button>
+                    </div>
+                `;
+        });
+    </script>
+  </body>
+</html>

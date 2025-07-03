@@ -1,8 +1,11 @@
 from __future__ import annotations
-import re, json, time
-from pathlib import Path
+
+import json
+import re
+import time
 from collections import Counter
-from typing import Dict
+from pathlib import Path
+
 from utils.advanced_logging import get_logger
 
 logger = get_logger(__name__)
@@ -30,11 +33,12 @@ def make_snapshot(items: list[dict]):
         json.dump(counter, f)
     logger.info("buzz snapshot saved", path=str(fname), unique=len(counter))
 
+
 # ---------------------------------------------------------------------------
 # Acceleration helper
 # ---------------------------------------------------------------------------
-_recent_cache: Dict[str, float] | None = None
-_prev_cache: Dict[str, float] | None = None
+_recent_cache: dict[str, float] | None = None
+_prev_cache: dict[str, float] | None = None
 
 
 def _load_two_latest():
@@ -54,4 +58,4 @@ def get_accel(term: str) -> float:
     recent = _recent_cache.get(term.lower(), 0)
     prev = _prev_cache.get(term.lower(), 0)
     avg_prev_hour = prev / 1 if prev else 0.1  # avoid div/0
-    return recent / avg_prev_hour if avg_prev_hour else 1.0 
+    return recent / avg_prev_hour if avg_prev_hour else 1.0

@@ -1,17 +1,17 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import logging
 import json
-from pathlib import Path
-from typing import List, Dict
 from datetime import datetime, timezone
+from pathlib import Path
 
 import httpx
-from utils.logger import setup_logging
-from utils.advanced_logging import get_logger
+
 from storage.db import add_reddit_posts  # acts as generic saver (title/link fields).
+from utils.advanced_logging import get_logger
+from utils.logger import setup_logging
 
 setup_logging()
 logger = get_logger(__name__)
@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 API_URL = "https://api.coingecko.com/api/v3/coins/markets"
 
 
-def fetch_top_gainers(limit: int = 20) -> List[Dict]:
+def fetch_top_gainers(limit: int = 20) -> list[dict]:
     params = {
         "vs_currency": "usd",
         "order": "price_change_percentage_24h_desc",
@@ -36,15 +36,15 @@ def fetch_top_gainers(limit: int = 20) -> List[Dict]:
     for coin in data:
         pct = coin.get("price_change_percentage_24h")
         title = f"{coin['symbol'].upper()} +{pct:.1f}% in 24h"
-        summary = (
-            f"{coin['name']} pumped {pct:.1f}% in the last 24h. Price now ${coin['current_price']:.4g}."
+        summary = f"{coin['name']} pumped {pct:.1f}% in the last 24h. Price now ${coin['current_price']:.4g}."
+        items.append(
+            {
+                "title": title,
+                "summary": summary,
+                "link": f"https://www.coingecko.com/en/coins/{coin['id']}",
+                "published": datetime.now(timezone.utc).isoformat(),
+            }
         )
-        items.append({
-            "title": title,
-            "summary": summary,
-            "link": f"https://www.coingecko.com/en/coins/{coin['id']}",
-            "published": datetime.now(timezone.utc).isoformat(),
-        })
     return items
 
 
@@ -64,4 +64,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

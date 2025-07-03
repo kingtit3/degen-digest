@@ -1,1 +1,1 @@
-# Makes `enrich` a Python package. 
+# Makes `enrich` a Python package.

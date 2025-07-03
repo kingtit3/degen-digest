@@ -11,7 +11,7 @@ import random
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from playwright.async_api import async_playwright
 from textblob import TextBlob

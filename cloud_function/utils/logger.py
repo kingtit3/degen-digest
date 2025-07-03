@@ -64,4 +64,4 @@ except Exception:  # pragma: no cover – structlog not available during install
         if not root_logger.handlers:
             root_logger.setLevel(level)
             root_logger.addHandler(console_handler)
-            root_logger.addHandler(file_handler) 
+            root_logger.addHandler(file_handler)

@@ -1,1 +1,1 @@
-# Makes `processor` a Python package for imports and tests. 
+# Makes `processor` a Python package for imports and tests.

@@ -1,10 +1,12 @@
 """Markdown → PDF conversion helper (uses Pandoc via pypandoc)."""
 
-from pathlib import Path
 import os
-from utils.advanced_logging import get_logger, _STRUCTLOG_AVAILABLE
-import pypandoc
 import shutil
+from pathlib import Path
+
+import pypandoc
+
+from utils.advanced_logging import _STRUCTLOG_AVAILABLE, get_logger
 
 logger = get_logger(__name__)
 
@@ -33,17 +35,28 @@ def md_to_pdf(input_md: Path, output_pdf: Path):
 
         # Professional page formatting
         extra_args += [
-            "-V", "geometry:margin=0.75in",  # Slightly smaller margins for more content
-            "-V", "fontsize=11pt",
-            "-V", "mainfont=Times New Roman",  # Professional serif font
-            "-V", "monofont=Consolas",  # Monospace font for code/links
-            "-V", "colorlinks=true",  # Colored links
-            "-V", "linkcolor=blue",
-            "-V", "urlcolor=blue",
-            "-V", "toccolor=gray",
-            "-V", "numbersections=true",  # Numbered sections
-            "-V", "papersize=letter",  # Standard letter size
-            "-V", "linestretch=1.2",  # Better line spacing
+            "-V",
+            "geometry:margin=0.75in",  # Slightly smaller margins for more content
+            "-V",
+            "fontsize=11pt",
+            "-V",
+            "mainfont=Times New Roman",  # Professional serif font
+            "-V",
+            "monofont=Consolas",  # Monospace font for code/links
+            "-V",
+            "colorlinks=true",  # Colored links
+            "-V",
+            "linkcolor=blue",
+            "-V",
+            "urlcolor=blue",
+            "-V",
+            "toccolor=gray",
+            "-V",
+            "numbersections=true",  # Numbered sections
+            "-V",
+            "papersize=letter",  # Standard letter size
+            "-V",
+            "linestretch=1.2",  # Better line spacing
             "--toc",  # Table of contents
             "--toc-depth=3",  # Include up to 3 levels
             "--pdf-engine-opt=-shell-escape",  # Allow shell commands for better font support
@@ -81,11 +94,11 @@ def md_to_pdf(input_md: Path, output_pdf: Path):
             outputfile=str(output_pdf),
             extra_args=extra_args or None,
         )
-        
+
         # Clean up temporary CSS file
         if css_file.exists():
             css_file.unlink()
-            
+
         logger.info("pdf done", path=str(output_pdf))
     except (OSError, RuntimeError) as exc:
-        logger.warning("pdf convert failed", exc_info=exc) 
+        logger.warning("pdf convert failed", exc_info=exc)

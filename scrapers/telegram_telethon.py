@@ -1,15 +1,14 @@
-import os
-import logging
 import json
+import logging
+import os
 from pathlib import Path
-from typing import List
 
-from telethon import TelegramClient, events
-from telethon.errors import SessionPasswordNeededError
-from telethon.errors.rpcerrorlist import UsernameInvalidError, ChannelPrivateError
 from dotenv import load_dotenv
-from utils.logger import setup_logging
+from telethon import TelegramClient
+from telethon.errors.rpcerrorlist import ChannelPrivateError, UsernameInvalidError
+
 from utils.advanced_logging import get_logger
+from utils.logger import setup_logging
 
 load_dotenv()
 
@@ -42,7 +41,7 @@ TARGET_CHANNELS = [
 ]
 
 
-async def collect_messages(channel_usernames: List[str], limit: int = 100):
+async def collect_messages(channel_usernames: list[str], limit: int = 100):
     """Collect recent Telegram messages from public channels (async)."""
     if API_ID == 0 or API_HASH is None:
         raise ValueError("TELEGRAM_API_ID/HASH not set")
@@ -57,12 +56,14 @@ async def collect_messages(channel_usernames: List[str], limit: int = 100):
             try:
                 async for message in client.iter_messages(ch, limit=limit):
                     if message.text:
-                        all_messages.append({
-                            "channel": ch,
-                            "date": str(message.date),
-                            "text": message.text,
-                            "id": message.id,
-                        })
+                        all_messages.append(
+                            {
+                                "channel": ch,
+                                "date": str(message.date),
+                                "text": message.text,
+                                "id": message.id,
+                            }
+                        )
             except (UsernameInvalidError, ChannelPrivateError) as exc:
                 logger.warning("telegram channel skipped", channel=ch, exc_info=exc)
                 continue
@@ -73,6 +74,7 @@ async def collect_messages(channel_usernames: List[str], limit: int = 100):
 
 def main():
     import asyncio
+
     messages = asyncio.run(collect_messages(TARGET_CHANNELS, limit=200))
     out_path = Path("output/telegram_raw.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -81,4 +83,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

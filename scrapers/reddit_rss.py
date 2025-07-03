@@ -1,18 +1,20 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import feedparser
+import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict
-from utils.logger import setup_logging
-from utils.advanced_logging import get_logger
-from storage.db import add_reddit_posts
-import asyncio
+
+import feedparser
 import httpx
 from dateutil import parser as dateparser
+
+from storage.db import add_reddit_posts
+from utils.advanced_logging import get_logger
+from utils.logger import setup_logging
 
 logger = get_logger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +43,7 @@ REDDIT_FEEDS = [
 ]
 
 
-async def parse_reddit_feed_async(url: str, keyword_filters: List[str]) -> List[Dict]:
+async def parse_reddit_feed_async(url: str, keyword_filters: list[str]) -> list[dict]:
     """Fetch RSS feed and filter entries by keywords (async)."""
     try:
         async with httpx.AsyncClient() as client:
@@ -62,33 +64,39 @@ async def parse_reddit_feed_async(url: str, keyword_filters: List[str]) -> List[
                         published_dt = dateparser.parse(published_str)
                         if published_dt.tzinfo is None:
                             from datetime import timezone
+
                             published_dt = published_dt.replace(tzinfo=timezone.utc)
                         else:
                             published_dt = published_dt.astimezone(dateparser.tz.UTC)
                     except Exception:
                         published_dt = None
-                entries.append({
-                    "title": title,
-                    "link": item.get("link"),
-                    "published": published_dt,
-                    "summary": summary,
-                    "subreddit": url.split("/")[4] if "/r/" in url else None,
-                })
+                entries.append(
+                    {
+                        "title": title,
+                        "link": item.get("link"),
+                        "published": published_dt,
+                        "summary": summary,
+                        "subreddit": url.split("/")[4] if "/r/" in url else None,
+                    }
+                )
         return entries
     except Exception as e:
         logger.warning(f"Failed to fetch {url}: {e}")
         return []
 
 
-def scrape_reddit(keyword_filters: List[str]):
+def scrape_reddit(keyword_filters: list[str]):
     """Scrape multiple Reddit RSS feeds concurrently and return filtered items."""
     all_entries = []
+
     async def worker(url):
         logger.info("scrape start", url=url)
         return await parse_reddit_feed_async(url, keyword_filters)
 
     loop = asyncio.get_event_loop()
-    results = loop.run_until_complete(asyncio.gather(*[worker(u) for u in REDDIT_FEEDS]))
+    results = loop.run_until_complete(
+        asyncio.gather(*[worker(u) for u in REDDIT_FEEDS])
+    )
     for entries in results:
         all_entries.extend(entries)
     # Sort by published date (string) but there might be inconsistent format; keep as is
@@ -107,4 +115,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

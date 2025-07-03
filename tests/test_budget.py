@@ -1,6 +1,4 @@
 from processor.summarizer import rewrite_content
-from utils.env import get
-import os
 
 
 def test_budget_guardrail(monkeypatch):
@@ -12,4 +10,4 @@ def test_budget_guardrail(monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     item = {"text": "Sample text"}
     result = rewrite_content(item)
-    assert result["headline"].startswith("Sample") 
+    assert result["headline"].startswith("Sample")

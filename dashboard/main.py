@@ -15,4 +15,4 @@ if str(project_root) not in sys.path:
 from dashboard.app import main
 
 if __name__ == "__main__":
-    main() 
+    main()
