@@ -90,7 +90,7 @@ def main():
 
         # Content type filter
         st.markdown("**📝 Content Type**")
-        content_types = st.multiselect(
+        st.multiselect(
             "Content types",
             ["News", "Analysis", "Meme", "Price Update", "Project Update", "Opinion"],
             default=["News", "Analysis", "Price Update"],

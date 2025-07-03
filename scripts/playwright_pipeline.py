@@ -120,7 +120,7 @@ class PlaywrightPipeline:
                 start_time = datetime.now()
 
                 # Run crawl session
-                tweets = await self.run_single_crawl()
+                await self.run_single_crawl()
 
                 # Calculate next run time
                 elapsed = (datetime.now() - start_time).total_seconds()

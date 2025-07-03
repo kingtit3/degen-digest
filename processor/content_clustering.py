@@ -94,7 +94,7 @@ class ContentClusterer:
                 continue
 
             # Extract common terms
-            all_text = " ".join(
+            " ".join(
                 [
                     f"{item.get('text', '')} {item.get('title', '')} {item.get('summary', '')}"
                     for item in cluster_items

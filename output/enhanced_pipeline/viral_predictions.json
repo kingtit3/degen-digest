@@ -1,205 +1,915 @@
-{
-  "timestamp": "2025-07-01T21:03:56.442093+00:00",
-  "predictions": [
-    {
-      "id": "1939534180297167246",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@Alt1cionGordon Free mentorship? Bro, your Telegram group is just a pyramid scheme with extra steps\u2014"
+[
+  {
+    "item_id": "playwright_1751550472_7769",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939534112408432724",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@BlumTalk Rug pull soon"
+    "content_preview": "ETH is a really bad stablecoin chain.\n\n@PlasmaFDN\n will disrupt it...",
+    "timestamp": "2025-07-03T16:53:32.925523"
+  },
+  {
+    "item_id": "playwright_1751550472_5124",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939534099229655285",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "\ud83d\udfe2New Token Migrated\n\nCHONKY (CHONKY)\n\n\ud83c\udfb2 CA:\nJCZdegUBDMPBro4AExLoK6nPvthNJTco4TiWFWarpump\n\n\ud83d\udc65 Holder\u6301\u6709"
+    "content_preview": "Automated crypto portfolios >>>>>>>\n\nDTFs built on Reserve work 24/7 in the background \u2014 no stress, ...",
+    "timestamp": "2025-07-03T16:53:32.925529"
+  },
+  {
+    "item_id": "playwright_1751550472_7097",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939534091394642177",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@Alt1cionGordon Bro, your 'free mentorship' is just a funnel to rug your Telegram group\u2014next time at"
+    "content_preview": "\"Yappers who don't yap a project post TGE are bad\"\n\nI think this is a terrible take and metric\n\nWhat...",
+    "timestamp": "2025-07-03T16:53:32.925532"
+  },
+  {
+    "item_id": "playwright_1751550472_1845",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939534067323797985",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@switchboardxyz 3/\n@switchboardxyz offers:\n\u26a1 Fast &amp; secure data feeds\n\ud83d\udee0\ufe0f Fully customizable inpu"
+    "content_preview": "These faggot kols sell you new \"narratives\" they bundled everyday and can't trade for shit  \n\nI'd ra...",
+    "timestamp": "2025-07-03T16:53:32.925534"
+  },
+  {
+    "item_id": "playwright_1751550472_5861",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533997882986557",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@MASTERDEV90 @yapyo_arb another rug? probably. GM fam, maybe today's the breakout."
+    "content_preview": "Being kind is FREE\n\nHelp others and smile more\n\nSpread love unconditionally...",
+    "timestamp": "2025-07-03T16:53:32.925537"
+  },
+  {
+    "item_id": "playwright_1751550472_5245",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533971450364154",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@minhthitran_thi @CreatorBid @bubble_bid That's my play as well. Most other launches recently could "
+    "content_preview": "One day at a time....",
+    "timestamp": "2025-07-03T16:53:32.925539"
+  },
+  {
+    "item_id": "playwright_1751550472_8969",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533861714591981",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "\ud83d\udfe2New Token Migrated\n\u26a1\ufe0fQuick Buy\u26a1\ufe0f: https://t.co/qoU7ts26eT\n\nCHONKY (CHONKY)\n\n\ud83c\udfb2 CA:\nJCZdegUBDMPBro4AE"
+    "content_preview": "pain teaches you what comfort never will...",
+    "timestamp": "2025-07-03T16:53:32.925540"
+  },
+  {
+    "item_id": "playwright_1751550472_7202",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533815422374129",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "$metoo\nMC:$127.4K\nA2yc9wbCFEzRdGNdzF9mAwQsjsDzTkveJJEQegP5pump\n\nNarrative: \nThe token's narrative ce"
+    "content_preview": "gud morning ...",
+    "timestamp": "2025-07-03T16:53:32.925542"
+  },
+  {
+    "item_id": "playwright_1751550472_5540",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533736686854152",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@cozyt1mzone Could\u2019ve played with faze rain and rug rain actually said he would play"
+    "content_preview": "Scaling your startup is great, but it's also where most fail.\n\nThey die from growing into chaos.\n\n- ...",
+    "timestamp": "2025-07-03T16:53:32.925544"
+  },
+  {
+    "item_id": "playwright_1751550472_2904",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533610652148094",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@jakeshieldsajj The art students and mall kiosk guys who sold helicopters were gathering intel for M"
+    "content_preview": "Legit all you have to is take $100 and hit a 100x to make your first million \n\nIt\u2019s not that hard...",
+    "timestamp": "2025-07-03T16:53:32.925546"
+  },
+  {
+    "item_id": "playwright_1751550472_3344",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533548244848950",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "This coin launched now and it might be a RUG\ud83d\udc80\nAvoid betting on this one!\n\ud83d\udcc8 Token: $CHONKY\n\ud83d\udccdCA: JCZde"
+    "content_preview": "Know how to code? Whether you're a full-time or part-time freelancer, DataAnnotation offers exciting...",
+    "timestamp": "2025-07-03T16:53:32.925548"
+  },
+  {
+    "item_id": "playwright_1751550472_3037",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533532117991877",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@pham_thuong97 @masavn24 @The_Utility_Co @NativeAIWolf @TechZone when your on-chain data matches the"
+    "content_preview": "There\u2019s a fair chance of BTC ATH today...",
+    "timestamp": "2025-07-03T16:53:32.925550"
+  },
+  {
+    "item_id": "playwright_1751550472_5246",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533514988224690",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "MORI COIN pumping 171%? Smells like a rug waiting to happen.  \nHODLers dreaming of 1B while scammers"
+    "content_preview": "$ETH will be the most hated rally \n\n$MOG will be the most loved rally \n\nsend both to infinity...",
+    "timestamp": "2025-07-03T16:53:32.925552"
+  },
+  {
+    "item_id": "playwright_1751550472_1754",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533498659836357",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@SpotsWriter @RadioGenoa The hard truths no one wants to talk about if the panty famine we're curren"
+    "content_preview": "GM \n\nHave a great day!...",
+    "timestamp": "2025-07-03T16:53:32.925554"
+  },
+  {
+    "item_id": "playwright_1751550472_8568",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533438492852320",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@Chasseur_Amour literally \ud83d\ude2d\ud83d\ude2d i moved myself to the very centre of the rug and i was gonna be like 'y"
+    "content_preview": "Welcome to Revenue Summer...",
+    "timestamp": "2025-07-03T16:53:32.925556"
+  },
+  {
+    "item_id": "playwright_1751550472_9797",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533267100672364",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@keithedwards Please make it \ud83d\ude4f we have been waiting for someone to make a video on him and all the o"
+    "content_preview": "Gm = get Mosciun \n\nSo in that case Gm everyone...",
+    "timestamp": "2025-07-03T16:53:32.925558"
+  },
+  {
+    "item_id": "playwright_1751550472_3435",
+    "source": "twitter",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533263988764811",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@ShlamDoubleU lol \ud83d\udc4a\ud83c\udffc So imagine the stuff I report on that somehow gets kicked under the rug???\u2026"
+    "content_preview": "I know people try to call for alt season all year every year but look\n\nwe are actually in the beginn...",
+    "timestamp": "2025-07-03T16:53:32.925560"
+  },
+  {
+    "item_id": 369,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533235148779997",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "@rozer100x wya ever since that rug I heard you\u2019ve been afk \u2026 would be nice if you popped up to expla"
+    "content_preview": "Sponsored Ads Free Plan & Powered by \u2764\ufe0f @Auto_Forward_Messages_Bot\n\nWhat is Auto Forward Telegram?\nY...",
+    "timestamp": "2025-07-03T16:53:32.925563"
+  },
+  {
+    "item_id": 368,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
     },
-    {
-      "id": "1939533232115941576",
-      "source": "twitter",
-      "viral_score": 0,
-      "predicted_engagement": 0,
-      "confidence": 0,
-      "market_impact": "low",
-      "trending_score": 0,
-      "content": "\ud83d\udea8  $CHONKY - DANGER (Screenshot)\n\ud83d\udc49 CA: JCZdegUBDMPBro4AExLoK6nPvthNJTco4TiWFWarpump\n\n\ud83d\udea9 Never buy rug"
-    }
-  ]
-}
+    "content_preview": "H\u1eb9n g\u1eb7p \ud83d\udcb0 \u1edf 300$ nha! \n\nV\u01b0\u1ee3t \ud83d\udcb0 n\u00e0o \ud83e\udd78\ud83e\udd78\ud83e\udd78...",
+    "timestamp": "2025-07-03T16:53:32.925565"
+  },
+  {
+    "item_id": 367,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "kratos trade m\u00f5m c\u0103ng \u0111\u00e9t. \n\n2k6 -> 7k5...",
+    "timestamp": "2025-07-03T16:53:32.925566"
+  },
+  {
+    "item_id": 365,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "Ranh gi\u1edbi th\u1eb1ng v\u1edbi th\u1ea7y n\u00f3 m\u1ecfng l\u1eafm....",
+    "timestamp": "2025-07-03T16:53:32.925568"
+  },
+  {
+    "item_id": 364,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "hi....",
+    "timestamp": "2025-07-03T16:53:32.925569"
+  },
+  {
+    "item_id": 363,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "\ud83d\udc40...",
+    "timestamp": "2025-07-03T16:53:32.925571"
+  },
+  {
+    "item_id": 362,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "binance advisor dog \ud83d\udc40...",
+    "timestamp": "2025-07-03T16:53:32.925573"
+  },
+  {
+    "item_id": 361,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "Cu\u1ed1i tu\u1ea7n m\u00e0 c\u00f3 tin g\u00ec c\u0103ng v\u1eady anh em...",
+    "timestamp": "2025-07-03T16:53:32.925574"
+  },
+  {
+    "item_id": 360,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "**TR\u1ede TH\u00c0NH SI\u00caU MEME TRADER **\ud83d\udcd4**\n\n**\u2705**B\u01b0\u1edbc 1**: Xem 2 video c\u00e1ch ch\u01a1i \n\n\ud83d\udd25**H\u01af\u1edaNG D\u1eaaN CH\u01a0I MEMECOI...",
+    "timestamp": "2025-07-03T16:53:32.925581"
+  },
+  {
+    "item_id": 359,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "C\u1ea3m \u01a1n $PNUT \ud83d\ude36\u200d\ud83c\udf2b\ufe0f\ud83d\ude36\u200d\ud83c\udf2b\ufe0f\ud83d\ude36\u200d\ud83c\udf2b\ufe0f...",
+    "timestamp": "2025-07-03T16:53:32.925583"
+  },
+  {
+    "item_id": 358,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "Sponsored Ads Free Plan & Powered by \u2764\ufe0f @Auto_Forward_Messages_Bot\n\nWhat is Auto Forward Telegram?\nY...",
+    "timestamp": "2025-07-03T16:53:32.925585"
+  },
+  {
+    "item_id": 357,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://t.me/boost/kratosgemx100...",
+    "timestamp": "2025-07-03T16:53:32.925587"
+  },
+  {
+    "item_id": 356,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "T\u00f4i s\u1ebd timing l\u00fac ngh\u1ec9 ng\u01a1i \u0103n T\u1ebft cho anh em, \u0111\u00f3 l\u00e0 tr\u01b0\u1edbc Noel v\u00e0i ng\u00e0y. \n\nL\u1ecbch s\u1eed l\u00fac n\u00e0o c\u0169ng c\u00f3 ...",
+    "timestamp": "2025-07-03T16:53:32.925589"
+  },
+  {
+    "item_id": 355,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "D\u1ef1 l\u00e0 tu\u1ea7n sau, Memecoins l\u1ea1i b\u00f9ng n\u1ed5 h\u01a1n tu\u1ea7n n\u00e0y n\u1eefa! T\u00f4i \u0111\u00e3 s\u1eb5n s\u00e0ng \ud83d\ude0b\ud83d\ude0b\ud83d\ude0b...",
+    "timestamp": "2025-07-03T16:53:32.925591"
+  },
+  {
+    "item_id": 354,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "H\u1ee5t k\u00e8o $PNUT th\u00ec gi\u1eef cho ch\u1eb7t $LESTER...",
+    "timestamp": "2025-07-03T16:53:32.925593"
+  },
+  {
+    "item_id": 353,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "\u0110i bi\u1ec3n ngh\u1ec9 m\u00e1t cu\u1ed1i tu\u1ea7n. \n\n**H\u01af\u1edaNG D\u1eaaN C\u00c1CH T\u1ef0 T\u00ccM COIN MEMECOINS C\u01a0 B\u1ea2N \u0110\u1ec2 CH\u01a0I**\n\nhttps://m.you...",
+    "timestamp": "2025-07-03T16:53:32.925595"
+  },
+  {
+    "item_id": 351,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "Called $AIKA t\u1ea1i 2M7 \u0111\u1ea1t ATH 20M...",
+    "timestamp": "2025-07-03T16:53:32.925597"
+  },
+  {
+    "item_id": 350,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "**TR\u1ede TH\u00c0NH SI\u00caU MEME TRADER **\ud83d\udcd4**\n\n**\u2705**B\u01b0\u1edbc 1**: Xem 2 video c\u00e1ch ch\u01a1i \n\n\ud83d\udd25**H\u01af\u1edaNG D\u1eaaN CH\u01a0I MEMECOI...",
+    "timestamp": "2025-07-03T16:53:32.925599"
+  },
+  {
+    "item_id": 349,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "R\u00f4m r\u00e3 c\u1ea3 tu\u1ea7n r\u1ed3i, ngh\u1ec9 ng\u01a1i th\u00f4i.\n\nCu\u1ed1i tu\u1ea7n vui v\u1ebb nh\u00e9 \ud83d\ude18\ud83d\ude18\ud83d\ude18...",
+    "timestamp": "2025-07-03T16:53:32.925601"
+  },
+  {
+    "item_id": 348,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "top1hoasimeme...",
+    "timestamp": "2025-07-03T16:53:32.925603"
+  },
+  {
+    "item_id": 347,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "Sponsored Ads Free Plan & Powered by \u2764\ufe0f @Auto_Forward_Messages_Bot\n\nWhat is Auto Forward Telegram?\nY...",
+    "timestamp": "2025-07-03T16:53:32.925605"
+  },
+  {
+    "item_id": 346,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857386061653295506?s=46\n\n\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23...",
+    "timestamp": "2025-07-03T16:53:32.925607"
+  },
+  {
+    "item_id": 345,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "**TR\u1ede TH\u00c0NH SI\u00caU MEME TRADER **\ud83d\udcd4**\n\n**\u2705**B\u01b0\u1edbc 1**: Xem 2 video c\u00e1ch ch\u01a1i \n\n\ud83d\udd25**H\u01af\u1edaNG D\u1eaaN CH\u01a0I MEMECOI...",
+    "timestamp": "2025-07-03T16:53:32.925609"
+  },
+  {
+    "item_id": 344,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857349270212411835?s=46...",
+    "timestamp": "2025-07-03T16:53:32.925610"
+  },
+  {
+    "item_id": 343,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "$LESTER x2 r\u1ed3i. G\u1ea7n nh\u01b0 l\u00e0 si\u00eau \u0111\u00e1y....",
+    "timestamp": "2025-07-03T16:53:32.925612"
+  },
+  {
+    "item_id": 342,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857326814961762617?s=46\n\nH\u1eb9n g\u1eb7p anh em \u1edf 500M!...",
+    "timestamp": "2025-07-03T16:53:32.925614"
+  },
+  {
+    "item_id": 341,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "12x $TMONKEY \ud83d\ude0d...",
+    "timestamp": "2025-07-03T16:53:32.925615"
+  },
+  {
+    "item_id": 340,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857310936811639259?s=46...",
+    "timestamp": "2025-07-03T16:53:32.925617"
+  },
+  {
+    "item_id": 339,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "$TMONKEY s\u1ebd 3m t\u1ed1i nay \ud83d\udc40...",
+    "timestamp": "2025-07-03T16:53:32.925618"
+  },
+  {
+    "item_id": 338,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857308926951428197?s=46...",
+    "timestamp": "2025-07-03T16:53:32.925620"
+  },
+  {
+    "item_id": 337,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857308026690236696?s=46...",
+    "timestamp": "2025-07-03T16:53:32.925621"
+  },
+  {
+    "item_id": 336,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "Sponsored Ads Free Plan & Powered by \u2764\ufe0f @Auto_Forward_Messages_Bot\n\nWhat is Auto Forward Telegram?\nY...",
+    "timestamp": "2025-07-03T16:53:32.925623"
+  },
+  {
+    "item_id": 335,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857306307860300282?s=46...",
+    "timestamp": "2025-07-03T16:53:32.925625"
+  },
+  {
+    "item_id": 334,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "\ud83d\udc40\ud83d\udc40\ud83d\udc40...",
+    "timestamp": "2025-07-03T16:53:32.925626"
+  },
+  {
+    "item_id": 333,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "$TMONKEY \ud83d\udcb0\n\nN\u00f3 s\u1ebd l\u00e0 c\u00e1i t\u00ean n\u1ed5i b\u1eadt sau $PNUT, Elon \u0111ang raise v\u1ed1n cho c\u00e1c trung t\u00e2m nghi\u00ean c\u1ee9u b\u00ean...",
+    "timestamp": "2025-07-03T16:53:32.925628"
+  },
+  {
+    "item_id": 332,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "$LESTER \ud83d\udcb0\n\nC\u00f3 th\u1ec3 s\u1ebd l\u00e0 trend m\u1edbi, mascot c\u1ee7a nh\u1eefng project m\u00f9a tr\u01b0\u1edbc. \u0110ang m\u1ea1nh nh\u1ea5t l\u00e0 h\u00e0ng c\u1ee7a LT...",
+    "timestamp": "2025-07-03T16:53:32.925629"
+  },
+  {
+    "item_id": 331,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "hi \ud83e\udd11...",
+    "timestamp": "2025-07-03T16:53:32.925631"
+  },
+  {
+    "item_id": 330,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "https://x.com/pumpmycoinpls/status/1857092643551076386?s=46...",
+    "timestamp": "2025-07-03T16:53:32.925633"
+  },
+  {
+    "item_id": 329,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "**TR\u1ede TH\u00c0NH SI\u00caU MEME TRADER **\ud83d\udcd4**\n\n**\u2705**B\u01b0\u1edbc 1**: Xem 2 video c\u00e1ch ch\u01a1i \n\n\ud83d\udd25**H\u01af\u1edaNG D\u1eaaN CH\u01a0I MEMECOI...",
+    "timestamp": "2025-07-03T16:53:32.925634"
+  },
+  {
+    "item_id": 328,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "Li\u1ec7u B\u00ecnh Ph\u01b0\u1edbc ph\u1ea3i l\u00e0 \u0111\u1ec9nh c\u1ee7a m\u00f9a n\u00e0y ch\u01b0a anh em nh\u1ec9, BTC sideway \u0111\u1ea9y meme, l\u00e0m c\u00e2y th\u00f4ng Noel x...",
+    "timestamp": "2025-07-03T16:53:32.925636"
+  },
+  {
+    "item_id": 327,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "H\u00ecnh nh\u01b0 s\u1eafp c\u00f3 k\u00e8o to \ud83d\udc40\ud83d\udc40...",
+    "timestamp": "2025-07-03T16:53:32.925637"
+  },
+  {
+    "item_id": 326,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "**\ud83d\ude39 IT\u2019S MEOW TIME: ****$CAT**** TOKEN X SHIBA ARMY PARTNERSHIP** \ud83d\udd38\n\n**\ud83d\udc23 ****https://x.com/****\nshib...",
+    "timestamp": "2025-07-03T16:53:32.925639"
+  },
+  {
+    "item_id": 325,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "**\ud83d\ude39 IT\u2019S MEOW TIME: ****$CAT**** TOKEN X SHIBA ARMY PARTNERSHIP** \ud83d\udd38\n\n**\ud83d\udc23 ****https://x.com/****\nshib...",
+    "timestamp": "2025-07-03T16:53:32.925640"
+  },
+  {
+    "item_id": 324,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "**\ud83d\ude39 IT\u2019S MEOW TIME: ****$CAT**** TOKEN X SHIBA ARMY PARTNERSHIP** \ud83d\udd38\n\n**\ud83d\udc23 ****https://x.com/****\nshib...",
+    "timestamp": "2025-07-03T16:53:32.925642"
+  },
+  {
+    "item_id": 323,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "8x !!!...",
+    "timestamp": "2025-07-03T16:53:32.925643"
+  },
+  {
+    "item_id": 322,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "6x !!...",
+    "timestamp": "2025-07-03T16:53:32.925644"
+  },
+  {
+    "item_id": 321,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "5x !!!...",
+    "timestamp": "2025-07-03T16:53:32.925646"
+  },
+  {
+    "item_id": 320,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "M\u00e3i m\u1edbi ray , ae DC x\u1ea3 qu\u00e1 haha...",
+    "timestamp": "2025-07-03T16:53:32.925647"
+  },
+  {
+    "item_id": 319,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "3x lu\u00f4n !!...",
+    "timestamp": "2025-07-03T16:53:32.925649"
+  },
+  {
+    "item_id": 318,
+    "source": "telegram",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "3.5x !! Ray...",
+    "timestamp": "2025-07-03T16:53:32.925651"
+  },
+  {
+    "item_id": "discord_cryptocurrency_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925652"
+  },
+  {
+    "item_id": "discord_cryptocurrency_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925654"
+  },
+  {
+    "item_id": "discord_bitcoin_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925655"
+  },
+  {
+    "item_id": "discord_bitcoin_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925656"
+  },
+  {
+    "item_id": "discord_ethereum_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925658"
+  },
+  {
+    "item_id": "discord_ethereum_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925659"
+  },
+  {
+    "item_id": "discord_defi_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925661"
+  },
+  {
+    "item_id": "discord_defi_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925662"
+  },
+  {
+    "item_id": "discord_nft_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925663"
+  },
+  {
+    "item_id": "discord_nft_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925665"
+  },
+  {
+    "item_id": "discord_cryptotrading_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925666"
+  },
+  {
+    "item_id": "discord_cryptotrading_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925668"
+  },
+  {
+    "item_id": "discord_altcoin_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925669"
+  },
+  {
+    "item_id": "discord_altcoin_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925671"
+  },
+  {
+    "item_id": "discord_cryptonews_0",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925672"
+  },
+  {
+    "item_id": "discord_cryptonews_1",
+    "source": "discord",
+    "prediction": {
+      "score": 0.0,
+      "confidence": 0.0,
+      "model": "untrained"
+    },
+    "content_preview": "",
+    "timestamp": "2025-07-03T16:53:32.925673"
+  }
+]

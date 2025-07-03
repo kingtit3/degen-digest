@@ -76,10 +76,9 @@ async def main():
         response = input().lower().strip()
 
         if response == "y":
-            crawl_ok = await test_single_crawl()
+            await test_single_crawl()
         else:
             print("⏭️ Skipping crawl test")
-            crawl_ok = True
 
     # Test data loading
     data_ok = test_data_loading()

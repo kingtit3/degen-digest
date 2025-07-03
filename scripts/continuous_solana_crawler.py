@@ -186,7 +186,7 @@ class ContinuousSolanaCrawler:
 
         while self.is_running:
             try:
-                current_time = datetime.now()
+                datetime.now()
 
                 # Check if we're in active hours
                 if not self.is_active_hours():

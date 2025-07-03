@@ -159,7 +159,7 @@ class EnhancedTwitterScraper:
         )
 
         # Author influence factor
-        author_followers = tweet_data.get("userFollowersCount", 0)
+        tweet_data.get("userFollowersCount", 0)
         author_verified = 1 if tweet_data.get("userVerified", False) else 0.5
 
         # Content quality factor

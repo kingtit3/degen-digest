@@ -103,7 +103,7 @@ def test_performance_logging():
     """Test performance metrics logging"""
     print("🧪 Testing Performance Metrics Logging...")
 
-    logger = get_logger(__name__)
+    get_logger(__name__)
 
     # Test performance metrics
     log_performance_metrics(

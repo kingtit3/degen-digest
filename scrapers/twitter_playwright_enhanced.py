@@ -1112,17 +1112,13 @@ class EnhancedTwitterPlaywrightCrawler:
     async def human_like_scroll(self, max_scrolls: int = 10, max_tweets: int = 30):
         """Simulate human-like scrolling on the current page"""
         tweets_loaded = 0
-        last_direction = "down"
         for scroll in range(max_scrolls):
             # Random scroll amount and direction
             if random.random() < 0.85:
                 scroll_amount = random.randint(400, 1200)
-                direction = "down"
             else:
                 scroll_amount = -random.randint(200, 600)
-                direction = "up"
             await self.page.evaluate(f"window.scrollBy(0, {scroll_amount})")
-            last_direction = direction
 
             # Random pause
             pause = random.uniform(1.0, 4.0)

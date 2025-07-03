@@ -31,7 +31,7 @@ import types
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 # ---------------------------------------------------------------------------
 # Optional structlog import.  If the dependency isn't available (e.g. in a

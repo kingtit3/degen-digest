@@ -1,25 +1,25 @@
 {
   "pipeline_run": {
-    "timestamp": "2025-06-30T20:39:33.423681",
+    "timestamp": "2025-07-03T16:53:32.929058",
     "total_items_processed": 0,
     "viral_items_detected": 0,
     "processing_time": 0,
-    "data_sources": 5
+    "data_sources": 6
   },
   "data_sources_summary": {
     "twitter": {
-      "count": 100,
-      "timestamp": "2025-06-30T20:39:30.329105",
+      "count": 17,
+      "timestamp": "2025-07-03T16:53:24.455023",
       "error": null
     },
     "reddit": {
       "count": 0,
-      "timestamp": "2025-06-30T20:39:30.333884",
+      "timestamp": "2025-07-03T16:53:24.459828",
       "error": null
     },
     "telegram": {
       "count": 50,
-      "timestamp": "2025-06-30T20:39:30.335515",
+      "timestamp": "2025-07-03T16:53:24.461578",
       "error": null
     },
     "news": {
@@ -31,42 +31,47 @@
       "count": 0,
       "timestamp": "unknown",
       "error": "'NoneType' object is not iterable"
+    },
+    "discord": {
+      "count": 16,
+      "timestamp": "2025-07-03T16:53:32.892033",
+      "error": null
     }
   },
   "viral_predictions_summary": {
-    "total_predictions": 150,
-    "high_viral_score": 7,
-    "medium_viral_score": 9,
-    "low_viral_score": 134
+    "total_predictions": 83,
+    "high_viral_score": 0,
+    "medium_viral_score": 0,
+    "low_viral_score": 83
   },
   "trends_summary": {
     "twitter": {
-      "total_items": 100,
-      "avg_engagement_velocity": 0.536,
-      "avg_viral_coefficient": 0.00014000000000000001,
+      "total_items": 17,
+      "avg_engagement_velocity": 0.0,
+      "avg_viral_coefficient": 0.0,
       "top_categories": [
         {
-          "category": "scam",
-          "count": 77
-        },
-        {
           "category": "general",
-          "count": 7
+          "count": 9
         },
         {
-          "category": "airdrop",
-          "count": 5
-        },
-        {
-          "category": "meme",
+          "category": "ethereum",
           "count": 3
         },
         {
-          "category": "defi",
-          "count": 2
+          "category": "meme",
+          "count": 1
+        },
+        {
+          "category": "scam",
+          "count": 1
+        },
+        {
+          "category": "trading",
+          "count": 1
         }
       ],
-      "viral_items": 9
+      "viral_items": 0
     },
     "telegram": {
       "total_items": 50,
@@ -92,6 +97,18 @@
         {
           "category": "bitcoin",
           "count": 2
+        }
+      ],
+      "viral_items": 0
+    },
+    "discord": {
+      "total_items": 16,
+      "avg_engagement_velocity": 0.8,
+      "avg_viral_coefficient": 0.08,
+      "top_categories": [
+        {
+          "category": "general",
+          "count": 16
         }
       ],
       "viral_items": 0

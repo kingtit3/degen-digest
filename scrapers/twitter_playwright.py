@@ -210,7 +210,7 @@ class TwitterPlaywrightCrawler:
             # Create tweet object
             tweet_data = {
                 "source": "twitter_playwright",
-                "id": f"playwright_{int(time.time())}_{len(tweets)}",
+                "id": f"playwright_{int(time.time())}_{hash(text)}",
                 "text": text,
                 "username": username,
                 "created_at": timestamp or datetime.now(timezone.utc).isoformat(),
