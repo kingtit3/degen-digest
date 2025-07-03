@@ -43,7 +43,7 @@ def check_cloud_run_logs():
                                 timestamp.replace("Z", "+00:00")
                             )
                             timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
-                        except:
+                        except Exception:
                             pass
 
                     print(f"[{timestamp}] {severity}: {text[:100]}...")

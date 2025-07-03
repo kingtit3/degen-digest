@@ -264,7 +264,7 @@ class DataMerger:
                     cursor.execute(f"SELECT COUNT(*) FROM {table}")
                     count = cursor.fetchone()[0]
                     report["local_data"][table] = count
-                except:
+                except Exception:
                     report["local_data"][table] = 0
 
             conn.close()

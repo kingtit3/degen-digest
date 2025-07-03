@@ -270,7 +270,7 @@ class TwitterPlaywrightCrawler:
                 return int(float(text.replace("m", "")) * 1000000)
             else:
                 return int(text)
-        except:
+        except Exception:
             return 0
 
     def analyze_sentiment(self, text: str) -> dict[str, float]:
@@ -281,7 +281,7 @@ class TwitterPlaywrightCrawler:
                 "polarity": blob.sentiment.polarity,
                 "subjectivity": blob.sentiment.subjectivity,
             }
-        except:
+        except Exception:
             return {"polarity": 0.0, "subjectivity": 0.0}
 
     async def crawl_continuously(

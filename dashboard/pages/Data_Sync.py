@@ -183,7 +183,7 @@ with tab1:
             try:
                 date = pd.to_datetime(tweet["createdAt"]).date()
                 timeline_data.append({"date": date, "source": "Twitter", "count": 1})
-            except:
+            except Exception:
                 pass
 
     for post in reddit_posts:
@@ -191,7 +191,7 @@ with tab1:
             try:
                 date = pd.to_datetime(post["published"]).date()
                 timeline_data.append({"date": date, "source": "Reddit", "count": 1})
-            except:
+            except Exception:
                 pass
 
     if timeline_data:

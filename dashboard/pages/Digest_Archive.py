@@ -56,7 +56,7 @@ def load_digest_files():
                     date_str = filename.split("digest-")[1]
                     try:
                         date = datetime.strptime(date_str, "%Y-%m-%d")
-                    except:
+                    except Exception:
                         # Fallback to current file modification time
                         date = datetime.fromtimestamp(file_path.stat().st_mtime)
                 else:
@@ -75,7 +75,7 @@ def load_digest_files():
                                         date_match.group(1), "%Y-%m-%d"
                                     )
                                     break
-                                except:
+                                except Exception:
                                     continue
 
                     if not date:

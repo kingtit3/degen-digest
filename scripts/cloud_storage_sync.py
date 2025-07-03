@@ -12,7 +12,6 @@ from typing import Any
 # Google Cloud Storage imports
 try:
     from google.cloud import storage
-    from google.cloud.exceptions import NotFound
 
     GCS_AVAILABLE = True
 except ImportError:

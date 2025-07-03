@@ -301,7 +301,7 @@ for item in items:
             item_time = datetime.fromisoformat(item["published"].replace("Z", "+00:00"))
             if item_time < cutoff_time:
                 continue
-        except:
+        except Exception:
             pass
 
     # Source filter

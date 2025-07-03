@@ -208,7 +208,7 @@ def parse_timestamp(timestamp_str):
         if timestamp_str:
             return datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
         return datetime.min
-    except:
+    except Exception:
         return datetime.min
 
 

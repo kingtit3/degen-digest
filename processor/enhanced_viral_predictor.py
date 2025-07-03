@@ -76,7 +76,7 @@ class EnhancedViralPredictor:
             nltk.download("stopwords", quiet=True)
             nltk.download("wordnet", quiet=True)
             nltk.download("averaged_perceptron_tagger", quiet=True)
-        except:
+        except Exception:
             logger.warning("NLTK components not available")
 
         self.stop_words = set(stopwords.words("english"))

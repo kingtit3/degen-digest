@@ -16,7 +16,6 @@ from typing import Any
 # Google Cloud Storage imports
 try:
     from google.cloud import storage
-    from google.cloud.exceptions import NotFound
 
     GCS_AVAILABLE = True
 except ImportError:
@@ -26,7 +25,7 @@ except ImportError:
     )
 
 try:
-    from playwright.async_api import Browser, Page, async_playwright
+    from playwright.async_api import async_playwright
 
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
@@ -260,7 +259,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     )
                     if next_button:
                         break
-                except:
+                except Exception:
                     continue
             if next_button:
                 await next_button.click()
@@ -291,7 +290,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     )
                     if login_button:
                         break
-                except:
+                except Exception:
                     continue
             if login_button:
                 await login_button.click()
@@ -317,7 +316,7 @@ class EnhancedTwitterPlaywrightCrawler:
                         )
                         self.is_logged_in = True
                         return True
-                except:
+                except Exception:
                     continue
             logger.error(
                 "Login failed - could not find any home/profile/tweet elements"
@@ -353,7 +352,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     )
                     if following_link:
                         break
-                except:
+                except Exception:
                     continue
 
             if following_link:
@@ -382,7 +381,7 @@ class EnhancedTwitterPlaywrightCrawler:
                                     usernames.append(username)
                         if usernames:
                             break
-                    except:
+                    except Exception:
                         continue
 
                 logger.info(f"Found {len(usernames)} followed accounts")
@@ -422,7 +421,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     await self.page.wait_for_selector(selector, timeout=5000)
                     tweets_found = True
                     break
-                except:
+                except Exception:
                     continue
 
             if not tweets_found:
@@ -446,7 +445,7 @@ class EnhancedTwitterPlaywrightCrawler:
                         if tweet_elements:
                             tweets_loaded = len(tweet_elements)
                             break
-                    except:
+                    except Exception:
                         continue
 
             # Extract tweets
@@ -504,7 +503,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     await self.page.wait_for_selector(selector, timeout=5000)
                     posts_found = True
                     break
-                except:
+                except Exception:
                     continue
 
             if not posts_found:
@@ -519,7 +518,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     if elements:
                         saved_posts = elements[:max_posts]
                         break
-                except:
+                except Exception:
                     continue
 
             all_comments = []
@@ -561,7 +560,7 @@ class EnhancedTwitterPlaywrightCrawler:
                                         comment_data["parent_post_index"] = i
                                         comments.append(comment_data)
                                 break
-                        except:
+                        except Exception:
                             continue
 
                     all_comments.extend(comments)
@@ -615,7 +614,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     tweets_found = True
                     logger.info(f"Found tweets using selector: {selector}")
                     break
-                except:
+                except Exception:
                     continue
 
             if not tweets_found:
@@ -644,7 +643,7 @@ class EnhancedTwitterPlaywrightCrawler:
                                 f"Loaded {tweets_loaded} tweets for '{query}' (scroll {scroll + 1})"
                             )
                             break
-                    except:
+                    except Exception:
                         continue
 
             # Extract tweet data
@@ -678,7 +677,7 @@ class EnhancedTwitterPlaywrightCrawler:
                         tweet_elements = elements
                         logger.info(f"Using selector: {selector}")
                         break
-                except:
+                except Exception:
                     continue
 
             for i, tweet_element in enumerate(tweet_elements[:max_tweets]):
@@ -716,7 +715,7 @@ class EnhancedTwitterPlaywrightCrawler:
                         text = await text_element.inner_text()
                         if text.strip():
                             break
-                except:
+                except Exception:
                     continue
 
             if not text.strip():
@@ -738,7 +737,7 @@ class EnhancedTwitterPlaywrightCrawler:
                         if href and href.startswith("/") and len(href) > 1:
                             username = href[1:]  # Remove leading slash
                             break
-                except:
+                except Exception:
                     continue
 
             # Extract timestamp
@@ -751,7 +750,7 @@ class EnhancedTwitterPlaywrightCrawler:
                         timestamp = await time_element.get_attribute("datetime")
                         if timestamp:
                             break
-                except:
+                except Exception:
                     continue
 
             # Extract engagement metrics
@@ -819,7 +818,7 @@ class EnhancedTwitterPlaywrightCrawler:
                                     text
                                 )
                             break
-                    except:
+                    except Exception:
                         continue
 
         except Exception as e:
@@ -841,7 +840,7 @@ class EnhancedTwitterPlaywrightCrawler:
                 return int(float(text.replace("m", "")) * 1000000)
             else:
                 return int(text)
-        except:
+        except Exception:
             return 0
 
     def analyze_sentiment(self, text: str) -> dict[str, float]:
@@ -852,7 +851,7 @@ class EnhancedTwitterPlaywrightCrawler:
                 "polarity": blob.sentiment.polarity,
                 "subjectivity": blob.sentiment.subjectivity,
             }
-        except:
+        except Exception:
             return {"polarity": 0.0, "subjectivity": 0.0}
 
     async def run_single_crawl(

@@ -35,9 +35,8 @@ from pathlib import Path
 from typing import Any
 
 try:
-    import structlog
-
-    STRUCTLOG_AVAILABLE = True
+    # structlog import removed as it was unused
+    STRUCTLOG_AVAILABLE = False
 except ImportError:
     STRUCTLOG_AVAILABLE = False
 
