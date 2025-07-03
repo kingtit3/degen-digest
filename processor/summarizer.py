@@ -208,7 +208,7 @@ def rewrite_batch(items: list[dict[str, str]]) -> list[dict[str, str]]:
         tasks = [process_with_semaphore(idx) for idx in uncached_indices]
         completed_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for i, (idx, result) in enumerate(zip(uncached_indices, completed_results)):
+        for _i, (idx, result) in enumerate(zip(uncached_indices, completed_results, strict=False)):
             if isinstance(result, Exception):
                 logger.error("Task failed for index %s: %s", idx, result)
                 # Fallback to original content

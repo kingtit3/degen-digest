@@ -45,7 +45,7 @@ def main():
 
             # Show digest preview
             digest_lines = result["digest_content"].split("\n")
-            for i, line in enumerate(digest_lines[:40]):
+            for _i, line in enumerate(digest_lines[:40]):
                 print(line)
 
             if len(digest_lines) > 40:

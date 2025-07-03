@@ -161,7 +161,7 @@ class ContentClusterer:
 
         # Assign topics to items
         item_topics = {}
-        for i, item in enumerate(items):
+        for i, _item in enumerate(items):
             if i < len(topic_matrix):
                 topic_scores = topic_matrix[i]
                 dominant_topic = topic_scores.argmax()

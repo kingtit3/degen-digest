@@ -278,7 +278,7 @@ def create_analytics_charts(data):
 
     # Engagement distribution (if available)
     engagement_scores = []
-    for source, items in data.items():
+    for _source, items in data.items():
         if isinstance(items, list):
             for item in items:
                 if isinstance(item, dict) and "engagement_score" in item:

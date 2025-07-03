@@ -324,7 +324,7 @@ class DataQualityMonitor:
         total_score = 0
         source_count = 0
 
-        for source, metrics in self.quality_metrics.items():
+        for _source, metrics in self.quality_metrics.items():
             if "overall_score" in metrics:
                 total_score += metrics["overall_score"]
                 source_count += 1
@@ -377,21 +377,21 @@ class DataQualityMonitor:
 
         recommendations = []
 
-        for source, metrics in self.quality_metrics.items():
+        for _source, metrics in self.quality_metrics.items():
             if "metrics" in metrics:
                 source_metrics = metrics["metrics"]
 
                 # Check completeness
                 if source_metrics.get("completeness", 0) < 0.8:
-                    recommendations.append(f"Improve data completeness for {source}")
+                    recommendations.append(f"Improve data completeness for {_source}")
 
                 # Check accuracy
                 if source_metrics.get("accuracy", 0) < 0.9:
-                    recommendations.append(f"Improve data accuracy for {source}")
+                    recommendations.append(f"Improve data accuracy for {_source}")
 
                 # Check timeliness
                 if source_metrics.get("timeliness", 0) < 0.8:
-                    recommendations.append(f"Improve data timeliness for {source}")
+                    recommendations.append(f"Improve data timeliness for {_source}")
 
         return recommendations
 

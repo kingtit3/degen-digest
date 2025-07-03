@@ -758,7 +758,7 @@ def main():
     # Load raw data
     sources = load_raw_sources()
     all_items = []
-    for source_name, items in sources.items():
+    for _source_name, items in sources.items():
         all_items.extend(items)
 
     logger.info(f"Processing {len(all_items)} items from raw sources")

@@ -247,7 +247,7 @@ def main():
         # Display data
         st.markdown(f"### 📊 Showing {len(current_data)} of {total_items} items")
 
-        for i, item in enumerate(current_data):
+        for _i, item in enumerate(current_data):
             with st.container():
                 st.markdown(
                     """

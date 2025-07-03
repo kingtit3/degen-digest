@@ -587,7 +587,7 @@ class EnhancedDataPipeline:
         all_data = []
 
         # Combine all data sources
-        for source_name, source_data in self.data_sources.items():
+        for _source_name, source_data in self.data_sources.items():
             if "data" in source_data and source_data["data"]:
                 all_data.extend(source_data["data"])
 

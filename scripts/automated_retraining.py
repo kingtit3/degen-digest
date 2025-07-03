@@ -138,7 +138,7 @@ class AutomatedRetraining:
 
             if not performance:
                 # Fallback to individual model performance
-                for model_name, perf in enhanced_predictor.model_performance.items():
+                for _model_name, perf in enhanced_predictor.model_performance.items():
                     if perf.get("r2", 0) > 0:
                         performance = perf
                         break

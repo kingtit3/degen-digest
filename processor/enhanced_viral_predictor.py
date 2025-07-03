@@ -629,7 +629,7 @@ class EnhancedViralPredictor:
         ]
 
         # Create importance dict
-        importance_dict = dict(zip(feature_names, self.feature_importance[model_name]))
+        importance_dict = dict(zip(feature_names, self.feature_importance[model_name], strict=False))
 
         # Sort by importance
         sorted_importance = dict(
