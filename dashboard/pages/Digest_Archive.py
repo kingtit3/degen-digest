@@ -191,9 +191,9 @@ def display_digest_archive():
                 summary_lines = lines[start_idx + 1 : start_idx + 6]
                 summary = " ".join(
                     [
-                        l.strip()
-                        for l in summary_lines
-                        if l.strip() and not l.startswith("---")
+                        line.strip()
+                        for line in summary_lines
+                        if line.strip() and not line.startswith("---")
                     ]
                 )
                 break

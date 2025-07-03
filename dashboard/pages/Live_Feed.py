@@ -308,9 +308,9 @@ def main():
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
-                xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-                yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+                font={"color": "white"},
+                xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+                yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -329,7 +329,7 @@ def main():
                 fig.update_layout(
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="white"),
+                    font={"color": "white"},
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -351,9 +351,9 @@ def main():
                 fig.update_layout(
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="white"),
-                    xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-                    yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+                    font={"color": "white"},
+                    xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+                    yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
                 )
                 st.plotly_chart(fig, use_container_width=True)
 

@@ -182,9 +182,9 @@ def show_engagement_trends(start_date, end_date, sources):
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
-                xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-                yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+                font={"color": "white"},
+                xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+                yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -202,9 +202,9 @@ def show_engagement_trends(start_date, end_date, sources):
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
-                xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-                yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+                font={"color": "white"},
+                xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+                yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -239,9 +239,9 @@ def show_engagement_trends(start_date, end_date, sources):
         fig.update_layout(
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
-            xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-            yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+            font={"color": "white"},
+            xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+            yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -334,7 +334,7 @@ def show_sentiment_analysis(start_date, end_date, sources):
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
+                font={"color": "white"},
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -352,9 +352,9 @@ def show_sentiment_analysis(start_date, end_date, sources):
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
-                xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-                yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+                font={"color": "white"},
+                xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+                yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
             )
             fig.add_hline(y=0, line_dash="dash", line_color="white")
             st.plotly_chart(fig, use_container_width=True)
@@ -372,9 +372,9 @@ def show_sentiment_analysis(start_date, end_date, sources):
         fig.update_layout(
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
-            xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-            yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+            font={"color": "white"},
+            xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+            yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -488,9 +488,9 @@ def show_source_performance(start_date, end_date, sources):
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
-                xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-                yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+                font={"color": "white"},
+                xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+                yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -508,9 +508,9 @@ def show_source_performance(start_date, end_date, sources):
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
-                xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-                yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+                font={"color": "white"},
+                xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+                yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -551,9 +551,9 @@ def show_source_performance(start_date, end_date, sources):
         fig.update_layout(
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
-            xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-            yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+            font={"color": "white"},
+            xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+            yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -639,9 +639,9 @@ def show_market_insights(start_date, end_date, sources):
         fig.update_layout(
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
-            xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
-            yaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+            font={"color": "white"},
+            xaxis={"gridcolor": "rgba(255,255,255,0.1)"},
+            yaxis={"gridcolor": "rgba(255,255,255,0.1)"},
         )
         fig.add_hline(y=0, line_dash="dash", line_color="white")
         st.plotly_chart(fig, use_container_width=True)
@@ -727,7 +727,7 @@ def show_market_insights(start_date, end_date, sources):
             height=600,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
+            font={"color": "white"},
             showlegend=False,
         )
 

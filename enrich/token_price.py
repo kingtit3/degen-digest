@@ -21,7 +21,6 @@ endpoint (they simply don't appear in the result mapping).
 
 from __future__ import annotations
 
-
 import httpx
 
 from utils.advanced_logging import get_logger

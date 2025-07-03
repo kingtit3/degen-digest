@@ -207,7 +207,7 @@ with col1:
             y=[0, df["_engagement_score"].max()],
             mode="lines",
             name="Perfect Prediction",
-            line=dict(dash="dash", color="red"),
+            line={"dash": "dash", "color": "red"},
         )
     )
     st.plotly_chart(fig, use_container_width=True)

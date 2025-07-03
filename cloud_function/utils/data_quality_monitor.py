@@ -142,13 +142,13 @@ class DataQualityMonitor:
         for item in data:
             # Check for reasonable engagement values
             engagement = item.get("engagement_velocity", 0)
-            if isinstance(engagement, (int, float)) and engagement >= 0:
+            if isinstance(engagement, int | float) and engagement >= 0:
                 passed_checks += 1
             accuracy_checks += 1
 
             # Check for reasonable viral coefficient
             viral_coef = item.get("viral_coefficient", 0)
-            if isinstance(viral_coef, (int, float)) and 0 <= viral_coef <= 10:
+            if isinstance(viral_coef, int | float) and 0 <= viral_coef <= 10:
                 passed_checks += 1
             accuracy_checks += 1
 
@@ -183,13 +183,13 @@ class DataQualityMonitor:
         for item in data:
             # Check engagement_velocity type consistency
             if "engagement_velocity" in item:
-                if isinstance(item["engagement_velocity"], (int, float)):
+                if isinstance(item["engagement_velocity"], int | float):
                     passed_checks += 1
                 consistency_checks += 1
 
             # Check viral_coefficient type consistency
             if "viral_coefficient" in item:
-                if isinstance(item["viral_coefficient"], (int, float)):
+                if isinstance(item["viral_coefficient"], int | float):
                     passed_checks += 1
                 consistency_checks += 1
 
@@ -268,12 +268,12 @@ class DataQualityMonitor:
 
             # Check for valid engagement metrics
             engagement = item.get("engagement_velocity", 0)
-            if not isinstance(engagement, (int, float)) or engagement < 0:
+            if not isinstance(engagement, int | float) or engagement < 0:
                 is_valid = False
 
             # Check for valid viral coefficient
             viral_coef = item.get("viral_coefficient", 0)
-            if not isinstance(viral_coef, (int, float)) or viral_coef < 0:
+            if not isinstance(viral_coef, int | float) or viral_coef < 0:
                 is_valid = False
 
             if is_valid:
