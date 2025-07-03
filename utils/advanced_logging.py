@@ -28,10 +28,11 @@ import sys
 import time
 import traceback
 import types
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Optional structlog import.  If the dependency isn't available (e.g. in a
@@ -230,7 +231,7 @@ def log_function_call(func: Callable) -> Callable:
             module=func.__module__,
             args_count=len(args),
             kwargs_keys=list(kwargs.keys()),
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
 
         try:
@@ -243,7 +244,7 @@ def log_function_call(func: Callable) -> Callable:
                 function_name=func.__name__,
                 execution_time_seconds=execution_time,
                 result_type=type(result).__name__,
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
 
             return result
@@ -258,7 +259,7 @@ def log_function_call(func: Callable) -> Callable:
                 error_message=str(e),
                 execution_time_seconds=execution_time,
                 traceback=traceback.format_exc(),
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
             raise
 
@@ -278,7 +279,7 @@ def log_database_operation(operation: str):
                 "database_operation_start",
                 operation=operation,
                 function_name=func.__name__,
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
 
             try:
@@ -291,7 +292,7 @@ def log_database_operation(operation: str):
                     function_name=func.__name__,
                     execution_time_seconds=execution_time,
                     result_type=type(result).__name__,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=datetime.now(UTC).isoformat(),
                 )
 
                 return result
@@ -306,7 +307,7 @@ def log_database_operation(operation: str):
                     error_message=str(e),
                     execution_time_seconds=execution_time,
                     traceback=traceback.format_exc(),
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=datetime.now(UTC).isoformat(),
                 )
                 raise
 
@@ -329,7 +330,7 @@ def log_api_call(api_name: str, endpoint: str = None):
                 api_name=api_name,
                 endpoint=endpoint,
                 function_name=func.__name__,
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
 
             try:
@@ -343,7 +344,7 @@ def log_api_call(api_name: str, endpoint: str = None):
                     function_name=func.__name__,
                     execution_time_seconds=execution_time,
                     result_type=type(result).__name__,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=datetime.now(UTC).isoformat(),
                 )
 
                 return result
@@ -359,7 +360,7 @@ def log_api_call(api_name: str, endpoint: str = None):
                     error_message=str(e),
                     execution_time_seconds=execution_time,
                     traceback=traceback.format_exc(),
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=datetime.now(UTC).isoformat(),
                 )
                 raise
 
@@ -381,7 +382,7 @@ def log_cloud_function_execution(function_name: str):
                 "cloud_function_start",
                 function_name=function_name,
                 execution_id=os.environ.get("K_REVISION", "unknown"),
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
 
             try:
@@ -393,7 +394,7 @@ def log_cloud_function_execution(function_name: str):
                     function_name=function_name,
                     execution_time_seconds=execution_time,
                     result_type=type(result).__name__,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=datetime.now(UTC).isoformat(),
                 )
 
                 return result
@@ -407,7 +408,7 @@ def log_cloud_function_execution(function_name: str):
                     error_message=str(e),
                     execution_time_seconds=execution_time,
                     traceback=traceback.format_exc(),
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=datetime.now(UTC).isoformat(),
                 )
                 raise
 
@@ -423,7 +424,7 @@ def log_performance_metrics(operation: str, **metrics):
         "performance_metrics",
         operation=operation,
         metrics=metrics,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 
@@ -435,7 +436,7 @@ def log_system_health(component: str, status: str, details: dict[str, Any] = Non
         component=component,
         status=status,
         details=details or {},
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 
@@ -447,7 +448,7 @@ def log_data_quality_issue(issue_type: str, severity: str, details: dict[str, An
         issue_type=issue_type,
         severity=severity,
         details=details,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 
@@ -459,7 +460,7 @@ def log_security_event(event_type: str, severity: str, details: dict[str, Any]):
         event_type=event_type,
         severity=severity,
         details=details,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 
@@ -470,7 +471,7 @@ def log_business_event(event_type: str, details: dict[str, Any]):
         "business_event",
         event_type=event_type,
         details=details,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 

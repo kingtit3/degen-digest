@@ -7,7 +7,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 # Add project root to path
@@ -49,7 +49,7 @@ def test_logging_system():
     logger.info(
         "structured_log_test",
         test_type="comprehensive",
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         features=["structured", "performance", "monitoring"],
     )
 
@@ -166,7 +166,7 @@ def test_monitoring_system():
 
         # Save test results
         test_results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "test_type": "comprehensive_monitoring",
             "metrics_collected": list(metrics.keys()),
             "overall_status": "success",

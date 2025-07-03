@@ -9,7 +9,7 @@ import json
 import logging
 import random
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -432,7 +432,7 @@ class EnhancedTwitterPlaywrightCrawler:
             tweets_loaded = 0
             max_scrolls = 3
 
-            for scroll in range(max_scrolls):
+            for _ in range(max_scrolls):
                 if tweets_loaded >= max_tweets:
                     break
 
@@ -625,22 +625,20 @@ class EnhancedTwitterPlaywrightCrawler:
             tweets_loaded = 0
             max_scrolls = 5
 
-            for scroll in range(max_scrolls):
+            for _ in range(max_scrolls):
                 if tweets_loaded >= max_tweets:
                     break
 
-                # Scroll down
                 await self.page.evaluate("window.scrollBy(0, 1000)")
                 await asyncio.sleep(2)
 
-                # Count current tweets using multiple selectors
                 for selector in tweet_selectors:
                     try:
                         tweet_elements = await self.page.query_selector_all(selector)
                         if tweet_elements:
                             tweets_loaded = len(tweet_elements)
                             logger.info(
-                                f"Loaded {tweets_loaded} tweets for '{query}' (scroll {scroll + 1})"
+                                f"Loaded {tweets_loaded} tweets for '{query}' (scroll {_ + 1})"
                             )
                             break
                     except Exception:
@@ -765,11 +763,11 @@ class EnhancedTwitterPlaywrightCrawler:
                 "id": f"playwright_{int(time.time())}_{random.randint(1000,9999)}",
                 "text": text,
                 "username": username,
-                "created_at": timestamp or datetime.now(timezone.utc).isoformat(),
+                "created_at": timestamp or datetime.now(UTC).isoformat(),
                 "engagement": engagement,
                 "sentiment": sentiment,
                 "query": self.current_query,
-                "collected_at": datetime.now(timezone.utc).isoformat(),
+                "collected_at": datetime.now(UTC).isoformat(),
             }
 
             return tweet_data
@@ -1048,7 +1046,7 @@ class EnhancedTwitterPlaywrightCrawler:
                 "tweets": tweets,
                 "metadata": {
                     "total_tweets": len(tweets),
-                    "collected_at": datetime.now(timezone.utc).isoformat(),
+                    "collected_at": datetime.now(UTC).isoformat(),
                     "source": "twitter_playwright_enhanced",
                     "crawler_version": "2.0",
                     "gcs_uploaded": True,
@@ -1112,7 +1110,7 @@ class EnhancedTwitterPlaywrightCrawler:
     async def human_like_scroll(self, max_scrolls: int = 10, max_tweets: int = 30):
         """Simulate human-like scrolling on the current page"""
         tweets_loaded = 0
-        for scroll in range(max_scrolls):
+        for _ in range(max_scrolls):
             # Random scroll amount and direction
             if random.random() < 0.85:
                 scroll_amount = random.randint(400, 1200)

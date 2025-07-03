@@ -3,7 +3,7 @@
 Provides Tweet, RedditPost, Digest models and helper insert/query functions.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 from dateutil import parser as dateparser
@@ -33,7 +33,7 @@ class Tweet(SQLModel, table=True):
     quote_count: int | None = Field(default=None)
     bookmark_count: int | None = Field(default=None)
     created_at: datetime | None = Field(default=None)
-    scraped_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    scraped_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class RedditPost(SQLModel, table=True):
@@ -46,7 +46,7 @@ class RedditPost(SQLModel, table=True):
     num_comments: int | None = Field(default=None)
     created_at: datetime | None = Field(default=None)
     link: str
-    scraped_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    scraped_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class Digest(SQLModel, table=True):
@@ -54,7 +54,7 @@ class Digest(SQLModel, table=True):
     digest_id: str = Field(unique=True, index=True)
     content: str
     summary: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     file_path: str | None = None
 
 
@@ -65,14 +65,14 @@ class LLMUsage(SQLModel, table=True):
     model: str
     tokens_used: int
     cost_usd: float
-    captured_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    captured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 # Additional snapshots of engagement captured after initial scrape
 class TweetMetrics(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     tweet_id: str = Field(index=True)
-    captured_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    captured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     like_count: int = 0
     retweet_count: int = 0
     reply_count: int = 0
@@ -121,8 +121,6 @@ def _parse_tweet_date(date_str: str) -> datetime | None:
                     year,
                 ) = match.groups()
                 # Convert to datetime (simplified - assumes UTC)
-                from datetime import datetime, timezone
-
                 return datetime(
                     int(year),
                     {
@@ -143,7 +141,7 @@ def _parse_tweet_date(date_str: str) -> datetime | None:
                     int(hour),
                     int(minute),
                     int(second),
-                    tzinfo=timezone.utc,
+                    tzinfo=UTC,
                 )
             return None
 
@@ -262,7 +260,7 @@ def stats():
 
 
 def add_llm_tokens(tokens: int, cost: float, model: str = "default"):
-    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    month = datetime.now(UTC).strftime("%Y-%m")
     with Session(engine) as session:
         # Check if usage record exists for this month and model
         existing = session.exec(
@@ -294,10 +292,10 @@ def get_month_usage(month: str, model: str = "default"):
 
 def recent_tweet_ids(hours: int = 2) -> list[str]:
     """Return tweet IDs scraped within the last *hours*."""
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    cutoff = datetime.now(UTC) - timedelta(hours=hours)
     with Session(engine) as sess:
         rows = sess.exec(select(Tweet.tweet_id).where(Tweet.scraped_at >= cutoff)).all()
-    return [r for r in rows]
+    return list(rows)
 
 
 def add_tweet_metrics(metrics: list[dict]):

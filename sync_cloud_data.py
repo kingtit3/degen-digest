@@ -5,7 +5,7 @@ Sync data from cloud function back to local system and save to database.
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import requests
@@ -155,7 +155,7 @@ def save_to_database(processed_data):
                             created_at=datetime.fromisoformat(
                                 item.get("created_at", datetime.now().isoformat())
                             ),
-                            scraped_at=datetime.now(timezone.utc),
+                            scraped_at=datetime.now(UTC),
                         )
                         session.add(tweet)
                         tweets_added += 1
@@ -178,7 +178,7 @@ def save_to_database(processed_data):
                                 item.get("created_utc", datetime.now().isoformat())
                             ),
                             link=item.get("url", ""),
-                            scraped_at=datetime.now(timezone.utc),
+                            scraped_at=datetime.now(UTC),
                         )
                         session.add(post)
                         reddit_added += 1

@@ -6,7 +6,7 @@ Converts twitter_playwright_enhanced_*.json to twitter_raw.json format
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -125,7 +125,7 @@ class CrawlerDataProcessor:
                     "sentiment": tweet.get("sentiment", {}),
                     "engagement_score": tweet.get("engagement_score", 0),
                     "collected_at": tweet.get(
-                        "collected_at", datetime.now(timezone.utc).isoformat()
+                        "collected_at", datetime.now(UTC).isoformat()
                     ),
                 }
 

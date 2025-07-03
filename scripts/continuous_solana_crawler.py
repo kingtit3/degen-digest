@@ -10,7 +10,7 @@ import logging
 import random
 import signal
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 # Add project root to path
@@ -136,9 +136,7 @@ class ContinuousSolanaCrawler:
                 self.session_stats["total_crawls"] += 1
                 self.session_stats["successful_crawls"] += 1
                 self.session_stats["total_tweets_collected"] += len(tweets)
-                self.session_stats["last_crawl_time"] = datetime.now(
-                    timezone.utc
-                ).isoformat()
+                self.session_stats["last_crawl_time"] = datetime.now(UTC).isoformat()
 
                 logger.info(f"Crawl session successful: {len(tweets)} tweets collected")
                 return True
@@ -161,7 +159,7 @@ class ContinuousSolanaCrawler:
         stats_file = self.output_dir / "crawler_stats.json"
         stats_data = {
             "session_stats": self.session_stats,
-            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
             "crawler_config": {
                 "start_hour": self.start_hour,
                 "end_hour": self.end_hour,
@@ -182,7 +180,7 @@ class ContinuousSolanaCrawler:
         logger.info(f"⏰ Crawl interval: {self.crawl_interval_minutes} minutes")
 
         self.is_running = True
-        self.session_stats["start_time"] = datetime.now(timezone.utc).isoformat()
+        self.session_stats["start_time"] = datetime.now(UTC).isoformat()
 
         while self.is_running:
             try:

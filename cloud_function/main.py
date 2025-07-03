@@ -5,7 +5,7 @@ import subprocess
 import sys
 import time
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import functions_framework
@@ -168,7 +168,7 @@ def collect_reddit_data():
                         if hasattr(entry, "author")
                         else "unknown",
                         "score": 0,  # RSS doesn't provide scores
-                        "created_utc": datetime.now(timezone.utc).isoformat(),
+                        "created_utc": datetime.now(UTC).isoformat(),
                         "num_comments": 0,  # RSS doesn't provide comment counts
                         "selftext": entry.summary if hasattr(entry, "summary") else "",
                     }
@@ -292,7 +292,7 @@ def process_data(all_data):
                 **item,
                 "sentiment": sentiment,
                 "engagement_score": engagement_score,
-                "processed_at": datetime.now(timezone.utc).isoformat(),
+                "processed_at": datetime.now(UTC).isoformat(),
             }
 
             processed_data.append(processed_item)
@@ -586,7 +586,7 @@ def refresh_data(request):
             return {
                 "status": "warning",
                 "message": "No data collected from any source",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }, 200
 
         # Step 3: Process and analyze data
@@ -623,7 +623,7 @@ def refresh_data(request):
                 "digest_generated": should_generate_digest
                 and digest_content is not None,
             },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Include digest content in response if generated
@@ -654,7 +654,7 @@ def refresh_data(request):
             "message": error_msg,
             "execution_id": execution_id,
             "execution_time": error_time,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }, 500
 
 
@@ -666,7 +666,7 @@ def health_check(request):
 
         health_status = {
             "status": "healthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "environment": "cloud_function",
             "version": "2.0.0",
             "features": [
@@ -685,5 +685,5 @@ def health_check(request):
         return {
             "status": "unhealthy",
             "error": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }, 500

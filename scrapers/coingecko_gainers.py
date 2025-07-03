@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -42,7 +42,7 @@ def fetch_top_gainers(limit: int = 20) -> list[dict]:
                 "title": title,
                 "summary": summary,
                 "link": f"https://www.coingecko.com/en/coins/{coin['id']}",
-                "published": datetime.now(timezone.utc).isoformat(),
+                "published": datetime.now(UTC).isoformat(),
             }
         )
     return items

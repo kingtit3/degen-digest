@@ -29,7 +29,7 @@ import traceback
 import uuid
 from collections.abc import Callable
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Any
@@ -135,7 +135,7 @@ class EnterpriseLogger:
             def format(self, record):
                 log_entry = {
                     "timestamp": datetime.fromtimestamp(
-                        record.created, tz=timezone.utc
+                        record.created, tz=UTC
                     ).isoformat(),
                     "level": record.levelname,
                     "logger": record.name,
@@ -197,7 +197,7 @@ class EnterpriseLogger:
         extra_fields["logger_instance_id"] = self.instance_id
 
         # Add timestamp
-        extra_fields["timestamp"] = datetime.now(timezone.utc).isoformat()
+        extra_fields["timestamp"] = datetime.now(UTC).isoformat()
 
         # Create log record with extra fields
         record = self.logger.makeRecord(self.name, level, "", 0, message, (), None)
@@ -233,19 +233,19 @@ class EnterpriseLogger:
         if error_key not in self.error_counts:
             self.error_counts[error_key] = {
                 "count": 0,
-                "first_occurrence": datetime.now(timezone.utc),
-                "last_occurrence": datetime.now(timezone.utc),
+                "first_occurrence": datetime.now(UTC),
+                "last_occurrence": datetime.now(UTC),
                 "examples": [],
             }
 
         self.error_counts[error_key]["count"] += 1
-        self.error_counts[error_key]["last_occurrence"] = datetime.now(timezone.utc)
+        self.error_counts[error_key]["last_occurrence"] = datetime.now(UTC)
 
         # Keep up to 5 examples
         if len(self.error_counts[error_key]["examples"]) < 5:
             self.error_counts[error_key]["examples"].append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "extra_fields": extra_fields,
                 }
             )
@@ -336,7 +336,7 @@ class EnterpriseLogger:
         audit_entry = {
             "event": event,
             "user_id": user_id or getattr(self._local, "user_id", None),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "ip_address": getattr(self._local, "ip_address", None),
             "user_agent": getattr(self._local, "user_agent", None),
             "session_id": getattr(self._local, "session_id", None),
@@ -355,7 +355,7 @@ class EnterpriseLogger:
         security_entry = {
             "event": event,
             "severity": severity,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "ip_address": getattr(self._local, "ip_address", None),
             "user_agent": getattr(self._local, "user_agent", None),
             "session_id": getattr(self._local, "session_id", None),
@@ -379,7 +379,7 @@ class EnterpriseLogger:
 
         business_entry = {
             "event": event,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "session_id": getattr(self._local, "session_id", None),
             "request_id": getattr(self._local, "request_id", None),
             **kwargs,
@@ -396,7 +396,7 @@ class EnterpriseLogger:
         quality_entry = {
             "issue": issue,
             "data_source": data_source,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "session_id": getattr(self._local, "session_id", None),
             "request_id": getattr(self._local, "request_id", None),
             **kwargs,
@@ -422,7 +422,7 @@ class EnterpriseLogger:
             "endpoint": endpoint,
             "status_code": status_code,
             "response_time_ms": response_time * 1000,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "session_id": getattr(self._local, "session_id", None),
             "request_id": getattr(self._local, "request_id", None),
             **kwargs,
@@ -442,7 +442,7 @@ class EnterpriseLogger:
             "operation": operation,
             "table": table,
             "duration_ms": duration * 1000,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "session_id": getattr(self._local, "session_id", None),
             "request_id": getattr(self._local, "request_id", None),
             **kwargs,
@@ -458,7 +458,7 @@ class EnterpriseLogger:
         crawler_entry = {
             "source": source,
             "action": action,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "session_id": getattr(self._local, "session_id", None),
             "request_id": getattr(self._local, "request_id", None),
             **kwargs,
@@ -474,7 +474,7 @@ class EnterpriseLogger:
         dashboard_entry = {
             "action": action,
             "page": page,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "session_id": getattr(self._local, "session_id", None),
             "request_id": getattr(self._local, "request_id", None),
             **kwargs,
@@ -831,7 +831,7 @@ def log_startup(component: str, version: str = "1.0.0"):
         f"Component started: {component}",
         component=component,
         version=version,
-        startup_time=datetime.now(timezone.utc).isoformat(),
+        startup_time=datetime.now(UTC).isoformat(),
     )
 
 
@@ -841,7 +841,7 @@ def log_shutdown(component: str):
     logger.info(
         f"Component shutting down: {component}",
         component=component,
-        shutdown_time=datetime.now(timezone.utc).isoformat(),
+        shutdown_time=datetime.now(UTC).isoformat(),
     )
 
 

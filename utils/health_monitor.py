@@ -2,7 +2,7 @@
 
 import json
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import psutil
@@ -33,7 +33,7 @@ class HealthMonitor:
             disk = psutil.disk_usage("/")
 
             return {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "uptime_seconds": time.time() - self.start_time,
                 "cpu_percent": cpu_percent,
                 "memory_percent": memory.percent,
@@ -61,7 +61,7 @@ class HealthMonitor:
             file_path = self.output_dir / filename
             if file_path.exists():
                 mtime = datetime.fromtimestamp(file_path.stat().st_mtime)
-                age_hours = (datetime.now(timezone.utc) - mtime).total_seconds() / 3600
+                age_hours = (datetime.now(UTC) - mtime).total_seconds() / 3600
                 file_size = file_path.stat().st_size
 
                 checks[filename] = {
@@ -98,7 +98,7 @@ class HealthMonitor:
                 ).one()
 
                 # Check recent activity
-                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                cutoff = datetime.now(UTC) - timedelta(hours=24)
                 recent_tweets = session.exec(
                     select(func.count())
                     .select_from(Tweet)
@@ -133,7 +133,7 @@ class HealthMonitor:
                 data_freshness = "unknown"
                 if latest_tweet:
                     hours_since_latest = (
-                        datetime.now(timezone.utc) - latest_tweet.created_at
+                        datetime.now(UTC) - latest_tweet.created_at
                     ).total_seconds() / 3600
                     if hours_since_latest < 1:
                         data_freshness = "very_fresh"
@@ -145,12 +145,12 @@ class HealthMonitor:
                         data_freshness = "very_stale"
 
                 # Get LLM usage
-                month = datetime.now(timezone.utc).strftime("%Y-%m")
+                month = datetime.now(UTC).strftime("%Y-%m")
                 usage = get_month_usage(month)
                 llm_cost = usage.cost_usd if usage else 0.0
 
                 health_metrics = {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "overall_status": "healthy",
                     "data_counts": {
                         "total_tweets": tweet_count,
@@ -204,7 +204,7 @@ class HealthMonitor:
     def check_llm_health(self) -> dict:
         """Check LLM service health and usage."""
         try:
-            month = datetime.now(timezone.utc).strftime("%Y-%m")
+            month = datetime.now(UTC).strftime("%Y-%m")
             usage = get_month_usage(month)
 
             return {
@@ -220,7 +220,7 @@ class HealthMonitor:
     def run_health_check(self) -> dict:
         """Run comprehensive health check."""
         health_data = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "system": self.collect_system_metrics(),
             "data_freshness": self.check_data_freshness(),
             "database": self.check_database_health(),
@@ -252,7 +252,7 @@ class HealthMonitor:
         if health_data["system"].get("cpu_percent", 0) > 80:
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "warning",
                     "category": "system",
                     "message": f"High CPU usage: {health_data['system']['cpu_percent']}%",
@@ -262,7 +262,7 @@ class HealthMonitor:
         if health_data["system"].get("memory_percent", 0) > 85:
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "warning",
                     "category": "system",
                     "message": f"High memory usage: {health_data['system']['memory_percent']}%",
@@ -274,7 +274,7 @@ class HealthMonitor:
             if not status["is_fresh"] and status["exists"]:
                 alerts.append(
                     {
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "level": "warning",
                         "category": "data",
                         "message": f"Stale data file: {filename} (age: {status['age_hours']:.1f}h)",
@@ -285,7 +285,7 @@ class HealthMonitor:
         if not health_data["database"].get("connected", False):
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "error",
                     "category": "database",
                     "message": "Database connection failed",
@@ -297,7 +297,7 @@ class HealthMonitor:
         if llm_data.get("budget_remaining_usd", 10.0) < 1.0:
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "warning",
                     "category": "llm",
                     "message": f"Low LLM budget remaining: ${llm_data['budget_remaining_usd']:.2f}",

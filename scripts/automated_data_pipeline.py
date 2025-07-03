@@ -9,7 +9,7 @@ import sqlite3
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 # Add project root to path
@@ -45,7 +45,7 @@ class AutomatedDataPipeline:
                 last_run_str = f.read().strip()
                 last_run = datetime.fromisoformat(last_run_str)
 
-            time_since_last = datetime.now(timezone.utc) - last_run
+            time_since_last = datetime.now(UTC) - last_run
             return time_since_last.total_seconds() >= (
                 self.twitter_interval_hours * 3600
             )
@@ -58,7 +58,7 @@ class AutomatedDataPipeline:
         """Mark that Twitter was just scraped"""
         try:
             with open(self.last_twitter_run_file, "w") as f:
-                f.write(datetime.now(timezone.utc).isoformat())
+                f.write(datetime.now(UTC).isoformat())
         except Exception as e:
             logger.error(f"Error marking Twitter run: {e}")
 
@@ -96,7 +96,7 @@ class AutomatedDataPipeline:
 
         while True:
             try:
-                current_time = datetime.now(timezone.utc)
+                current_time = datetime.now(UTC)
                 logger.info(
                     f"📅 Pipeline run at: {current_time.strftime('%Y-%m-%d %H:%M:%S UTC')}"
                 )

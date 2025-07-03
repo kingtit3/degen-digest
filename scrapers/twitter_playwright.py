@@ -9,7 +9,7 @@ import json
 import logging
 import random
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -213,11 +213,11 @@ class TwitterPlaywrightCrawler:
                 "id": f"playwright_{int(time.time())}_{hash(text)}",
                 "text": text,
                 "username": username,
-                "created_at": timestamp or datetime.now(timezone.utc).isoformat(),
+                "created_at": timestamp or datetime.now(UTC).isoformat(),
                 "engagement": engagement,
                 "sentiment": sentiment,
                 "query": getattr(self, "current_query", "unknown"),
-                "collected_at": datetime.now(timezone.utc).isoformat(),
+                "collected_at": datetime.now(UTC).isoformat(),
             }
 
             return tweet_data

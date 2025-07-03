@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -60,7 +60,7 @@ def get_database_metrics():
             digest_count = session.exec(select(func.count()).select_from(Digest)).one()
 
             # Get recent activity (last 24 hours)
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+            cutoff = datetime.now(UTC) - timedelta(hours=24)
             recent_tweets = session.exec(
                 select(func.count())
                 .select_from(Tweet)
@@ -88,12 +88,12 @@ def get_database_metrics():
 
             if latest_tweet:
                 tweet_freshness = (
-                    datetime.now(timezone.utc) - latest_tweet.created_at
+                    datetime.now(UTC) - latest_tweet.created_at
                 ).total_seconds() / 3600
 
             if latest_reddit:
                 reddit_freshness = (
-                    datetime.now(timezone.utc) - latest_reddit.created_at
+                    datetime.now(UTC) - latest_reddit.created_at
                 ).total_seconds() / 3600
 
             return {
@@ -563,7 +563,7 @@ def main():
     # Footer with last update time
     st.markdown("---")
     st.markdown(
-        f"*Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}*"
+        f"*Last updated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}*"
     )
 
 

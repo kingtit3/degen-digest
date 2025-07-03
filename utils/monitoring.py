@@ -4,7 +4,7 @@ Comprehensive monitoring system for Degen Digest gcloud infrastructure
 
 import json
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +47,7 @@ class SystemMonitor:
             process_memory = process.memory_info()
 
             metrics = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "uptime_seconds": time.time() - self.start_time,
                 "system": {
                     "cpu_percent": cpu_percent,
@@ -92,7 +92,7 @@ class SystemMonitor:
                 ).one()
 
                 # Check recent activity
-                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                cutoff = datetime.now(UTC) - timedelta(hours=24)
                 recent_tweets = session.exec(
                     select(func.count())
                     .select_from(Tweet)
@@ -127,7 +127,7 @@ class SystemMonitor:
                 data_freshness = "unknown"
                 if latest_tweet:
                     hours_since_latest = (
-                        datetime.now(timezone.utc) - latest_tweet.created_at
+                        datetime.now(UTC) - latest_tweet.created_at
                     ).total_seconds() / 3600
                     if hours_since_latest < 1:
                         data_freshness = "very_fresh"
@@ -139,14 +139,14 @@ class SystemMonitor:
                         data_freshness = "very_stale"
 
                 # Get LLM usage
-                month = datetime.now(timezone.utc).strftime("%Y-%m")
+                month = datetime.now(UTC).strftime("%Y-%m")
                 usage = session.exec(
                     select(LLMUsage).where(LLMUsage.month == month)
                 ).first()
                 llm_cost = usage.cost_usd if usage else 0.0
 
                 health_metrics = {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "overall_status": "healthy",
                     "data_counts": {
                         "total_tweets": tweet_count,
@@ -187,7 +187,7 @@ class SystemMonitor:
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
             return {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "overall_status": "error",
                 "error": str(e),
             }
@@ -201,7 +201,7 @@ class SystemMonitor:
             response = requests.get(function_url, timeout=10)
 
             health_metrics = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "function_status": "healthy"
                 if response.status_code == 200
                 else "unhealthy",
@@ -215,7 +215,7 @@ class SystemMonitor:
         except Exception as e:
             logger.error(f"Cloud function health check failed: {e}")
             return {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "function_status": "error",
                 "error": str(e),
             }
@@ -241,7 +241,7 @@ class SystemMonitor:
             except Exception as e:
                 api_health[api_name] = {"status": "error", "error": str(e)}
 
-        return {"timestamp": datetime.now(timezone.utc).isoformat(), "apis": api_health}
+        return {"timestamp": datetime.now(UTC).isoformat(), "apis": api_health}
 
     def check_data_quality(self) -> dict[str, Any]:
         """Check data quality metrics"""
@@ -273,7 +273,7 @@ class SystemMonitor:
                 ).one()
 
                 quality_metrics = {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "duplicate_tweets": len(duplicate_tweets),
                     "no_engagement_tweets": no_engagement_tweets,
                     "malformed_tweets": malformed_tweets,
@@ -287,7 +287,7 @@ class SystemMonitor:
         except Exception as e:
             logger.error(f"Data quality check failed: {e}")
             return {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "error": str(e),
             }
 
@@ -299,7 +299,7 @@ class SystemMonitor:
         if metrics.get("system", {}).get("cpu_percent", 0) > 80:
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "warning",
                     "category": "system",
                     "message": f"High CPU usage: {metrics['system']['cpu_percent']}%",
@@ -310,7 +310,7 @@ class SystemMonitor:
         if metrics.get("system", {}).get("memory_percent", 0) > 85:
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "warning",
                     "category": "system",
                     "message": f"High memory usage: {metrics['system']['memory_percent']}%",
@@ -322,7 +322,7 @@ class SystemMonitor:
         if metrics.get("database", {}).get("overall_status") == "critical":
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "critical",
                     "category": "database",
                     "message": "Database health is critical",
@@ -334,7 +334,7 @@ class SystemMonitor:
         if metrics.get("data_quality", {}).get("data_quality_score", 100) < 70:
             alerts.append(
                 {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "level": "warning",
                     "category": "data_quality",
                     "message": f"Low data quality score: {metrics['data_quality']['data_quality_score']}",
@@ -375,7 +375,7 @@ class SystemMonitor:
 
         # Combine all metrics
         all_metrics = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "system": system_metrics,
             "database": database_health,
             "cloud_function": cloud_function_health,

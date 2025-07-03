@@ -6,7 +6,7 @@ This replaces the basic cloud function with advanced ML capabilities
 
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -52,10 +52,7 @@ class EnhancedDataPipeline:
                 # Get recent tweets with engagement data
                 tweets = session.exec(
                     select(Tweet)
-                    .where(
-                        Tweet.created_at
-                        >= datetime.now(timezone.utc) - timedelta(days=30)
-                    )
+                    .where(Tweet.created_at >= datetime.now(UTC) - timedelta(days=30))
                     .order_by(desc(Tweet.created_at))
                 ).all()
 
@@ -81,8 +78,7 @@ class EnhancedDataPipeline:
                 posts = session.exec(
                     select(RedditPost)
                     .where(
-                        RedditPost.created_at
-                        >= datetime.now(timezone.utc) - timedelta(days=30)
+                        RedditPost.created_at >= datetime.now(UTC) - timedelta(days=30)
                     )
                     .order_by(desc(RedditPost.created_at))
                 ).all()
@@ -308,7 +304,7 @@ class EnhancedDataPipeline:
                 created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
 
             hours_since_creation = (
-                datetime.now(timezone.utc) - created_at
+                datetime.now(UTC) - created_at
             ).total_seconds() / 3600
             if hours_since_creation < 1:
                 hours_since_creation = 1
@@ -738,7 +734,7 @@ class EnhancedDataPipeline:
         # Save viral predictions
         viral_file = output_dir / "viral_predictions.json"
         viral_predictions = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "predictions": [
                 {
                     "id": item.get("id", item.get("url", "")),

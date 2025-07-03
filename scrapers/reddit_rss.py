@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
 import json
 import logging
+from datetime import UTC
 from pathlib import Path
 
 import feedparser
@@ -65,7 +66,7 @@ async def parse_reddit_feed_async(url: str, keyword_filters: list[str]) -> list[
                         if published_dt.tzinfo is None:
                             from datetime import timezone
 
-                            published_dt = published_dt.replace(tzinfo=timezone.utc)
+                            published_dt = published_dt.replace(tzinfo=UTC)
                         else:
                             published_dt = published_dt.astimezone(dateparser.tz.UTC)
                     except Exception:

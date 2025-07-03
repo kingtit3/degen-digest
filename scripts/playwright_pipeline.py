@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -85,7 +85,7 @@ class PlaywrightPipeline:
                     "telegram_messages": [],
                     "news_articles": [],
                     "metadata": {
-                        "last_updated": datetime.now(timezone.utc).isoformat(),
+                        "last_updated": datetime.now(UTC).isoformat(),
                         "total_items": 0,
                         "sources": [],
                     },
@@ -95,9 +95,7 @@ class PlaywrightPipeline:
             existing_data["tweets"].extend(new_tweets)
 
             # Update metadata
-            existing_data["metadata"]["last_updated"] = datetime.now(
-                timezone.utc
-            ).isoformat()
+            existing_data["metadata"]["last_updated"] = datetime.now(UTC).isoformat()
             existing_data["metadata"]["total_items"] = len(existing_data["tweets"])
 
             # Save updated data
