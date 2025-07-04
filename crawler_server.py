@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import threading
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -32,11 +33,31 @@ def run_crawler() -> None:
         print("🚀 Starting Solana crawler...")
         crawler_running = True
 
-        # Start the continuous crawler
+        # Define the crawler command - Use enhanced multi-source crawler
+        crawler_command = [
+            sys.executable,
+            "scripts/enhanced_multi_crawler.py",
+            "--username",
+            "gorebroai",
+            "--password",
+            "firefireomg4321",
+            "--start-hour",
+            "6",
+            "--end-hour",
+            "0",
+            "--interval",
+            "30",
+        ]
+
+        print(f"🔧 Executing command: {' '.join(crawler_command)}")
+        print(f"📁 Working directory: {os.getcwd()}")
+        print(f"🐍 Python executable: {sys.executable}")
+
+        # Start the enhanced multi-source crawler
         crawler_process = subprocess.Popen(
             [
                 sys.executable,
-                "scripts/continuous_solana_crawler.py",
+                "scripts/enhanced_multi_crawler.py",
                 "--username",
                 "gorebroai",
                 "--password",
@@ -51,17 +72,42 @@ def run_crawler() -> None:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            bufsize=1,
+            env={
+                **os.environ,
+                "OUTPUT_DIR": "/tmp",  # Force cloud-only operation
+                "CLOUD_ONLY": "true",
+            },
         )
 
         print(f"✅ Crawler started with PID: {crawler_process.pid}")
 
+        # Stream stdout and stderr in real time
+        def stream_output(pipe, label):
+            try:
+                for line in iter(pipe.readline, ""):
+                    if line:
+                        print(f"[{label}] {line.rstrip()}")
+            except Exception:
+                print(f"❌ Error streaming {label} output:")
+                traceback.print_exc()
+
+        stdout_thread = threading.Thread(
+            target=stream_output, args=(crawler_process.stdout, "STDOUT")
+        )
+        stderr_thread = threading.Thread(
+            target=stream_output, args=(crawler_process.stderr, "STDERR")
+        )
+        stdout_thread.start()
+        stderr_thread.start()
+
         # Wait for the process to complete
-        stdout, stderr = crawler_process.communicate()
+        crawler_process.wait()
+        stdout_thread.join()
+        stderr_thread.join()
 
         if crawler_process.returncode != 0:
             print(f"❌ Crawler exited with code {crawler_process.returncode}")
-            print(f"STDOUT: {stdout}")
-            print(f"STDERR: {stderr}")
         else:
             print("✅ Crawler completed successfully")
 
@@ -85,9 +131,11 @@ def run_crawler() -> None:
             print("⚠️ Data processing timed out")
         except Exception as e:
             print(f"❌ Error processing crawler data: {e}")
+            traceback.print_exc()
 
     except Exception as e:
         print(f"❌ Error running crawler: {e}")
+        traceback.print_exc()
     finally:
         crawler_running = False
         crawler_process = None

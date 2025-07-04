@@ -178,70 +178,174 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Standardized Cloud Configuration
+GCS_CONFIG = {
+    "project_id": "lucky-union-463615-t3",
+    "bucket_name": "degen-digest-data",
+    "data_structure": {
+        "twitter": {
+            "raw": "twitter_data/",
+            "consolidated": "consolidated/twitter_consolidated.json",
+            "latest": "consolidated/twitter_latest.json",
+        },
+        "reddit": {
+            "raw": "reddit_data/",
+            "consolidated": "consolidated/reddit_consolidated.json",
+        },
+        "telegram": {
+            "raw": "telegram_data/",
+            "consolidated": "consolidated/telegram_consolidated.json",
+        },
+        "news": {
+            "raw": "news_data/",
+            "consolidated": "consolidated/news_consolidated.json",
+        },
+        "crypto": {
+            "raw": "crypto_data/",
+            "consolidated": "consolidated/crypto_consolidated.json",
+        },
+        "analytics": {
+            "stats": "analytics/crawler_stats.json",
+            "metrics": "analytics/engagement_metrics.json",
+        },
+        "digests": {
+            "latest": "digests/latest_digest.md",
+            "archive": "digests/archive/",
+        },
+    },
+}
 
-def get_latest_digest():
-    """Get the latest digest content"""
-    output_dir = Path("output")
 
-    # Look for the most recent digest file
-    digest_files = list(output_dir.glob("digest*.md"))
-    if not digest_files:
-        return None, "No digest found"
-
-    latest_digest = max(digest_files, key=lambda x: x.stat().st_mtime)
+def get_gcs_client():
+    """Get Google Cloud Storage client"""
+    if not GCS_AVAILABLE:
+        return None, "Google Cloud Storage not available"
 
     try:
-        with open(latest_digest, encoding="utf-8") as f:
-            content = f.read()
-        return content, latest_digest.name
+        client = storage.Client(project=GCS_CONFIG["project_id"])
+        bucket = client.bucket(GCS_CONFIG["bucket_name"])
+        return client, bucket
     except Exception as e:
-        return None, f"Error reading {latest_digest.name}: {str(e)}"
+        return None, f"GCS connection failed: {e}"
+
+
+def load_consolidated_data(source_name):
+    """Load consolidated data from GCS for a specific source"""
+    client, bucket = get_gcs_client()
+    if not bucket:
+        return None
+
+    try:
+        consolidated_path = GCS_CONFIG["data_structure"][source_name]["consolidated"]
+        blob = bucket.blob(consolidated_path)
+
+        if blob.exists():
+            content = blob.download_as_text()
+            data = json.loads(content)
+            st.success(f"✅ Loaded {source_name} data from GCS")
+            return data
+        else:
+            st.warning(f"⚠️ No consolidated {source_name} data found in GCS")
+            return None
+    except Exception as e:
+        st.error(f"❌ Error loading {source_name} data: {e}")
+        return None
 
 
 def get_raw_data():
-    """Get raw data for analytics and trending content from both local and GCS"""
-    output_dir = Path("output")
+    """Get raw data for analytics and trending content from GCS"""
     data = {}
 
-    # Load different data sources
-    sources = [
-        "twitter_raw.json",
-        "reddit_raw.json",
-        "telegram_raw.json",
-        "newsapi_raw.json",
-    ]
+    # Load from consolidated files in GCS
+    sources = ["twitter", "reddit", "telegram", "news", "crypto"]
 
-    # Try to load from Google Cloud Storage first
-    if GCS_AVAILABLE:
-        try:
-            client = storage.Client(project="lucky-union-463615-t3")
-            bucket = client.bucket("degen-digest-data")
-
-            for source in sources:
-                try:
-                    blob = bucket.blob(source)
-                    if blob.exists():
-                        content = blob.download_as_text()
-                        data[source.replace("_raw.json", "")] = json.loads(content)
-                except Exception as e:
-                    st.warning(f"Could not load {source} from GCS: {e}")
-
-        except Exception as e:
-            st.warning(f"GCS connection failed: {e}")
-
-    # Fallback to local files
     for source in sources:
-        source_name = source.replace("_raw.json", "")
-        if source_name not in data:  # Only load if not already loaded from GCS
-            file_path = output_dir / source
-            if file_path.exists():
-                try:
-                    with open(file_path, encoding="utf-8") as f:
-                        data[source_name] = json.load(f)
-                except Exception as e:
-                    st.warning(f"Could not load {source}: {e}")
+        source_data = load_consolidated_data(source)
+        if source_data:
+            # Extract tweets/posts from the consolidated structure
+            if "tweets" in source_data:
+                data[source] = source_data["tweets"]
+            elif "posts" in source_data:
+                data[source] = source_data["posts"]
+            elif "messages" in source_data:
+                data[source] = source_data["messages"]
+            elif "articles" in source_data:
+                data[source] = source_data["articles"]
+            elif "data" in source_data:
+                data[source] = source_data["data"]
+            else:
+                data[source] = source_data
 
     return data
+
+
+def get_latest_digest():
+    """Get the latest digest content from GCS"""
+    client, bucket = get_gcs_client()
+    if not bucket:
+        return None, "GCS not available"
+
+    try:
+        # Try to get latest digest from GCS
+        digest_path = GCS_CONFIG["data_structure"]["digests"]["latest"]
+        blob = bucket.blob(digest_path)
+
+        if blob.exists():
+            content = blob.download_as_text()
+            return content, "Latest Digest (GCS)"
+        else:
+            # Fallback to local file if GCS doesn't have digest
+            output_dir = Path("output")
+            digest_files = list(output_dir.glob("digest*.md"))
+            if digest_files:
+                latest_digest = max(digest_files, key=lambda x: x.stat().st_mtime)
+                with open(latest_digest, encoding="utf-8") as f:
+                    content = f.read()
+                return content, latest_digest.name
+            else:
+                return None, "No digest found"
+    except Exception as e:
+        return None, f"Error reading digest: {str(e)}"
+
+
+def get_crawler_analytics():
+    """Get crawler analytics and statistics from GCS"""
+    client, bucket = get_gcs_client()
+    if not bucket:
+        return None
+
+    try:
+        stats_path = GCS_CONFIG["data_structure"]["analytics"]["stats"]
+        blob = bucket.blob(stats_path)
+
+        if blob.exists():
+            content = blob.download_as_text()
+            return json.loads(content)
+        else:
+            return None
+    except Exception as e:
+        st.error(f"Error loading crawler analytics: {e}")
+        return None
+
+
+def get_engagement_metrics():
+    """Get engagement metrics from GCS"""
+    client, bucket = get_gcs_client()
+    if not bucket:
+        return None
+
+    try:
+        metrics_path = GCS_CONFIG["data_structure"]["analytics"]["metrics"]
+        blob = bucket.blob(metrics_path)
+
+        if blob.exists():
+            content = blob.download_as_text()
+            return json.loads(content)
+        else:
+            return None
+    except Exception as e:
+        st.error(f"Error loading engagement metrics: {e}")
+        return None
 
 
 def generate_fresh_digest():
@@ -382,22 +486,24 @@ def main():
     st.markdown(
         """
     <div class="main-header">
-        <h1>🚀 Degen Digest</h1>
-        <p>Your Daily Crypto Intelligence Dashboard</p>
+        <h1>🚀 Degen Digest - Cloud Intelligence Platform</h1>
+        <p>Your Daily Crypto Intelligence Dashboard - Powered by Google Cloud</p>
     </div>
     """,
         unsafe_allow_html=True,
     )
 
-    # Get current digest and data
+    # Get data from cloud sources
     digest_content, digest_filename = get_latest_digest()
     data = get_raw_data()
     trending = get_trending_content(data, limit=15)
     status_data = get_cloud_crawler_status()
+    crawler_analytics = get_crawler_analytics()
+    engagement_metrics = get_engagement_metrics()
 
     # System Status Section
     st.markdown(
-        '<div class="section-header"><h2>📊 System Status</h2></div>',
+        '<div class="section-header"><h2>📊 Cloud System Status</h2></div>',
         unsafe_allow_html=True,
     )
 
@@ -413,17 +519,18 @@ def main():
             f"""
         <div class="metric-card">
             <div class="metric-value">{total_items:,}</div>
-            <div class="metric-label">Total Items</div>
+            <div class="metric-label">Total Items (GCS)</div>
         </div>
         """,
             unsafe_allow_html=True,
         )
 
     with col2:
+        active_sources = len([k for k, v in data.items() if v])
         st.markdown(
             f"""
         <div class="metric-card">
-            <div class="metric-value">{len([k for k, v in data.items() if v])}</div>
+            <div class="metric-value">{active_sources}</div>
             <div class="metric-label">Active Sources</div>
         </div>
         """,
@@ -431,10 +538,11 @@ def main():
         )
 
     with col3:
+        twitter_count = len(data.get("twitter", []))
         st.markdown(
             f"""
         <div class="metric-card">
-            <div class="metric-value">{len(data.get('twitter', []))}</div>
+            <div class="metric-value">{twitter_count}</div>
             <div class="metric-label">Twitter Posts</div>
         </div>
         """,
@@ -464,247 +572,195 @@ def main():
             <div class="metric-value">
                 <span class="status-indicator {status_class}"></span>{status_text}
             </div>
-            <div class="metric-label">Crawler Status</div>
+            <div class="metric-label">Cloud Crawler</div>
         </div>
         """,
             unsafe_allow_html=True,
         )
 
+    # Crawler Analytics Section
+    if crawler_analytics:
+        st.markdown(
+            '<div class="section-header"><h2>🤖 Crawler Analytics</h2></div>',
+            unsafe_allow_html=True,
+        )
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            total_crawls = crawler_analytics.get("session_stats", {}).get(
+                "total_crawls", 0
+            )
+            st.metric("Total Crawls", total_crawls)
+
+        with col2:
+            successful_crawls = crawler_analytics.get("session_stats", {}).get(
+                "successful_crawls", 0
+            )
+            st.metric("Successful Crawls", successful_crawls)
+
+        with col3:
+            total_tweets = crawler_analytics.get("session_stats", {}).get(
+                "total_tweets_collected", 0
+            )
+            st.metric("Tweets Collected", total_tweets)
+
+        with col4:
+            last_crawl = crawler_analytics.get("session_stats", {}).get(
+                "last_crawl_time", "Unknown"
+            )
+            if last_crawl != "Unknown":
+                st.metric("Last Crawl", last_crawl[:10])  # Show just the date
+            else:
+                st.metric("Last Crawl", "Unknown")
+
+    # Data Sources Section
+    st.markdown(
+        '<div class="section-header"><h2>📡 Data Sources</h2></div>',
+        unsafe_allow_html=True,
+    )
+
+    # Show data source status
+    source_cols = st.columns(5)
+    sources = ["twitter", "reddit", "telegram", "news", "crypto"]
+
+    for i, source in enumerate(sources):
+        with source_cols[i]:
+            source_data = data.get(source, [])
+            count = len(source_data) if isinstance(source_data, list) else 0
+            status = "✅ Active" if count > 0 else "❌ No Data"
+
+            st.markdown(
+                f"""
+            <div class="metric-card">
+                <div class="metric-value">{count}</div>
+                <div class="metric-label">{source.title()}</div>
+                <div style="font-size: 0.8rem; color: {'green' if count > 0 else 'red'};">{status}</div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
     # Current Digest Section
     st.markdown(
-        '<div class="section-header"><h2>📰 Current Digest</h2></div>',
+        '<div class="section-header"><h2>📰 Latest Digest</h2></div>',
         unsafe_allow_html=True,
     )
 
     if digest_content:
-        # Digest controls
-        col1, col2, col3 = st.columns([2, 1, 1])
-
-        with col1:
-            st.info(f"📄 **Current Digest:** {digest_filename}")
-
-        with col2:
-            if st.button("🔄 Generate Fresh Digest", key="fresh_digest"):
-                with st.spinner("Generating fresh digest..."):
-                    success, message = generate_fresh_digest()
-                    if success:
-                        st.success(message)
-                        st.rerun()
-                    else:
-                        st.error(message)
-
-        with col3:
-            if st.button("📥 Download Digest"):
-                st.download_button(
-                    "Download",
-                    digest_content,
-                    file_name=digest_filename,
-                    mime="text/markdown",
-                )
-
-        # Display digest content
         st.markdown(
-            """
+            f"""
         <div class="digest-container">
+            <h3>📄 {digest_filename}</h3>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {digest_content}
+            </div>
+        </div>
         """,
             unsafe_allow_html=True,
         )
-
-        st.markdown(digest_content)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
     else:
-        st.error(f"❌ {digest_filename}")
-        st.info("💡 Click 'Generate Fresh Digest' to create a new digest.")
+        st.warning("No digest content available")
 
     # Trending Content Section
-    st.markdown(
-        '<div class="section-header"><h2>🔥 Trending Content</h2></div>',
-        unsafe_allow_html=True,
-    )
-
     if trending:
-        # Filter options
-        col1, col2 = st.columns([1, 3])
-
-        with col1:
-            source_filter = st.selectbox(
-                "Filter by source:",
-                ["All"] + list({item["source"] for item in trending}),
-            )
-
-        with col2:
-            min_engagement = st.slider(
-                "Minimum engagement score:", min_value=0, max_value=100, value=0
-            )
-
-        # Filter content
-        filtered_trending = trending
-        if source_filter != "All":
-            filtered_trending = [
-                item for item in trending if item["source"] == source_filter
-            ]
-
-        filtered_trending = [
-            item
-            for item in filtered_trending
-            if item["engagement_score"] >= min_engagement
-        ]
-
-        # Display trending content in a grid
-        cols = st.columns(2)
-        for i, item in enumerate(filtered_trending):
-            col_idx = i % 2
-            is_viral = item["engagement_score"] > 80
-
-            with cols[col_idx]:
-                st.markdown(
-                    f"""
-                <div class="tweet-card">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                        <div>
-                            <strong>@{item['author']}</strong>
-                            <span style="color: #666; font-size: 0.9rem;"> • {item['source'].title()}</span>
-                        </div>
-                        {'<span class="viral-badge">🔥 VIRAL</span>' if is_viral else ''}
-                    </div>
-                    <p style="margin: 1rem 0; line-height: 1.5;">{item['text']}</p>
-                    <div class="engagement-stats">
-                        <div class="engagement-stat">
-                            <span>❤️</span>
-                            <span>{item['like_count']:,}</span>
-                        </div>
-                        <div class="engagement-stat">
-                            <span>📊</span>
-                            <span>Score: {item['engagement_score']:.1f}</span>
-                        </div>
-                        <div class="engagement-stat">
-                            <span>📈</span>
-                            <span>Sentiment: {item['sentiment']:.2f}</span>
-                        </div>
-                    </div>
-                </div>
-                """,
-                    unsafe_allow_html=True,
-                )
-
-        if not filtered_trending:
-            st.info("No content matches your filters. Try adjusting the criteria.")
-
-    else:
-        st.info(
-            "No trending content available. Generate a fresh digest to see trending items."
+        st.markdown(
+            '<div class="section-header"><h2>🔥 Trending Content</h2></div>',
+            unsafe_allow_html=True,
         )
 
-    # Crawler Control Section
+        for i, item in enumerate(trending[:10]):
+            engagement_color = (
+                "#ff6b6b"
+                if item["engagement_score"] > 50
+                else "#ffa500"
+                if item["engagement_score"] > 20
+                else "#28a745"
+            )
+
+            st.markdown(
+                f"""
+            <div class="tweet-card">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <strong>@{item['author']}</strong> • <span style="color: #666;">{item['source'].title()}</span>
+                        <div style="margin-top: 0.5rem;">{item['text']}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: {engagement_color}; font-weight: bold; font-size: 1.2rem;">
+                            {item['engagement_score']:.1f}
+                        </div>
+                        <div style="font-size: 0.8rem; color: #666;">Engagement</div>
+                    </div>
+                </div>
+                <div class="engagement-stats">
+                    <div class="engagement-stat">
+                        ❤️ {item['like_count']}
+                    </div>
+                    <div class="engagement-stat">
+                        📊 {item.get('sentiment', 0):.2f}
+                    </div>
+                </div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+    # Crawler Controls Section
     st.markdown(
-        '<div class="section-header"><h2>🕷️ Crawler Control</h2></div>',
+        '<div class="section-header"><h2>🎮 Crawler Controls</h2></div>',
         unsafe_allow_html=True,
     )
 
-    # Crawler info
-    st.info(
-        """
-    🌐 **Cloud Crawler Status**
-
-    The Solana crawler is deployed on Google Cloud Run and runs automatically for 18 hours per day.
-    Use the controls below to manually start or stop the crawler.
-
-    **Schedule:** 18 hours/day (6 hours off for maintenance)
-    **Credentials:** Pre-configured in cloud deployment
-    **Target:** Solana-focused content from followed accounts
-    """
-    )
-
-    # Crawler controls
-    st.markdown('<div class="crawler-controls">', unsafe_allow_html=True)
-
-    # Status display
-    if status_data.get("status") == "running":
-        st.success("🟢 **Crawler Status: RUNNING**")
-        if "last_crawl" in status_data:
-            st.info(f"📈 Last crawl: {status_data['last_crawl']}")
-        if "total_tweets" in status_data:
-            st.info(f"📊 Total tweets collected: {status_data['total_tweets']}")
-    elif status_data.get("status") == "stopped":
-        st.warning("🔴 **Crawler Status: STOPPED**")
-    else:
-        st.error(f"❌ **Status Error:** {status_data.get('message', 'Unknown error')}")
-
-    # Control buttons
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("🚀 Start Crawler", key="start_cloud_crawler", type="primary"):
-            with st.spinner("Starting crawler..."):
-                success, message = start_cloud_crawler()
-                if success:
-                    st.success(message)
-                    time.sleep(2)  # Give time for status to update
-                    st.rerun()
-                else:
-                    st.error(message)
+        if st.button("🟢 Start Crawler", use_container_width=True):
+            success, message = start_cloud_crawler()
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
 
     with col2:
-        if st.button("⏹️ Stop Crawler", key="stop_cloud_crawler"):
-            with st.spinner("Stopping crawler..."):
-                success, message = stop_cloud_crawler()
-                if success:
-                    st.success(message)
-                    time.sleep(2)  # Give time for status to update
-                    st.rerun()
-                else:
-                    st.error(message)
+        if st.button("🔴 Stop Crawler", use_container_width=True):
+            success, message = stop_cloud_crawler()
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # Auto-refresh status
-    if st.button("🔄 Refresh Status", key="refresh_status"):
-        st.rerun()
+    with col3:
+        if st.button("🔄 Refresh Data", use_container_width=True):
+            st.rerun()
 
     # Analytics Charts Section
+    if data:
+        st.markdown(
+            '<div class="section-header"><h2>📈 Analytics</h2></div>',
+            unsafe_allow_html=True,
+        )
+
+        charts = create_analytics_charts(data)
+
+        if "source_distribution" in charts:
+            st.plotly_chart(charts["source_distribution"], use_container_width=True)
+
+        if "engagement_distribution" in charts:
+            st.plotly_chart(charts["engagement_distribution"], use_container_width=True)
+
+    # Footer
     st.markdown(
-        '<div class="section-header"><h2>📈 Analytics</h2></div>',
+        """
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
+        <p><strong>🚀 Degen Digest</strong> - Powered by Google Cloud Platform</p>
+        <p style="font-size: 0.9rem; color: #666;">
+            Data sourced from Twitter, Reddit, Telegram, News APIs, and CoinGecko
+        </p>
+    </div>
+    """,
         unsafe_allow_html=True,
     )
-
-    charts = create_analytics_charts(data)
-
-    if charts:
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if "source_distribution" in charts:
-                st.plotly_chart(charts["source_distribution"], use_container_width=True)
-
-        with col2:
-            if "engagement_distribution" in charts:
-                st.plotly_chart(
-                    charts["engagement_distribution"], use_container_width=True
-                )
-
-    # Data quality metrics
-    st.markdown("### 📈 Data Quality Metrics")
-
-    quality_metrics = []
-    for source, items in data.items():
-        if isinstance(items, list) and items:
-            valid_items = len(
-                [item for item in items if isinstance(item, dict) and item.get("text")]
-            )
-            quality_metrics.append(
-                {
-                    "Source": source.title(),
-                    "Total Items": len(items),
-                    "Valid Items": valid_items,
-                    "Quality %": round((valid_items / len(items)) * 100, 1),
-                }
-            )
-
-    if quality_metrics:
-        df_quality = pd.DataFrame(quality_metrics)
-        st.dataframe(df_quality, use_container_width=True)
 
 
 if __name__ == "__main__":

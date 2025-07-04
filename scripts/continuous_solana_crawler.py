@@ -37,7 +37,7 @@ class ContinuousSolanaCrawler:
         password: str,
         cookies_path: str | None = None,
         user_agent: str | None = None,
-        output_dir: str = "output",
+        output_dir: str = "/tmp",  # Use /tmp for cloud-only operation
         start_hour: int = 6,  # Start at 6 AM
         end_hour: int = 0,  # End at midnight (24 hours)
         crawl_interval_minutes: int = 30,
@@ -71,6 +71,11 @@ class ContinuousSolanaCrawler:
         # Anti-detection settings
         self.variable_intervals = True
         self.random_delays = True
+
+        # Cloud-only configuration
+        self.cloud_only = True
+        self.gcs_bucket = "degen-digest-data"
+        self.project_id = "lucky-union-463615-t3"
 
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -120,8 +125,8 @@ class ContinuousSolanaCrawler:
                     password=self.password,
                     cookies_path=self.cookies_path,
                     user_agent=self.user_agent,
-                    gcs_bucket="degen-digest-data",  # Save directly to GCS
-                    project_id="lucky-union-463615-t3",
+                    gcs_bucket=self.gcs_bucket,
+                    project_id=self.project_id,
                 )
 
                 # Run the crawl
@@ -155,21 +160,41 @@ class ContinuousSolanaCrawler:
                     return False
 
     async def save_session_stats(self):
-        """Save current session statistics"""
-        stats_file = self.output_dir / "crawler_stats.json"
-        stats_data = {
-            "session_stats": self.session_stats,
-            "last_updated": datetime.now(UTC).isoformat(),
-            "crawler_config": {
-                "start_hour": self.start_hour,
-                "end_hour": self.end_hour,
-                "crawl_interval_minutes": self.crawl_interval_minutes,
-                "username": self.username,
-            },
-        }
+        """Save current session statistics to GCS"""
+        try:
+            from google.cloud import storage
 
-        with open(stats_file, "w", encoding="utf-8") as f:
-            json.dump(stats_data, f, indent=2, default=str)
+            # Create stats data
+            stats_data = {
+                "session_stats": self.session_stats,
+                "last_updated": datetime.now(UTC).isoformat(),
+                "crawler_config": {
+                    "start_hour": self.start_hour,
+                    "end_hour": self.end_hour,
+                    "crawl_interval_minutes": self.crawl_interval_minutes,
+                    "username": self.username,
+                },
+            }
+
+            # Save to GCS
+            client = storage.Client(project=self.project_id)
+            bucket = client.bucket(self.gcs_bucket)
+            blob = bucket.blob("crawler_stats/crawler_stats.json")
+
+            # Upload as JSON
+            blob.upload_from_string(
+                json.dumps(stats_data, indent=2, default=str),
+                content_type="application/json",
+            )
+
+            logger.info("📊 Session stats saved to GCS")
+
+        except Exception as e:
+            logger.error(f"Error saving session stats to GCS: {e}")
+            # Fallback to local file if GCS fails
+            stats_file = self.output_dir / "crawler_stats.json"
+            with open(stats_file, "w", encoding="utf-8") as f:
+                json.dump(stats_data, f, indent=2, default=str)
 
     async def run_continuous_crawler(self):
         """Main continuous crawler loop"""

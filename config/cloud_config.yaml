@@ -1,0 +1,157 @@
+# Degen Digest Cloud Configuration
+# Centralized configuration for all cloud-based components
+
+project:
+  name: "Degen Digest"
+  version: "2.0.0"
+  description: "Cloud-based crypto intelligence platform"
+
+google_cloud:
+  project_id: "lucky-union-463615-t3"
+  region: "us-central1"
+  bucket_name: "degen-digest-data"
+
+services:
+  crawler:
+    name: "solana-crawler"
+    url: "https://solana-crawler-128671663649.us-central1.run.app"
+    schedule:
+      active_hours: 18 # 6 AM to 12 AM
+      interval_minutes: 30
+      timezone: "America/Chicago"
+
+  dashboard:
+    name: "farmchecker"
+    url: "https://farmchecker-128671663649.us-central1.run.app"
+    port: 8501
+
+data_structure:
+  # Raw data storage (individual files from crawlers)
+  raw_data:
+    twitter: "twitter_data/"
+    reddit: "reddit_data/"
+    telegram: "telegram_data/"
+    news: "news_data/"
+    crypto: "crypto_data/"
+
+  # Consolidated data (merged and deduplicated)
+  consolidated:
+    twitter: "consolidated/twitter_consolidated.json"
+    reddit: "consolidated/reddit_consolidated.json"
+    telegram: "consolidated/telegram_consolidated.json"
+    news: "consolidated/news_consolidated.json"
+    crypto: "consolidated/crypto_consolidated.json"
+
+  # Latest data (most recent collection)
+  latest:
+    twitter: "consolidated/twitter_latest.json"
+    reddit: "consolidated/reddit_latest.json"
+    telegram: "consolidated/telegram_latest.json"
+    news: "consolidated/news_latest.json"
+    crypto: "consolidated/crypto_latest.json"
+
+  # Analytics and metrics
+  analytics:
+    crawler_stats: "analytics/crawler_stats.json"
+    engagement_metrics: "analytics/engagement_metrics.json"
+    viral_predictions: "analytics/viral_predictions.json"
+    sentiment_analysis: "analytics/sentiment_analysis.json"
+
+  # Generated content
+  digests:
+    latest: "digests/latest_digest.md"
+    archive: "digests/archive/"
+    templates: "digests/templates/"
+
+  # System files
+  system:
+    logs: "system/logs/"
+    backups: "system/backups/"
+    config: "system/config/"
+
+file_naming:
+  # Standardized file naming patterns
+  patterns:
+    twitter_raw: "twitter_playwright_enhanced_{timestamp}.json"
+    twitter_latest: "twitter_playwright_enhanced_latest.json"
+    reddit_raw: "reddit_rss_{timestamp}.json"
+    telegram_raw: "telegram_telethon_{timestamp}.json"
+    news_raw: "newsapi_headlines_{timestamp}.json"
+    crypto_raw: "coingecko_gainers_{timestamp}.json"
+    digest: "digest_{date}.md"
+
+  # Timestamp formats
+  timestamps:
+    filename: "%Y%m%d_%H%M%S"
+    display: "%Y-%m-%d %H:%M:%S"
+    iso: "%Y-%m-%dT%H:%M:%S"
+
+data_processing:
+  # Data quality settings
+  quality:
+    min_text_length: 10
+    max_text_length: 10000
+    required_fields: ["text", "timestamp"]
+    optional_fields: ["author", "engagement_score", "sentiment"]
+
+  # Deduplication settings
+  deduplication:
+    use_tweet_id: true
+    use_content_hash: true
+    content_similarity_threshold: 0.9
+
+  # Engagement scoring
+  engagement:
+    like_weight: 1
+    retweet_weight: 2
+    reply_weight: 3
+    max_score: 100
+
+monitoring:
+  # Health check endpoints
+  health_checks:
+    crawler: "/status"
+    dashboard: "/_stcore/health"
+
+  # Metrics to track
+  metrics:
+    - "total_tweets_collected"
+    - "crawler_uptime"
+    - "data_quality_score"
+    - "engagement_average"
+    - "viral_predictions_accuracy"
+
+  # Alert thresholds
+  alerts:
+    crawler_down_minutes: 5
+    low_data_threshold: 10
+    high_error_rate: 0.1
+
+security:
+  # Authentication and authorization
+  auth:
+    require_authentication: false
+    allowed_origins: ["*"]
+
+  # Data privacy
+  privacy:
+    anonymize_user_data: true
+    retention_days: 90
+    sensitive_keywords: ["password", "private_key", "seed_phrase"]
+
+logging:
+  # Log levels
+  levels:
+    crawler: "INFO"
+    dashboard: "INFO"
+    analytics: "DEBUG"
+
+  # Log destinations
+  destinations:
+    - "cloud_logging"
+    - "gcs_backup"
+
+  # Log retention
+  retention:
+    cloud_logging_days: 30
+    gcs_backup_days: 365
