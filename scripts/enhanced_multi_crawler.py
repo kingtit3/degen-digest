@@ -333,11 +333,11 @@ class EnhancedMultiSourceCrawler:
                 "metadata": {"source": "crypto", "status": "error", "error": str(e)},
             }
 
-    async def crawl_reddit_full(self) -> dict[str, Any]:
+        def crawl_reddit_full(self) -> dict[str, Any]:
         """Full Reddit RSS crawler using the proper scraper"""
         try:
             logger.info("🔄 Starting full Reddit crawl...")
-
+            
             # Import and use the full Reddit scraper
             import json
             from pathlib import Path
@@ -359,7 +359,7 @@ class EnhancedMultiSourceCrawler:
                     "nft",
                 ]
 
-            # Use the full scraper
+            # Use the full scraper - call it directly since it's not async
             posts = scrape_reddit(reddit_keywords)
 
             data = {
@@ -455,7 +455,7 @@ class EnhancedMultiSourceCrawler:
                 self.upload_to_gcs(twitter_data, "twitter")
 
                 # 2. Reddit crawl (sync) - Use full scraper
-                reddit_data = await self.crawl_reddit_full()
+                reddit_data = self.crawl_reddit_full()
                 self.upload_to_gcs(reddit_data, "reddit")
 
                 # 3. News crawl (sync) - Use full scraper
