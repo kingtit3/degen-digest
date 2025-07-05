@@ -37,79 +37,45 @@ def run_crawler() -> None:
         crawler_command = [
             sys.executable,
             "scripts/enhanced_multi_crawler.py",
-            "--username",
-            "gorebroai",
-            "--password",
-            "firefireomg4321",
-            "--start-hour",
-            "6",
-            "--end-hour",
-            "0",
-            "--interval",
-            "30",
         ]
 
         print(f"🔧 Executing command: {' '.join(crawler_command)}")
         print(f"📁 Working directory: {os.getcwd()}")
         print(f"🐍 Python executable: {sys.executable}")
 
-        # Start the enhanced multi-source crawler
-        crawler_process = subprocess.Popen(
-            [
-                sys.executable,
-                "scripts/enhanced_multi_crawler.py",
-                "--username",
-                "gorebroai",
-                "--password",
-                "firefireomg4321",
-                "--start-hour",
-                "6",
-                "--end-hour",
-                "0",
-                "--interval",
-                "30",
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,
-            env={
-                **os.environ,
-                "OUTPUT_DIR": "/tmp",  # Force cloud-only operation
-                "CLOUD_ONLY": "true",
-            },
-        )
+        # Run the enhanced multi-source crawler directly
+        try:
+            print("🔄 Running enhanced multi-source crawler...")
 
-        print(f"✅ Crawler started with PID: {crawler_process.pid}")
+            # Import and run the enhanced multi-source crawler directly
+            import asyncio
 
-        # Stream stdout and stderr in real time
-        def stream_output(pipe, label):
-            try:
-                for line in iter(pipe.readline, ""):
-                    if line:
-                        print(f"[{label}] {line.rstrip()}")
-            except Exception:
-                print(f"❌ Error streaming {label} output:")
-                traceback.print_exc()
+            import scripts.enhanced_multi_crawler
 
-        stdout_thread = threading.Thread(
-            target=stream_output, args=(crawler_process.stdout, "STDOUT")
-        )
-        stderr_thread = threading.Thread(
-            target=stream_output, args=(crawler_process.stderr, "STDERR")
-        )
-        stdout_thread.start()
-        stderr_thread.start()
+            # Get Twitter credentials from environment variables
+            username = os.environ.get("TWITTER_USERNAME")
+            password = os.environ.get("TWITTER_PASSWORD")
 
-        # Wait for the process to complete
-        crawler_process.wait()
-        stdout_thread.join()
-        stderr_thread.join()
+            if not username or not password:
+                print("❌ Twitter credentials not found in environment variables")
+                print("Please set TWITTER_USERNAME and TWITTER_PASSWORD")
+                return
 
-        if crawler_process.returncode != 0:
-            print(f"❌ Crawler exited with code {crawler_process.returncode}")
-        else:
-            print("✅ Crawler completed successfully")
+            # Create crawler instance and run
+            crawler = scripts.enhanced_multi_crawler.EnhancedMultiSourceCrawler(
+                username=username, password=password
+            )
+            result = asyncio.run(crawler.run_continuous_crawler())
+
+            print("✅ Enhanced multi-source crawler completed successfully")
+
+        except Exception as e:
+            print(f"❌ Error running enhanced multi-source crawler: {e}")
+            traceback.print_exc()
+
+        # Note: crawler_process is not used when running the crawler directly
+        # The result is handled by the asyncio.run() call above
+        print("✅ Crawler execution completed")
 
         # Process the crawler data for digest generation
         print("🔄 Processing crawler data for digest generation...")

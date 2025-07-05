@@ -1,706 +1,647 @@
-# Enterprise Logging System
-
-This document provides comprehensive documentation for the Degen Digest enterprise logging system.
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Setup and Configuration](#setup-and-configuration)
-- [Usage Patterns](#usage-patterns)
-- [Log Categories](#log-categories)
-- [Monitoring and Alerting](#monitoring-and-alerting)
-- [Performance Considerations](#performance-considerations)
-- [Troubleshooting](#troubleshooting)
-- [Best Practices](#best-practices)
+# DegenDigest Logging System Documentation
 
 ## Overview
 
-The Degen Digest platform uses an enterprise-grade structured logging system that provides:
-
-- **Structured JSON Logging** - Machine-readable logs for analysis
-- **Log Rotation** - Automatic log rotation and archival
-- **Performance Monitoring** - Request timing and resource usage
-- **Error Tracking** - Comprehensive error tracking and alerting
-- **Audit Logging** - Security and compliance audit trails
-- **Business Metrics** - Key business metrics and KPIs
-- **Request Correlation** - End-to-end request tracing
-- **Context Management** - Thread-local context for correlation
+The DegenDigest logging system provides comprehensive, enterprise-grade logging capabilities with structured data, multiple output formats, and advanced monitoring features. This system is designed to handle high-volume logging requirements while maintaining performance and providing detailed insights into system behavior.
 
 ## Architecture
 
-### Logging Flow
+### Logging Components
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Application   │───▶│  Enterprise     │───▶│   Log Outputs   │
-│     Code        │    │   Logger        │    │                 │
-└─────────────────┘    └─────────────────┘    │ • Console       │
-                                              │ • Files         │
-                                              │ • Cloud Logging │
-                                              │ • External APIs │
-                                              └─────────────────┘
+│   Application   │    │  Enterprise     │    │   Output        │
+│   Code          │───▶│  Logger         │───▶│   Handlers      │
+│                 │    │                 │    │                 │
+│ • Crawlers      │    │ • Context       │    │ • Console       │
+│ • Processors    │    │ • Performance   │    │ • File          │
+│ • APIs          │    │ • Security      │    │ • JSON          │
+│ • Dashboards    │    │ • Business      │    │ • Cloud         │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### Components
+### Key Features
 
-1. **EnterpriseLogger** - Main logging class with enterprise features
-2. **Log Formatters** - JSON and console formatters
-3. **Log Handlers** - File and console handlers with rotation
-4. **Context Management** - Thread-local storage for request context
-5. **Performance Tracking** - Built-in performance monitoring
-6. **Error Tracking** - Comprehensive error tracking and alerting
+- **Structured Logging**: JSON-formatted logs with consistent schema
+- **Context Management**: Request-level context tracking
+- **Performance Monitoring**: Built-in performance metrics
+- **Multiple Outputs**: Console, file, JSON, and cloud logging
+- **Log Rotation**: Automatic log file rotation and compression
+- **Security Logging**: Dedicated security event logging
+- **Business Metrics**: Business event and metric tracking
 
-## Setup and Configuration
-
-### Environment Variables
-
-```bash
-# Core logging configuration
-LOG_LEVEL=INFO                    # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-LOG_FORMAT=json                   # Log format (json, console)
-LOG_FILE=logs/degen_digest.log    # Log file path
-LOG_MAX_SIZE_MB=100              # Maximum log file size in MB
-LOG_BACKUP_COUNT=5               # Number of backup files to keep
-
-# Feature toggles
-ENABLE_CLOUD_LOGGING=true        # Enable cloud logging integration
-ENABLE_AUDIT_LOGGING=true        # Enable audit logging
-ENABLE_PERFORMANCE_LOGGING=true  # Enable performance monitoring
-ENABLE_SECURITY_LOGGING=true     # Enable security event logging
-ENABLE_BUSINESS_LOGGING=true     # Enable business metrics logging
-ENABLE_DATA_QUALITY_LOGGING=true # Enable data quality monitoring
-ENABLE_API_LOGGING=true          # Enable API call logging
-ENABLE_DATABASE_LOGGING=true     # Enable database operation logging
-ENABLE_CRAWLER_LOGGING=true      # Enable crawler operation logging
-ENABLE_DASHBOARD_LOGGING=true    # Enable dashboard interaction logging
-```
-
-### Python Configuration
-
-```python
-from utils.enterprise_logging import initialize_logging, get_logger
-
-# Initialize the logging system
-logger = initialize_logging({
-    'level': 'INFO',
-    'format': 'json',
-    'file_path': 'logs/degen_digest.log',
-    'max_size': 100 * 1024 * 1024,  # 100MB
-    'backup_count': 5
-})
-
-# Get a logger for your module
-logger = get_logger('your_module_name')
-```
-
-### Log Levels
-
-| Level        | Description                    | Usage                           |
-| ------------ | ------------------------------ | ------------------------------- |
-| **DEBUG**    | Detailed debugging information | Development and troubleshooting |
-| **INFO**     | General operational messages   | Normal operation tracking       |
-| **WARNING**  | Warning conditions             | Potential issues                |
-| **ERROR**    | Error conditions               | Failed operations               |
-| **CRITICAL** | Critical system failures       | System outages                  |
-
-## Usage Patterns
+## Usage
 
 ### Basic Logging
 
 ```python
 from utils.enterprise_logging import get_logger
 
-logger = get_logger('my_module')
+# Get logger instance
+logger = get_logger("my_service")
 
 # Basic logging
-logger.info("Application started")
-logger.warning("Rate limit approaching")
-logger.error("Database connection failed", error=str(e))
-logger.critical("System shutdown required")
-```
-
-### Structured Logging with Context
-
-```python
-# Log with additional context
-logger.info("User login successful",
-           user_id="user123",
-           ip_address="192.168.1.1",
-           user_agent="Mozilla/5.0...",
-           login_method="oauth")
-
-# Log with performance metrics
-logger.info("API request completed",
-           endpoint="/api/digest",
-           method="GET",
-           status_code=200,
-           response_time_ms=150,
-           request_size_bytes=1024)
-```
-
-### Request Context Management
-
-```python
-from utils.enterprise_logging import get_logger
-
-logger = get_logger('api')
-
-# Set request context for correlation
-logger.set_request_context(
-    request_id="req_12345",
-    user_id="user123",
-    session_id="sess_67890",
-    ip_address="192.168.1.1",
-    user_agent="Mozilla/5.0..."
-)
-
-# All subsequent logs will include request context
-logger.info("Processing request")
-logger.info("Database query executed")
-logger.info("Response sent")
-
-# Clear context when done
-logger.clear_request_context()
-```
-
-### Performance Monitoring
-
-```python
-from utils.enterprise_logging import get_logger
-
-logger = get_logger('performance')
-
-# Using performance timer context manager
-with logger.performance_timer("database_query", table="users"):
-    # Database operation
-    result = database.query("SELECT * FROM users")
-
-# Performance metrics are automatically tracked
-```
-
-### Error Tracking
-
-```python
-from utils.enterprise_logging import get_logger, log_error_with_context
-
-logger = get_logger('error_handler')
-
-try:
-    # Some operation that might fail
-    result = risky_operation()
-except Exception as e:
-    # Log error with context
-    log_error_with_context(
-        error=e,
-        context={
-            'operation': 'risky_operation',
-            'user_id': 'user123',
-            'input_data': {'key': 'value'}
-        },
-        logger_name='error_handler'
-    )
-    raise
-```
-
-## Log Categories
-
-### 1. Application Logs
-
-```python
-# Main application logs
-logger = get_logger('main')
-logger.info("Application started", version="2.0.0", environment="production")
-logger.info("Configuration loaded", config_keys=list(config.keys()))
-logger.info("Application shutting down", uptime_seconds=3600)
-```
-
-### 2. API Logs
-
-```python
-# API request/response logs
-logger = get_logger('api')
-logger.api_log(
-    method="POST",
-    endpoint="/api/digest",
-    status_code=200,
-    response_time=0.25,
-    user_id="user123",
-    request_size=1024
-)
-```
-
-### 3. Database Logs
-
-```python
-# Database operation logs
-logger = get_logger('database')
-logger.database_log(
-    operation="SELECT",
-    table="tweets",
-    duration=0.05,
-    rows_returned=100,
-    query_hash="abc123"
-)
-```
-
-### 4. Crawler Logs
-
-```python
-# Crawler operation logs
-logger = get_logger('crawler')
-logger.crawler_log(
-    source="twitter",
-    action="login",
-    username="gorebroai",
-    success=True,
-    duration_seconds=2.5
-)
-```
-
-### 5. Dashboard Logs
-
-```python
-# Dashboard interaction logs
-logger = get_logger('dashboard')
-logger.dashboard_log(
-    action="page_view",
-    page="analytics",
-    user_id="user123",
-    session_duration=300
-)
-```
-
-### 6. Audit Logs
-
-```python
-# Security audit logs
-logger = get_logger('audit')
-logger.audit_log(
-    event="user_login",
-    user_id="user123",
-    ip_address="192.168.1.1",
-    success=True,
-    login_method="password"
-)
-```
-
-### 7. Security Logs
-
-```python
-# Security event logs
-logger = get_logger('security')
-logger.security_log(
-    event="failed_login_attempt",
-    severity="warning",
-    ip_address="192.168.1.1",
-    username="user123",
-    attempt_count=3
-)
-```
-
-### 8. Business Logs
-
-```python
-# Business metrics logs
-logger = get_logger('business')
-logger.business_log(
-    event="digest_generated",
-    digest_date="2025-07-03",
-    content_count=150,
-    source_count=4,
-    generation_time_seconds=30
-)
-```
-
-### 9. Data Quality Logs
-
-```python
-# Data quality issue logs
-logger = get_logger('data_quality')
-logger.data_quality_log(
-    issue="missing_required_field",
-    data_source="twitter",
-    field_name="user_id",
-    record_count=5,
-    severity="warning"
-)
-```
-
-## Decorators
-
-### Function Call Logging
-
-```python
-from utils.enterprise_logging import log_function_call
-
-@log_function_call()
-def process_data(data):
-    # Function implementation
-    return processed_data
-```
-
-### Database Operation Logging
-
-```python
-from utils.enterprise_logging import log_database_operation
-
-@log_database_operation()
-def save_tweet(tweet_data, table="tweets"):
-    # Database operation
-    return result
-```
-
-### API Call Logging
-
-```python
-from utils.enterprise_logging import log_api_call
-
-@log_api_call()
-def call_external_api(endpoint="/api/data", method="GET"):
-    # API call implementation
-    return response
-```
-
-### Performance Monitoring
-
-```python
-from utils.enterprise_logging import log_performance_metrics
-
-@log_performance_metrics()
-def expensive_operation():
-    # Expensive operation
-    return result
-```
-
-### Security Event Logging
-
-```python
-from utils.enterprise_logging import log_security_event
-
-@log_security_event()
-def authenticate_user(username, password):
-    # Authentication logic
-    return auth_result
-```
-
-## Monitoring and Alerting
-
-### Log Analysis
-
-```python
-# Get metrics summary
-logger = get_logger('monitoring')
-metrics = logger.get_metrics_summary()
-
-print(f"Performance metrics: {metrics['performance_metrics']}")
-print(f"Error counts: {metrics['error_counts']}")
-print(f"Audit events: {metrics['audit_events_count']}")
-```
-
-### Error Rate Monitoring
-
-```python
-# Monitor error rates
-error_counts = logger.error_counts
-for error_key, error_info in error_counts.items():
-    if error_info['count'] > 10:  # Alert threshold
-        logger.warning(f"High error rate for {error_key}",
-                      count=error_info['count'],
-                      first_occurrence=error_info['first_occurrence'])
-```
-
-### Performance Monitoring
-
-```python
-# Monitor performance metrics
-performance_metrics = logger.performance_metrics
-for operation, metrics in performance_metrics.items():
-    if metrics['avg_duration'] > 1.0:  # Alert threshold
-        logger.warning(f"Slow operation: {operation}",
-                      avg_duration=metrics['avg_duration'],
-                      count=metrics['count'])
-```
-
-### Health Checks
-
-```python
-from utils.enterprise_logging import log_system_health
-
-@log_system_health()
-def check_database_connection():
-    # Database health check
-    return {"status": "healthy", "response_time": 0.05}
-
-@log_system_health()
-def check_api_endpoints():
-    # API health check
-    return {"status": "healthy", "endpoints": ["/health", "/status"]}
-```
-
-## Performance Considerations
-
-### Log Volume Management
-
-```python
-# Use appropriate log levels
-logger.debug("Detailed debug info")  # Only in development
-logger.info("Normal operation")      # Production logging
-logger.warning("Potential issues")   # Monitor closely
-logger.error("Actual problems")      # Alert immediately
-```
-
-### Structured Data
-
-```python
-# Good: Structured data
-logger.info("User action",
-           action="login",
-           user_id="user123",
-           timestamp="2025-07-03T10:30:00Z")
-
-# Bad: Unstructured text
-logger.info("User user123 logged in at 2025-07-03T10:30:00Z")
+logger.info("Service started", service_name="my_service")
+logger.warning("High memory usage detected", memory_usage=85.5)
+logger.error("Database connection failed", error_code="DB_001")
+logger.critical("System shutdown required", reason="critical_error")
 ```
 
 ### Context Management
 
 ```python
-# Set context once at request start
-logger.set_request_context(request_id="req_123", user_id="user123")
+from utils.enterprise_logging import get_logger, LogContext
 
-# Use context throughout request
-logger.info("Processing step 1")
-logger.info("Processing step 2")
-logger.info("Processing step 3")
+logger = get_logger("api_service")
 
-# Clear context at request end
-logger.clear_request_context()
+# Set context for request
+context = LogContext(
+    service_name="api_service",
+    operation="user_login",
+    request_id="req_123",
+    user_id="user_456",
+    source_ip="192.168.1.1"
+)
+logger.set_context(context)
+
+# Log with context
+logger.info("User login attempt", username="john_doe")
+
+# Clear context when done
+logger.clear_context()
+```
+
+### Operation Context Manager
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("data_processor")
+
+# Use context manager for automatic timing and error handling
+with logger.operation_context("data_processing", request_id="req_123") as context:
+    # Process data
+    data = process_large_dataset()
+
+    # Add custom metadata
+    context.metadata = {"records_processed": len(data)}
+
+    # Log performance
+    logger.log_performance("data_processing", 1500.5, records=len(data))
+```
+
+### Performance Logging
+
+```python
+import time
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("api_service")
+
+def api_call():
+    start_time = time.time()
+
+    try:
+        # Make API call
+        response = make_external_api_call()
+
+        # Calculate duration
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Log performance
+        logger.log_performance("external_api_call", duration_ms,
+                             status_code=response.status_code)
+
+        return response
+
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        logger.log_performance("external_api_call", duration_ms,
+                             error=str(e), success=False)
+        raise
+```
+
+### API Call Logging
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("http_client")
+
+def make_request(method, url, data=None):
+    start_time = time.time()
+
+    try:
+        response = requests.request(method, url, json=data)
+        duration_ms = (time.time() - start_time) * 1000
+
+        logger.log_api_call(
+            method=method,
+            url=url,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+            request_size=len(str(data)) if data else 0,
+            response_size=len(response.content)
+        )
+
+        return response
+
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        logger.log_api_call(
+            method=method,
+            url=url,
+            status_code=0,
+            duration_ms=duration_ms,
+            error=str(e)
+        )
+        raise
+```
+
+### Security Event Logging
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("auth_service")
+
+def log_login_attempt(username, success, ip_address, details=None):
+    severity = "high" if not success else "low"
+
+    logger.log_security_event(
+        event_type="login_attempt",
+        severity=severity,
+        user_id=username,
+        ip_address=ip_address,
+        details={
+            "success": success,
+            "user_agent": details.get("user_agent"),
+            "location": details.get("location")
+        }
+    )
+
+def log_suspicious_activity(activity_type, user_id, ip_address, details):
+    logger.log_security_event(
+        event_type="suspicious_activity",
+        severity="critical",
+        user_id=user_id,
+        ip_address=ip_address,
+        details=details
+    )
+```
+
+### Data Operation Logging
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("database_service")
+
+def insert_records(table, records):
+    start_time = time.time()
+
+    try:
+        # Insert records
+        result = database.insert_many(table, records)
+        duration_ms = (time.time() - start_time) * 1000
+
+        logger.log_data_operation(
+            operation="insert",
+            table=table,
+            record_count=len(records),
+            duration_ms=duration_ms,
+            success=True
+        )
+
+        return result
+
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+
+        logger.log_data_operation(
+            operation="insert",
+            table=table,
+            record_count=len(records),
+            duration_ms=duration_ms,
+            success=False,
+            error=str(e)
+        )
+        raise
+```
+
+## Configuration
+
+### Logger Initialization
+
+```python
+from utils.enterprise_logging import EnterpriseLogger
+
+# Create logger with custom configuration
+logger = EnterpriseLogger(
+    service_name="my_service",
+    log_level="INFO",
+    log_dir="logs",
+    max_file_size=10 * 1024 * 1024,  # 10MB
+    backup_count=5,
+    enable_console=True,
+    enable_file=True,
+    enable_json=True,
+    enable_cloud_logging=False
+)
+```
+
+### Environment Variables
+
+```bash
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FORMAT=json
+LOG_DIR=logs
+LOG_MAX_SIZE_MB=10
+LOG_BACKUP_COUNT=5
+
+# Enable/Disable Features
+ENABLE_CONSOLE_LOGGING=true
+ENABLE_FILE_LOGGING=true
+ENABLE_JSON_LOGGING=true
+ENABLE_CLOUD_LOGGING=false
+
+# Performance Monitoring
+ENABLE_PERFORMANCE_LOGGING=true
+PERFORMANCE_THRESHOLD_MS=1000
+
+# Security Logging
+ENABLE_SECURITY_LOGGING=true
+SECURITY_LOG_LEVEL=WARNING
+```
+
+### Configuration File
+
+```yaml
+# config/logging_config.yaml
+logging:
+  level: INFO
+  format: json
+  directory: logs
+  max_file_size_mb: 10
+  backup_count: 5
+
+  handlers:
+    console:
+      enabled: true
+      level: INFO
+
+    file:
+      enabled: true
+      level: DEBUG
+      rotation: true
+
+    json:
+      enabled: true
+      level: INFO
+
+    cloud:
+      enabled: false
+      level: ERROR
+
+  performance:
+    enabled: true
+    threshold_ms: 1000
+    track_operations: true
+
+  security:
+    enabled: true
+    level: WARNING
+    track_events: true
+
+  context:
+    enabled: true
+    track_request_id: true
+    track_user_id: true
+    track_session_id: true
+```
+
+## Log Formats
+
+### Console Format
+
+```
+2024-01-01 12:00:00 | INFO     | degen_digest.my_service | Service started
+2024-01-01 12:00:01 | WARNING  | degen_digest.my_service | High memory usage: 85.5%
+2024-01-01 12:00:02 | ERROR    | degen_digest.my_service | Database connection failed
+```
+
+### JSON Format
+
+```json
+{
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "level": "INFO",
+  "logger": "degen_digest.my_service",
+  "message": "Service started",
+  "module": "main",
+  "function": "start_service",
+  "line": 25,
+  "service_name": "my_service",
+  "operation": "service_startup",
+  "request_id": "req_123",
+  "user_id": "user_456",
+  "metadata": {
+    "version": "1.0.0",
+    "environment": "production"
+  }
+}
+```
+
+### Performance Log Format
+
+```
+PERF | data_processing took 1500.50ms (records: 1000, success: true)
+PERF | api_call took 250.30ms (status_code: 200, url: /api/data)
+PERF | database_query took 45.20ms (table: users, operation: select)
+```
+
+## Log Analysis
+
+### Performance Analysis
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("analytics")
+
+# Get performance summary
+summary = logger.get_performance_summary()
+
+for operation, metrics in summary.items():
+    print(f"Operation: {operation}")
+    print(f"  Count: {metrics['count']}")
+    print(f"  Average: {metrics['avg_duration_ms']:.2f}ms")
+    print(f"  Min: {metrics['min_duration_ms']:.2f}ms")
+    print(f"  Max: {metrics['max_duration_ms']:.2f}ms")
+    print(f"  Total: {metrics['total_duration_ms']:.2f}ms")
+```
+
+### Log Export
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("export")
+
+# Export all logs
+logger.export_logs("exported_logs.txt", log_type="all")
+
+# Export specific log types
+logger.export_logs("errors_only.txt", log_type="errors")
+logger.export_logs("performance_only.txt", log_type="performance")
+logger.export_logs("structured_only.txt", log_type="json")
+```
+
+### Log Parsing
+
+```python
+import json
+from pathlib import Path
+
+def parse_json_logs(log_file):
+    """Parse JSON-formatted logs for analysis"""
+    logs = []
+
+    with open(log_file, 'r') as f:
+        for line in f:
+            try:
+                log_entry = json.loads(line.strip())
+                logs.append(log_entry)
+            except json.JSONDecodeError:
+                continue
+
+    return logs
+
+def analyze_logs(logs):
+    """Analyze logs for patterns and insights"""
+    # Count by level
+    level_counts = {}
+    for log in logs:
+        level = log.get('level', 'UNKNOWN')
+        level_counts[level] = level_counts.get(level, 0) + 1
+
+    # Find errors
+    errors = [log for log in logs if log.get('level') == 'ERROR']
+
+    # Performance analysis
+    perf_logs = [log for log in logs if log.get('performance')]
+
+    return {
+        'total_logs': len(logs),
+        'level_counts': level_counts,
+        'error_count': len(errors),
+        'performance_count': len(perf_logs)
+    }
+```
+
+## Monitoring and Alerting
+
+### Health Checks
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("health_monitor")
+
+def check_logging_health():
+    """Check logging system health"""
+    try:
+        # Test basic logging
+        logger.info("Health check: logging system operational")
+
+        # Check log file accessibility
+        log_dir = Path("logs")
+        if not log_dir.exists():
+            logger.error("Log directory not found")
+            return False
+
+        # Check disk space
+        disk_usage = log_dir.stat().st_size
+        if disk_usage > 1024 * 1024 * 100:  # 100MB
+            logger.warning("Log directory size exceeds threshold", size_mb=disk_usage/1024/1024)
+
+        return True
+
+    except Exception as e:
+        logger.error("Logging health check failed", error=str(e))
+        return False
+```
+
+### Alerting Rules
+
+```python
+from utils.enterprise_logging import get_logger
+
+logger = get_logger("alerting")
+
+def check_error_threshold():
+    """Check if error rate exceeds threshold"""
+    # This would typically query a monitoring system
+    # For demonstration, we'll use a simple counter
+
+    error_count = get_recent_error_count()
+    total_count = get_recent_total_count()
+
+    if total_count > 0:
+        error_rate = error_count / total_count
+
+        if error_rate > 0.05:  # 5% threshold
+            logger.critical("Error rate exceeds threshold",
+                          error_rate=error_rate,
+                          threshold=0.05)
+            send_alert("High error rate detected")
+
+def check_performance_degradation():
+    """Check for performance degradation"""
+    recent_performance = get_recent_performance_metrics()
+
+    for operation, metrics in recent_performance.items():
+        avg_duration = metrics.get('avg_duration_ms', 0)
+
+        if avg_duration > 1000:  # 1 second threshold
+            logger.warning("Performance degradation detected",
+                          operation=operation,
+                          avg_duration_ms=avg_duration,
+                          threshold_ms=1000)
+```
+
+## Best Practices
+
+### 1. Log Level Usage
+
+- **DEBUG**: Detailed debugging information
+- **INFO**: General operational information
+- **WARNING**: Potential issues that don't stop operation
+- **ERROR**: Error conditions that affect functionality
+- **CRITICAL**: System failures that require immediate attention
+
+### 2. Context Management
+
+```python
+# Good: Use context manager for operations
+with logger.operation_context("user_registration", user_id=user_id) as context:
+    # Registration logic
+    user = create_user(user_data)
+    context.metadata = {"user_id": user.id}
+
+# Bad: Manual context management
+logger.set_context(context)
+try:
+    # Logic
+    pass
+finally:
+    logger.clear_context()
+```
+
+### 3. Performance Logging
+
+```python
+# Good: Log performance with meaningful metrics
+logger.log_performance("data_processing", duration_ms,
+                      records_processed=len(data),
+                      success_rate=success_count/total_count)
+
+# Bad: Just logging duration
+logger.info(f"Processing took {duration_ms}ms")
+```
+
+### 4. Error Logging
+
+```python
+# Good: Include context and error details
+try:
+    result = risky_operation()
+except DatabaseError as e:
+    logger.error("Database operation failed",
+                operation="user_query",
+                user_id=user_id,
+                error_code=e.code,
+                error_message=str(e),
+                exc_info=True)
+
+# Bad: Generic error logging
+except Exception as e:
+    logger.error("Something went wrong")
+```
+
+### 5. Security Logging
+
+```python
+# Good: Comprehensive security event logging
+logger.log_security_event(
+    event_type="authentication_failure",
+    severity="high",
+    user_id=username,
+    ip_address=client_ip,
+    details={
+        "attempt_count": failed_attempts,
+        "user_agent": request.headers.get("User-Agent"),
+        "location": get_location_from_ip(client_ip)
+    }
+)
+
+# Bad: Basic security logging
+logger.warning(f"Failed login attempt for {username}")
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Logs Not Appearing**
+#### 1. High Log Volume
 
-   ```python
-   # Check log level
-   logger.debug("This won't appear if level is INFO")
+**Symptoms**: Large log files, slow performance
+**Solutions**:
 
-   # Check log file permissions
-   import os
-   os.access('logs/degen_digest.log', os.W_OK)
-   ```
+- Adjust log levels
+- Implement log filtering
+- Use log rotation
+- Consider log aggregation
 
-2. **Performance Impact**
+#### 2. Missing Context
 
-   ```python
-   # Use lazy evaluation for expensive operations
-   logger.debug("Expensive data", data=expensive_operation())  # Bad
-   logger.debug("Expensive data", data=lambda: expensive_operation())  # Good
-   ```
+**Symptoms**: Logs without request/user context
+**Solutions**:
 
-3. **Memory Leaks**
-   ```python
-   # Clear context after each request
-   try:
-       logger.set_request_context(request_id="req_123")
-       # Process request
-   finally:
-       logger.clear_request_context()
-   ```
+- Ensure context is set before logging
+- Use context managers
+- Check thread-local storage
 
-### Debug Mode
+#### 3. Performance Impact
 
-```python
-# Enable debug logging
-import os
-os.environ['LOG_LEVEL'] = 'DEBUG'
-os.environ['LOG_FORMAT'] = 'console'
+**Symptoms**: Slow application performance
+**Solutions**:
 
-# Reinitialize logging
-from utils.enterprise_logging import initialize_logging
-initialize_logging()
-```
+- Use async logging
+- Implement log buffering
+- Reduce log verbosity
+- Use sampling for high-volume operations
 
-### Log Analysis Tools
+### Debugging Commands
 
 ```bash
-# View recent logs
-tail -f logs/degen_digest.log
+# Check log file sizes
+ls -lh logs/
 
-# Search for errors
-grep "ERROR" logs/degen_digest.log
+# Search for specific errors
+grep "ERROR" logs/*.log
 
-# Count log entries by level
-grep -o '"level":"[^"]*"' logs/degen_digest.log | sort | uniq -c
+# Analyze performance logs
+grep "PERF" logs/performance.log
 
-# Extract performance metrics
-grep "performance_timer" logs/degen_digest.log | jq '.duration_seconds'
+# Check recent activity
+tail -100 logs/main.log
+
+# Monitor log growth
+watch -n 5 'ls -lh logs/'
 ```
 
-## Best Practices
+---
 
-### 1. Use Appropriate Log Levels
-
-```python
-# DEBUG: Detailed debugging information
-logger.debug("Variable value", variable_name="user_id", value=user_id)
-
-# INFO: General operational messages
-logger.info("User logged in", user_id=user_id, method="oauth")
-
-# WARNING: Warning conditions
-logger.warning("Rate limit approaching", remaining_requests=10)
-
-# ERROR: Error conditions
-logger.error("Database connection failed", error=str(e), retry_count=3)
-
-# CRITICAL: Critical system failures
-logger.critical("System shutdown required", reason="memory_exhaustion")
-```
-
-### 2. Include Relevant Context
-
-```python
-# Good: Include relevant context
-logger.error("API call failed",
-            endpoint="/api/data",
-            method="GET",
-            status_code=500,
-            user_id=user_id,
-            request_id=request_id)
-
-# Bad: Missing context
-logger.error("API call failed")
-```
-
-### 3. Use Structured Data
-
-```python
-# Good: Structured data
-logger.info("Data processed",
-           record_count=1000,
-           processing_time_ms=1500,
-           success_count=995,
-           error_count=5)
-
-# Bad: Unstructured text
-logger.info("Processed 1000 records in 1.5 seconds with 5 errors")
-```
-
-### 4. Handle Sensitive Data
-
-```python
-# Good: Mask sensitive data
-logger.info("User login",
-           user_id=user_id,
-           ip_address=ip_address,
-           password="***")  # Masked
-
-# Bad: Log sensitive data
-logger.info("User login", password=password)  # Never do this
-```
-
-### 5. Use Request Correlation
-
-```python
-# Set correlation ID at request start
-request_id = str(uuid.uuid4())
-logger.set_request_context(request_id=request_id, user_id=user_id)
-
-# All logs in this request will include the correlation ID
-logger.info("Processing request")
-logger.info("Database query")
-logger.info("Response sent")
-
-# Clear context at request end
-logger.clear_request_context()
-```
-
-### 6. Monitor Log Volume
-
-```python
-# Use sampling for high-volume operations
-import random
-
-def log_high_volume_operation(operation_data):
-    if random.random() < 0.01:  # Log 1% of operations
-        logger.info("High volume operation", data=operation_data)
-```
-
-### 7. Performance Monitoring
-
-```python
-# Use performance timers for expensive operations
-with logger.performance_timer("expensive_operation"):
-    result = expensive_operation()
-
-# Monitor specific metrics
-logger.info("Batch processing completed",
-           batch_size=len(batch),
-           processing_time_ms=processing_time * 1000,
-           memory_usage_mb=memory_usage)
-```
-
-### 8. Error Handling
-
-```python
-# Log errors with full context
-try:
-    result = risky_operation()
-except Exception as e:
-    logger.error("Operation failed",
-                operation="risky_operation",
-                error=str(e),
-                error_type=type(e).__name__,
-                traceback=traceback.format_exc(),
-                context={"user_id": user_id, "data": data})
-    raise
-```
-
-## Integration with External Systems
-
-### Cloud Logging
-
-```python
-# Google Cloud Logging integration
-import google.cloud.logging
-
-client = google.cloud.logging.Client()
-client.setup_logging()
-
-# Logs will be sent to Google Cloud Logging
-logger.info("Cloud logging test")
-```
-
-### Log Aggregation
-
-```python
-# Send logs to external aggregation service
-import requests
-
-def send_to_aggregator(log_entry):
-    requests.post("https://log-aggregator.com/logs", json=log_entry)
-
-# Custom handler for external aggregation
-class ExternalHandler(logging.Handler):
-    def emit(self, record):
-        log_entry = self.format(record)
-        send_to_aggregator(log_entry)
-```
-
-### Monitoring Dashboards
-
-```python
-# Export metrics for monitoring dashboards
-def export_metrics():
-    logger = get_logger('monitoring')
-    metrics = logger.get_metrics_summary()
-
-    # Send to monitoring system
-    requests.post("https://monitoring.com/metrics", json=metrics)
-```
-
-This comprehensive logging system provides enterprise-grade monitoring, debugging, and compliance capabilities for the Degen Digest platform.
+This documentation provides comprehensive guidance for using the DegenDigest logging system. For specific implementation details, refer to the source code in `utils/enterprise_logging.py`.

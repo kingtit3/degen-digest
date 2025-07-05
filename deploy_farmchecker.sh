@@ -199,7 +199,7 @@ while true; do
     echo "================================"
     echo "Last updated: $(date)"
     echo ""
-    
+
     # Check services
     echo "📊 Services:"
     if systemctl is-active --quiet farmchecker-pipeline.service; then
@@ -207,15 +207,15 @@ while true; do
     else
         echo "❌ Pipeline: STOPPED"
     fi
-    
+
     if systemctl is-active --quiet farmchecker-dashboard.service; then
         echo "✅ Dashboard: RUNNING"
     else
         echo "❌ Dashboard: STOPPED"
     fi
-    
+
     echo ""
-    
+
     # Check data
     echo "📁 Data Status:"
     if [ -f "output/consolidated_data.json" ]; then
@@ -225,13 +225,13 @@ while true; do
     else
         echo "❌ Data file: MISSING"
     fi
-    
+
     echo ""
-    
+
     # Show recent activity
     echo "📋 Recent Activity:"
     tail -3 logs/degen_digest.log 2>/dev/null || echo "No recent activity"
-    
+
     echo ""
     echo "Press Ctrl+C to exit"
     sleep 10
@@ -285,4 +285,4 @@ echo ""
 echo "🌐 Dashboard should be available at: http://localhost:8501"
 echo ""
 
-print_success "Deployment completed successfully!" 
+print_success "Deployment completed successfully!"

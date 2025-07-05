@@ -34,7 +34,7 @@ API_URL = "https://newsapi.org/v2/everything"
 
 # Query parameters tuned for crypto / markets coverage
 PARAMS = {
-    "q": "crypto OR bitcoin OR ethereum OR solana OR defi OR nft OR blockchain OR cryptocurrency OR altcoin OR token OR coin OR trading OR market",
+    "q": "crypto OR bitcoin OR ethereum OR solana OR defi OR nft OR blockchain OR cryptocurrency OR memecoin OR launchpad OR presale OR bonk OR dogwifhat OR jupiter",
     "language": "en",
     "pageSize": 100,
     "sortBy": "publishedAt",

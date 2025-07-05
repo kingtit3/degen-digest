@@ -1,46 +1,52 @@
-# Use official Python image
+# Twitter Crawler Dockerfile with Playwright support
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV STREAMLIT_SERVER_PORT=8501
-ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
-ENV STREAMLIT_SERVER_HEADLESS=true
-ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-
-# Set workdir
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for Playwright
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
+    wget \
+    gnupg \
+    ca-certificates \
+    procps \
+    libxss1 \
+    libnss3 \
+    libnspr4 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libatspi2.0-0 \
+    libgtk-3-0 \
+    libgdk-pixbuf2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
-COPY requirements-streamlit.txt ./
-RUN pip install --upgrade pip && pip install -r requirements-streamlit.txt
+# Copy requirements first for better caching
+COPY requirements-crawler.txt .
 
-# Copy dashboard and essential files
-COPY dashboard/ ./dashboard/
-COPY start_dashboard.py ./
-COPY main.py ./
-COPY utils/ ./utils/
-COPY storage/ ./storage/
-COPY processor/ ./processor/
-COPY config/ ./config/
-COPY output/ ./output/
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements-crawler.txt
 
-# Create necessary directories
-RUN mkdir -p logs output
+# Install Playwright browsers
+RUN playwright install chromium
+RUN playwright install-deps chromium
 
-# Expose port for Cloud Run
-EXPOSE 8501
+# Copy application code
+COPY . .
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+# Create logs directory
+RUN mkdir -p logs
 
-# Entrypoint
-CMD ["python3", "start_dashboard.py"]
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Default command for Twitter crawler server
+CMD ["python", "twitter_crawler_server.py"]

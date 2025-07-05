@@ -10,9 +10,11 @@ import logging
 import os
 import sys
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from dotenv import load_dotenv
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -39,6 +41,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Load environment variables from .env at startup
+load_dotenv()
+
 
 class EnhancedMultiSourceCrawler:
     def __init__(
@@ -60,6 +65,12 @@ class EnhancedMultiSourceCrawler:
         self.user_agent = user_agent
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
+
+        # Log loaded Twitter credentials (mask password)
+        logger.info(f"Loaded Twitter username: {self.username}")
+        logger.info(
+            f"Loaded Twitter password: {'*' * len(self.password) if self.password else None}"
+        )
 
         # Time settings
         self.start_hour = start_hour
@@ -333,11 +344,11 @@ class EnhancedMultiSourceCrawler:
                 "metadata": {"source": "crypto", "status": "error", "error": str(e)},
             }
 
-        def crawl_reddit_full(self) -> dict[str, Any]:
+    def crawl_reddit_full(self) -> dict[str, Any]:
         """Full Reddit RSS crawler using the proper scraper"""
         try:
             logger.info("🔄 Starting full Reddit crawl...")
-            
+
             # Import and use the full Reddit scraper
             import json
             from pathlib import Path
@@ -415,86 +426,157 @@ class EnhancedMultiSourceCrawler:
                 "metadata": {"source": "news", "status": "error", "error": str(e)},
             }
 
-    async def run_single_crawl_session(self) -> bool:
-        """Run a single crawl session with all sources"""
-        for attempt in range(self.max_retries):
-            try:
-                logger.info(
-                    f"Starting enhanced crawl session (attempt {attempt + 1}/{self.max_retries})"
-                )
+    async def run_single_crawl_session(self):
+        logger = self.logger
+        logger.info("🔄 Starting enhanced crawl session...")
+        # 1. Twitter crawl (direct execution, with timeout and granular logging)
+        logger.info("🔄 [TWITTER] Starting Twitter crawl...")
+        tweets = []
+        twitter_status = "not_run"
+        try:
+            twitter_username = os.environ.get("TWITTER_USERNAME")
+            twitter_password = os.environ.get("TWITTER_PASSWORD")
+            cookies_path = os.environ.get("TWITTER_COOKIES_PATH")
+            user_agent = os.environ.get("TWITTER_USER_AGENT")
+            gcs_bucket = self.gcs_bucket
+            project_id = self.project_id
+            output_dir = str(self.output_dir)
 
-                # 1. Twitter crawl (async)
+            if not twitter_username or not twitter_password:
+                logger.warning(
+                    "⚠️ [TWITTER] Credentials not set, skipping Twitter crawl."
+                )
+            else:
                 twitter_crawler = EnhancedTwitterPlaywrightCrawler(
                     headless=True,
-                    output_dir=str(self.output_dir),
-                    username=self.username,
-                    password=self.password,
-                    cookies_path=self.cookies_path,
-                    user_agent=self.user_agent,
-                    gcs_bucket=self.gcs_bucket,
-                    project_id=self.project_id,
+                    output_dir=output_dir,
+                    username=twitter_username,
+                    password=twitter_password,
+                    cookies_path=cookies_path,
+                    user_agent=user_agent,
+                    gcs_bucket=gcs_bucket,
+                    project_id=project_id,
                 )
+                try:
+                    logger.info("🔄 [TWITTER] Running Twitter crawl with timeout...")
+                    tweets = await asyncio.wait_for(
+                        twitter_crawler.run_solana_focused_crawl(
+                            max_for_you_tweets=10,  # Reduced for debugging
+                            max_followed_accounts=5,
+                            max_tweets_per_user=3,
+                            max_saved_posts=2,
+                        ),
+                        timeout=180,  # 3 minute timeout
+                    )
+                    twitter_status = "success"
+                    logger.info(
+                        f"✅ [TWITTER] Twitter crawl completed: {len(tweets)} tweets"
+                    )
+                except TimeoutError:
+                    twitter_status = "timeout"
+                    logger.error("❌ [TWITTER] Twitter crawl timed out after 3 minutes")
+                except Exception as e:
+                    twitter_status = "error"
+                    logger.error(f"❌ [TWITTER] Twitter crawl failed: {e}")
+        except Exception as e:
+            twitter_status = "error"
+            logger.error(f"❌ [TWITTER] Unexpected error in Twitter crawl setup: {e}")
+        # Save Twitter results (even if empty)
+        twitter_data = {
+            "tweets": tweets,
+            "metadata": {
+                "source": "twitter",
+                "crawled_at": datetime.now(UTC).isoformat(),
+                "count": len(tweets),
+                "status": twitter_status,
+            },
+        }
+        self.upload_to_gcs(twitter_data, "twitter")
 
-                tweets = await twitter_crawler.run_solana_focused_crawl(
-                    max_for_you_tweets=30,
-                    max_followed_accounts=20,
-                    max_tweets_per_user=10,
-                    max_saved_posts=5,
-                )
+        # 2. Reddit crawl (sync) - Use full scraper
+        reddit_data = self.crawl_reddit_full()
+        self.upload_to_gcs(reddit_data, "reddit")
 
-                # Upload Twitter data
-                twitter_data = {
-                    "tweets": tweets,
-                    "metadata": {
-                        "source": "twitter",
-                        "crawled_at": datetime.now(UTC).isoformat(),
-                        "count": len(tweets),
-                        "status": "success",
-                    },
-                }
-                self.upload_to_gcs(twitter_data, "twitter")
+        # 3. News crawl (sync) - Use full scraper
+        news_data = self.crawl_news_full()
+        self.upload_to_gcs(news_data, "news")
 
-                # 2. Reddit crawl (sync) - Use full scraper
-                reddit_data = self.crawl_reddit_full()
-                self.upload_to_gcs(reddit_data, "reddit")
+        # 4. Crypto crawl (sync)
+        crypto_data = self.crawl_crypto_simple()
+        self.upload_to_gcs(crypto_data, "crypto")
 
-                # 3. News crawl (sync) - Use full scraper
-                news_data = self.crawl_news_full()
-                self.upload_to_gcs(news_data, "news")
+        # 5. DEX Screener crawl (sync)
+        try:
+            from scrapers.dexscreener import main as dexscreener_main
 
-                # 4. Crypto crawl (sync)
-                crypto_data = self.crawl_crypto_simple()
-                self.upload_to_gcs(crypto_data, "crypto")
+            dexscreener_main()
+            with open("output/dexscreener_raw.json") as f:
+                dexscreener_data = json.load(f)
+            self.upload_to_gcs(dexscreener_data, "dexscreener")
+            logger.info(
+                f"✅ DEX Screener crawl completed: {len(dexscreener_data.get('latest_token_profiles', []))} tokens"
+            )
+        except Exception as e:
+            logger.error(f"❌ DEX Screener crawl failed: {e}")
 
-                # Update statistics
-                self.session_stats["total_crawls"] += 1
-                self.session_stats["successful_crawls"] += 1
-                self.session_stats["total_tweets_collected"] += len(tweets)
-                self.session_stats["last_crawl_time"] = datetime.now(UTC).isoformat()
+        # 6. DexPaprika crawl (sync)
+        try:
+            from scrapers.dexpaprika import main as dexpaprika_main
 
-                logger.info("Enhanced crawl session successful:")
-                logger.info(f"  - Twitter: {len(tweets)} tweets")
-                logger.info(f"  - Reddit: {len(reddit_data.get('posts', []))} posts")
-                logger.info(f"  - News: {len(news_data.get('articles', []))} articles")
-                logger.info(
-                    f"  - Crypto: {len(crypto_data.get('gainers', []))} gainers"
-                )
+            dexpaprika_main()
+            with open("output/dexpaprika_raw.json") as f:
+                dexpaprika_data = json.load(f)
+            self.upload_to_gcs(dexpaprika_data, "dexpaprika")
+            logger.info(
+                f"✅ DexPaprika crawl completed: {len(dexpaprika_data.get('token_data', []))} tokens"
+            )
+        except Exception as e:
+            logger.error(f"❌ DexPaprika crawl failed: {e}")
 
-                return True
+        # 7. Telegram crawl (sync)
+        try:
+            from scrapers.telegram_telethon import main as telegram_main
 
-            except Exception as e:
-                logger.error(
-                    f"Enhanced crawl session failed (attempt {attempt + 1}): {e}"
-                )
-                self.session_stats["failed_crawls"] += 1
+            telegram_main()
+            with open("output/telegram_raw.json") as f:
+                telegram_data = json.load(f)
+            self.upload_to_gcs(telegram_data, "telegram")
+            logger.info(
+                f"✅ Telegram crawl completed: {len(telegram_data.get('messages', []))} messages"
+            )
+        except Exception as e:
+            logger.error(f"❌ Telegram crawl failed: {e}")
 
-                if attempt < self.max_retries - 1:
-                    retry_delay = (2**attempt) * 60
-                    logger.info(f"Retrying in {retry_delay} seconds...")
-                    await asyncio.sleep(retry_delay)
-                else:
-                    logger.error("All retry attempts failed")
-                    return False
+        # Update statistics
+        self.session_stats["total_crawls"] += 1
+        self.session_stats["successful_crawls"] += 1
+        self.session_stats["total_tweets_collected"] += len(tweets)
+        self.session_stats["last_crawl_time"] = datetime.now(UTC).isoformat()
+
+        logger.info("Enhanced crawl session successful:")
+        logger.info(f"  - Twitter: {len(tweets)} tweets")
+        logger.info(f"  - Reddit: {len(reddit_data.get('posts', []))} posts")
+        logger.info(f"  - News: {len(news_data.get('articles', []))} articles")
+        logger.info(f"  - Crypto: {len(crypto_data.get('gainers', []))} gainers")
+        logger.info(f"  - Telegram: {len(telegram_data.get('messages', []))} messages")
+
+        # Run data consolidation in background (non-blocking)
+        logger.info("🔄 Starting data consolidation in background...")
+        try:
+            import subprocess
+
+            # Start consolidation in background
+            consolidation_process = subprocess.Popen(
+                [sys.executable, "scripts/consolidate_cloud_data.py"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            logger.info("✅ Data consolidation started in background")
+        except Exception as e:
+            logger.error(f"❌ Error starting data consolidation: {e}")
+
+        return True
 
     async def save_session_stats(self):
         """Save current session statistics to GCS"""
@@ -600,13 +682,14 @@ class EnhancedMultiSourceCrawler:
 
 async def main():
     """Main function"""
-    # Get credentials from environment
+    # Load credentials from environment
     username = os.getenv("TWITTER_USERNAME")
     password = os.getenv("TWITTER_PASSWORD")
-
     if not username or not password:
         logger.error("❌ Twitter credentials not found in environment")
         return
+    else:
+        logger.info(f"✅ Twitter credentials found: {username} / {'*' * len(password)}")
 
     # Create crawler
     crawler = EnhancedMultiSourceCrawler(

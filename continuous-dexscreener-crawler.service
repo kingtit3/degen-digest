@@ -1,0 +1,25 @@
+[Unit]
+Description=Continuous DexScreener Crawler Service
+After=network.target
+
+[Service]
+Type=simple
+User=king
+WorkingDirectory=/home/king/DegenDigest
+Environment=PATH=/home/king/DegenDigest/venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/king/DegenDigest/venv/bin/python3 /home/king/DegenDigest/continuous_dexscreener_crawler.py
+Restart=always
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+
+# Logging
+StandardOutput=append:/home/king/DegenDigest/output/dexscreener_service.log
+StandardError=append:/home/king/DegenDigest/output/dexscreener_service.log
+
+# Resource limits
+MemoryMax=1G
+CPUQuota=60%
+
+[Install]
+WantedBy=multi-user.target

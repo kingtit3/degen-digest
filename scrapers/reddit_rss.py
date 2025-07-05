@@ -6,14 +6,18 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
 import json
 import logging
-from datetime import UTC
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import feedparser
 import httpx
 from dateutil import parser as dateparser
 
-from storage.db import add_reddit_posts
+# DB insertion optional – only if table/model exists. Import guarded.
+try:
+    from storage.db import add_reddit_posts  # type: ignore
+except ImportError:
+    add_reddit_posts = None  # type: ignore
 from utils.advanced_logging import get_logger
 from utils.logger import setup_logging
 
@@ -94,10 +98,11 @@ def scrape_reddit(keyword_filters: list[str]):
         logger.info("scrape start", url=url)
         return await parse_reddit_feed_async(url, keyword_filters)
 
-    loop = asyncio.get_event_loop()
-    results = loop.run_until_complete(
-        asyncio.gather(*[worker(u) for u in REDDIT_FEEDS])
-    )
+    async def gather_all():
+        results = await asyncio.gather(*[worker(u) for u in REDDIT_FEEDS])
+        return results
+
+    results = asyncio.run(gather_all())
     for entries in results:
         all_entries.extend(entries)
     # Sort by published date (string) but there might be inconsistent format; keep as is
@@ -108,10 +113,27 @@ def scrape_reddit(keyword_filters: list[str]):
 def main():
     keywords = json.loads(Path("config/keywords.json").read_text())
     items = scrape_reddit(keywords["reddit"])
-    add_reddit_posts(items)
+    # optional DB integration if schema present
+    if add_reddit_posts:
+        try:
+            add_reddit_posts(items)  # type: ignore
+        except Exception:
+            pass
+
+    # Save in the expected format for consolidation
+    data = {
+        "posts": items,
+        "metadata": {
+            "source": "reddit",
+            "fetched_at": datetime.now(UTC).isoformat(),
+            "count": len(items),
+            "status": "success",
+        },
+    }
+
     out_path = Path("output/reddit_raw.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(items, indent=2))
+    out_path.write_text(json.dumps(data, indent=2))
     logger.info("reddit items saved", count=len(items))
 
 

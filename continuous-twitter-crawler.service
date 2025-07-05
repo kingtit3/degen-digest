@@ -1,0 +1,25 @@
+[Unit]
+Description=Continuous Twitter Crawler Service
+After=network.target
+
+[Service]
+Type=simple
+User=king
+WorkingDirectory=/home/king/DegenDigest
+Environment=PATH=/home/king/DegenDigest/venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/king/DegenDigest/venv/bin/python3 /home/king/DegenDigest/continuous_twitter_crawler.py
+Restart=always
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+
+# Logging
+StandardOutput=append:/home/king/DegenDigest/output/crawler_service.log
+StandardError=append:/home/king/DegenDigest/output/crawler_service.log
+
+# Resource limits
+MemoryMax=2G
+CPUQuota=80%
+
+[Install]
+WantedBy=multi-user.target

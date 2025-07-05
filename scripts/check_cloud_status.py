@@ -143,8 +143,17 @@ def check_data_structure():
                 try:
                     content = blob.download_as_text()
                     data = json.loads(content)
+                    # Check for different data keys based on source
                     if "tweets" in data:
                         count = len(data["tweets"])
+                    elif "posts" in data:
+                        count = len(data["posts"])
+                    elif "articles" in data:
+                        count = len(data["articles"])
+                    elif "gainers" in data:
+                        count = len(data["gainers"])
+                    elif "messages" in data:
+                        count = len(data["messages"])
                     elif "data" in data:
                         count = len(data["data"])
                     else:

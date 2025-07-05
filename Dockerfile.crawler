@@ -9,11 +9,6 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright browsers
-RUN pip install playwright
-RUN playwright install chromium
-RUN playwright install-deps
-
 # Set working directory
 WORKDIR /app
 
@@ -22,6 +17,11 @@ COPY requirements-crawler.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements-crawler.txt
+
+# Install Playwright and browsers as root
+RUN pip install playwright
+RUN playwright install chromium
+RUN playwright install-deps
 
 # Copy application code
 COPY . .
@@ -35,8 +35,18 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Create non-root user
 RUN useradd -m -u 1000 crawler
+
+# Give crawler user access to everything
 RUN chown -R crawler:crawler /app
+
+# Find and give access to Playwright browsers directory
+RUN find / -name "chromium*" -type d 2>/dev/null | head -1 | xargs -I {} chown -R crawler:crawler {} || true
+
+# Switch to crawler user
 USER crawler
+
+# Verify browser installation
+RUN playwright --version
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
