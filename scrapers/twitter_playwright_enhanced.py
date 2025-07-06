@@ -466,7 +466,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     )
                     raise Exception(
                         f"Browser setup failed after {max_retries} attempts: {e}"
-                    )
+                    ) from e
 
     async def inject_anti_detection_scripts(self):
         """Inject scripts to bypass bot detection"""
@@ -863,7 +863,6 @@ class EnhancedTwitterPlaywrightCrawler:
                 return []
 
             # Comprehensive scrolling to load ALL tweets
-            tweets_loaded = 0
             max_scrolls = 20  # Increased scrolls to get more tweets
             scroll_attempts = 0
             last_tweet_count = 0
@@ -969,7 +968,7 @@ class EnhancedTwitterPlaywrightCrawler:
             await self.human_like_scroll(max_scrolls=15, max_tweets=max_tweets)
 
             # Additional scrolling to ensure we get enough content
-            for i in range(5):
+            for _i in range(5):
                 await self.page.evaluate("window.scrollBy(0, 800)")
                 await asyncio.sleep(random.uniform(1.5, 3.0))
 
@@ -1557,7 +1556,7 @@ class EnhancedTwitterPlaywrightCrawler:
                     f"🎯 Searching {category} category with {len(queries)} queries..."
                 )
 
-                for i, query in enumerate(
+                for _i, query in enumerate(
                     queries[:5]
                 ):  # Reduced to 5 queries per category
                     try:

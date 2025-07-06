@@ -1,105 +1,85 @@
 #!/bin/bash
 
+# Deploy Cloud Tasks for Multi-Source Data Collection
+# This script deploys Reddit, News, and CoinGecko crawlers to Google Cloud Run
+
+set -e
+
+echo "🚀 Deploying Cloud Tasks for Multi-Source Data Collection"
+echo "=========================================================="
+
 # Configuration
 PROJECT_ID="lucky-union-463615-t3"
 REGION="us-central1"
-DEXSCREENER_SERVICE="dexscreener-crawler"
-DEXPAPRIKA_SERVICE="dexpaprika-crawler"
+BUCKET_NAME="degen-digest-data"
 
-echo "🚀 Deploying Crypto Crawlers as Cloud Run Services..."
+# Services to deploy
+SERVICES=(
+    "reddit-crawler:cloud_tasks_reddit.py"
+    "news-crawler:cloud_tasks_news.py"
+    "coingecko-crawler:cloud_tasks_coingecko.py"
+)
 
-# Enable required APIs
-echo "🔧 Enabling required APIs..."
-gcloud services enable cloudtasks.googleapis.com --project=$PROJECT_ID
-gcloud services enable cloudscheduler.googleapis.com --project=$PROJECT_ID
-gcloud services enable cloudbuild.googleapis.com --project=$PROJECT_ID
+# Environment variables for all services
+ENV_VARS="NEWSAPI_KEY=ffc45af6fcd94c4991eaefdc469346e8"
 
-# Build and deploy DexScreener service
-echo "📦 Building and deploying DexScreener service..."
-gcloud run deploy $DEXSCREENER_SERVICE \
-    --source . \
-    --platform managed \
-    --region $REGION \
-    --project $PROJECT_ID \
-    --allow-unauthenticated \
-    --memory 1Gi \
-    --cpu 1 \
-    --timeout 300 \
-    --set-env-vars "PYTHONPATH=/app"
+echo "📋 Deploying ${#SERVICES[@]} services..."
 
-# Build and deploy DexPaprika service
-echo "📦 Building and deploying DexPaprika service..."
-gcloud run deploy $DEXPAPRIKA_SERVICE \
-    --source . \
-    --platform managed \
-    --region $REGION \
-    --project $PROJECT_ID \
-    --allow-unauthenticated \
-    --memory 1Gi \
-    --cpu 1 \
-    --timeout 300 \
-    --set-env-vars "PYTHONPATH=/app"
+for service_info in "${SERVICES[@]}"; do
+    IFS=':' read -r service_name source_file <<< "$service_info"
 
-# Get service URLs
-DEXSCREENER_URL=$(gcloud run services describe $DEXSCREENER_SERVICE --region=$REGION --format="value(status.url)" 2>/dev/null)
-DEXPAPRIKA_URL=$(gcloud run services describe $DEXPAPRIKA_SERVICE --region=$REGION --format="value(status.url)" 2>/dev/null)
+    echo ""
+    echo "🔧 Deploying $service_name..."
+    echo "   Source: $source_file"
 
-echo "✅ Services deployed successfully!"
-echo "DexScreener URL: $DEXSCREENER_URL"
-echo "DexPaprika URL: $DEXPAPRIKA_URL"
+    # Deploy to Cloud Run
+    gcloud run deploy "$service_name" \
+        --source . \
+        --platform managed \
+        --region "$REGION" \
+        --project "$PROJECT_ID" \
+        --set-env-vars "$ENV_VARS" \
+        --memory 1Gi \
+        --cpu 1 \
+        --max-instances 10 \
+        --timeout 300 \
+        --concurrency 80 \
+        --allow-unauthenticated
 
-# Create Cloud Tasks queues
-echo "📋 Creating Cloud Tasks queues..."
-gcloud tasks queues create dexscreener-queue \
-    --location=$REGION \
-    --project=$PROJECT_ID \
-    --max-concurrent-dispatches=1 \
-    --max-attempts=3
-
-gcloud tasks queues create dexpaprika-queue \
-    --location=$REGION \
-    --project=$PROJECT_ID \
-    --max-concurrent-dispatches=1 \
-    --max-attempts=3
-
-echo "✅ Cloud Tasks queues created!"
-
-# Create Cloud Scheduler jobs (every 2 hours)
-echo "⏰ Creating Cloud Scheduler jobs..."
-
-# DexScreener scheduler (every 2 hours)
-gcloud scheduler jobs create http dexscreener-scheduler \
-    --schedule="0 */2 * * *" \
-    --uri="$DEXSCREENER_URL" \
-    --http-method=POST \
-    --location=$REGION \
-    --project=$PROJECT_ID \
-    --description="Trigger DexScreener crawl every 2 hours"
-
-# DexPaprika scheduler (every 2 hours, offset by 1 hour)
-gcloud scheduler jobs create http dexpaprika-scheduler \
-    --schedule="0 1-23/2 * * *" \
-    --uri="$DEXPAPRIKA_URL" \
-    --http-method=POST \
-    --location=$REGION \
-    --project=$PROJECT_ID \
-    --description="Trigger DexPaprika crawl every 2 hours (offset)"
-
-echo "✅ Cloud Scheduler jobs created!"
+    echo "✅ $service_name deployed successfully"
+done
 
 echo ""
-echo "🎯 Deployment Summary:"
-echo "======================"
-echo "DexScreener Service: $DEXSCREENER_URL"
-echo "DexPaprika Service:  $DEXPAPRIKA_URL"
-echo "DexScreener Schedule: Every 2 hours (0:00, 2:00, 4:00, etc.)"
-echo "DexPaprika Schedule:  Every 2 hours (1:00, 3:00, 5:00, etc.)"
+echo "🎉 All Cloud Tasks deployed successfully!"
 echo ""
-echo "📊 Monitoring:"
-echo "  - Cloud Run logs: gcloud logging read 'resource.type=cloud_run_revision' --limit=50"
-echo "  - Scheduler logs: gcloud scheduler jobs list"
-echo "  - GCS files: gsutil ls gs://degen-digest-data/data/ | grep -E '(dexscreener|dexpaprika)'"
+echo "📊 Deployed Services:"
+for service_info in "${SERVICES[@]}"; do
+    IFS=':' read -r service_name source_file <<< "$service_info"
+    echo "   - $service_name"
+done
+
 echo ""
-echo "🔄 Manual triggers:"
-echo "  - DexScreener: curl -X POST $DEXSCREENER_URL"
-echo "  - DexPaprika:  curl -X POST $DEXPAPRIKA_URL"
+echo "🔗 Service URLs:"
+for service_info in "${SERVICES[@]}"; do
+    IFS=':' read -r service_name source_file <<< "$service_info"
+    URL=$(gcloud run services describe "$service_name" --region="$REGION" --format="value(status.url)")
+    echo "   - $service_name: $URL"
+done
+
+echo ""
+echo "📝 Next Steps:"
+echo "1. Set up Cloud Scheduler jobs to trigger these services"
+echo "2. Configure monitoring and alerting"
+echo "3. Test each service individually"
+echo "4. Verify data is being uploaded to GCS bucket: $BUCKET_NAME"
+
+echo ""
+echo "🧪 Test Commands:"
+for service_info in "${SERVICES[@]}"; do
+    IFS=':' read -r service_name source_file <<< "$service_info"
+    URL=$(gcloud run services describe "$service_name" --region="$REGION" --format="value(status.url)")
+    echo "   curl -X POST $URL"
+done
+
+echo ""
+echo "✅ Deployment complete!"

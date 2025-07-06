@@ -216,48 +216,16 @@ class EnhancedMultiSourceCrawler:
                 "metadata": {"source": "reddit", "status": "error", "error": str(e)},
             }
 
-    def crawl_news_simple(self) -> dict[str, Any]:
-        """Simple News API crawler"""
+    async def crawl_news_full(self) -> dict[str, Any]:
+        """Full News API crawler using the proper scraper"""
         try:
-            logger.info("🔄 Starting News crawl...")
+            logger.info("🔄 Starting full News crawl...")
 
-            import requests
+            # Import and use the full News scraper
+            from scrapers.newsapi_headlines import fetch_headlines
 
-            # Check for API key
-            api_key = os.getenv("NEWSAPI_KEY")
-            if not api_key:
-                logger.warning("⚠️ NEWSAPI_KEY not found, using fallback")
-                # Return some basic crypto news from a public source
-                articles = [
-                    {
-                        "title": "Crypto Market Update",
-                        "summary": "Latest developments in cryptocurrency markets",
-                        "link": "https://cointelegraph.com",
-                        "published": datetime.now(UTC).isoformat(),
-                    }
-                ]
-            else:
-                try:
-                    url = "https://newsapi.org/v2/everything"
-                    params = {
-                        "q": "crypto OR bitcoin OR ethereum OR solana",
-                        "language": "en",
-                        "pageSize": 10,
-                        "sortBy": "publishedAt",
-                        "apiKey": api_key,
-                    }
-
-                    response = requests.get(url, params=params, timeout=10)
-                    if response.status_code == 200:
-                        data = response.json()
-                        articles = data.get("articles", [])
-                    else:
-                        logger.warning(f"News API returned HTTP {response.status_code}")
-                        articles = []
-
-                except Exception as e:
-                    logger.warning(f"News API failed: {e}")
-                    articles = []
+            # Use the full scraper
+            articles = fetch_headlines()
 
             data = {
                 "articles": articles,
@@ -270,17 +238,17 @@ class EnhancedMultiSourceCrawler:
             }
 
             self.session_stats["total_news_articles"] += len(articles)
-            logger.info(f"✅ News crawl completed: {len(articles)} articles")
+            logger.info(f"✅ Full News crawl completed: {len(articles)} articles")
             return data
 
         except Exception as e:
-            logger.error(f"❌ News crawl failed: {e}")
+            logger.error(f"❌ Full News crawl failed: {e}")
             return {
                 "articles": [],
                 "metadata": {"source": "news", "status": "error", "error": str(e)},
             }
 
-    def crawl_crypto_simple(self) -> dict[str, Any]:
+    async def crawl_crypto_simple(self) -> dict[str, Any]:
         """Simple CoinGecko API crawler"""
         try:
             logger.info("🔄 Starting Crypto crawl...")
@@ -344,7 +312,71 @@ class EnhancedMultiSourceCrawler:
                 "metadata": {"source": "crypto", "status": "error", "error": str(e)},
             }
 
-    def crawl_reddit_full(self) -> dict[str, Any]:
+    async def crawl_news_simple(self) -> dict[str, Any]:
+        """Simple News API crawler"""
+        try:
+            logger.info("🔄 Starting News crawl...")
+
+            import requests
+
+            # Check for API key
+            api_key = os.getenv("NEWSAPI_KEY")
+            if not api_key:
+                logger.warning("⚠️ NEWSAPI_KEY not found, using fallback")
+                # Return some basic crypto news from a public source
+                articles = [
+                    {
+                        "title": "Crypto Market Update",
+                        "summary": "Latest developments in cryptocurrency markets",
+                        "link": "https://cointelegraph.com",
+                        "published": datetime.now(UTC).isoformat(),
+                    }
+                ]
+            else:
+                try:
+                    url = "https://newsapi.org/v2/everything"
+                    params = {
+                        "q": "crypto OR bitcoin OR ethereum OR solana",
+                        "language": "en",
+                        "pageSize": 10,
+                        "sortBy": "publishedAt",
+                        "apiKey": api_key,
+                    }
+
+                    response = requests.get(url, params=params, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        articles = data.get("articles", [])
+                    else:
+                        logger.warning(f"News API returned HTTP {response.status_code}")
+                        articles = []
+
+                except Exception as e:
+                    logger.warning(f"News API failed: {e}")
+                    articles = []
+
+            data = {
+                "articles": articles,
+                "metadata": {
+                    "source": "news",
+                    "crawled_at": datetime.now(UTC).isoformat(),
+                    "count": len(articles),
+                    "status": "success",
+                },
+            }
+
+            self.session_stats["total_news_articles"] += len(articles)
+            logger.info(f"✅ News crawl completed: {len(articles)} articles")
+            return data
+
+        except Exception as e:
+            logger.error(f"❌ News crawl failed: {e}")
+            return {
+                "articles": [],
+                "metadata": {"source": "news", "status": "error", "error": str(e)},
+            }
+
+    async def crawl_reddit_full(self) -> dict[str, Any]:
         """Full Reddit RSS crawler using the proper scraper"""
         try:
             logger.info("🔄 Starting full Reddit crawl...")
@@ -371,7 +403,16 @@ class EnhancedMultiSourceCrawler:
                 ]
 
             # Use the full scraper - call it directly since it's not async
-            posts = scrape_reddit(reddit_keywords)
+            # Use nest_asyncio to handle event loop conflicts
+            try:
+                import nest_asyncio
+
+                nest_asyncio.apply()
+                posts = await self._scrape_reddit_async(reddit_keywords)
+            except ImportError:
+                # Fallback if nest_asyncio is not available
+                logger.warning("nest_asyncio not available, using fallback")
+                posts = []
 
             data = {
                 "posts": posts,
@@ -394,40 +435,46 @@ class EnhancedMultiSourceCrawler:
                 "metadata": {"source": "reddit", "status": "error", "error": str(e)},
             }
 
-    def crawl_news_full(self) -> dict[str, Any]:
-        """Full News API crawler using the proper scraper"""
+    async def _scrape_reddit_async(self, keyword_filters: list[str]) -> list[dict]:
+        """Async Reddit scraping to avoid event loop conflicts"""
         try:
-            logger.info("🔄 Starting full News crawl...")
+            from scrapers.reddit_rss import parse_reddit_feed_async
 
-            # Import and use the full News scraper
-            from scrapers.newsapi_headlines import fetch_headlines
+            REDDIT_FEEDS = [
+                "https://www.reddit.com/r/CryptoCurrency/new/.rss",
+                "https://www.reddit.com/r/shitcoin/new/.rss",
+                "https://www.reddit.com/r/Solana/new/.rss",
+                "https://www.reddit.com/r/Bitcoin/new/.rss",
+                "https://www.reddit.com/r/Ethereum/new/.rss",
+                "https://www.reddit.com/r/CryptoMarkets/new/.rss",
+                "https://www.reddit.com/r/defi/new/.rss",
+                "https://www.reddit.com/r/NFT/new/.rss",
+                "https://www.reddit.com/r/cryptostreetbets/new/.rss",
+                "https://www.reddit.com/r/altcoin/new/.rss",
+                "https://www.reddit.com/r/cryptomoonshots/new/.rss",
+                "https://www.reddit.com/r/cryptonews/new/.rss",
+                "https://www.reddit.com/r/ethtrader/new/.rss",
+                "https://www.reddit.com/r/cryptocurrencymemes/new/.rss",
+                "https://www.reddit.com/r/cryptotrading/new/.rss",
+                "https://www.reddit.com/r/cryptosignals/new/.rss",
+                "https://www.reddit.com/r/cryptomemes/new/.rss",
+            ]
 
-            # Use the full scraper
-            articles = fetch_headlines()
+            all_entries = []
+            for url in REDDIT_FEEDS:
+                try:
+                    entries = await parse_reddit_feed_async(url, keyword_filters)
+                    all_entries.extend(entries)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch {url}: {e}")
+                    continue
 
-            data = {
-                "articles": articles,
-                "metadata": {
-                    "source": "news",
-                    "crawled_at": datetime.now(UTC).isoformat(),
-                    "count": len(articles),
-                    "status": "success",
-                },
-            }
-
-            self.session_stats["total_news_articles"] += len(articles)
-            logger.info(f"✅ Full News crawl completed: {len(articles)} articles")
-            return data
-
+            return all_entries[:20]  # Limit to 20 posts
         except Exception as e:
-            logger.error(f"❌ Full News crawl failed: {e}")
-            return {
-                "articles": [],
-                "metadata": {"source": "news", "status": "error", "error": str(e)},
-            }
+            logger.error(f"Reddit async scraping failed: {e}")
+            return []
 
     async def run_single_crawl_session(self):
-        logger = self.logger
         logger.info("🔄 Starting enhanced crawl session...")
         # 1. Twitter crawl (direct execution, with timeout and granular logging)
         logger.info("🔄 [TWITTER] Starting Twitter crawl...")
@@ -466,7 +513,7 @@ class EnhancedMultiSourceCrawler:
                             max_tweets_per_user=3,
                             max_saved_posts=2,
                         ),
-                        timeout=180,  # 3 minute timeout
+                        timeout=300,  # 5 minute timeout
                     )
                     twitter_status = "success"
                     logger.info(
@@ -493,16 +540,16 @@ class EnhancedMultiSourceCrawler:
         }
         self.upload_to_gcs(twitter_data, "twitter")
 
-        # 2. Reddit crawl (sync) - Use full scraper
-        reddit_data = self.crawl_reddit_full()
+        # 2. Reddit crawl (async) - Use full scraper
+        reddit_data = await self.crawl_reddit_full()
         self.upload_to_gcs(reddit_data, "reddit")
 
-        # 3. News crawl (sync) - Use full scraper
-        news_data = self.crawl_news_full()
+        # 3. News crawl (async) - Use full scraper
+        news_data = await self.crawl_news_full()
         self.upload_to_gcs(news_data, "news")
 
-        # 4. Crypto crawl (sync)
-        crypto_data = self.crawl_crypto_simple()
+        # 4. Crypto crawl (async)
+        crypto_data = await self.crawl_crypto_simple()
         self.upload_to_gcs(crypto_data, "crypto")
 
         # 5. DEX Screener crawl (sync)
@@ -534,18 +581,68 @@ class EnhancedMultiSourceCrawler:
             logger.error(f"❌ DexPaprika crawl failed: {e}")
 
         # 7. Telegram crawl (sync)
+        telegram_data = {
+            "messages": [],
+            "metadata": {"source": "telegram", "status": "error", "error": "not_run"},
+        }
         try:
-            from scrapers.telegram_telethon import main as telegram_main
+            from scrapers.telegram_telethon import collect_messages
 
-            telegram_main()
-            with open("output/telegram_raw.json") as f:
-                telegram_data = json.load(f)
-            self.upload_to_gcs(telegram_data, "telegram")
-            logger.info(
-                f"✅ Telegram crawl completed: {len(telegram_data.get('messages', []))} messages"
-            )
+            # Use nest_asyncio to handle event loop conflicts
+            try:
+                import nest_asyncio
+
+                nest_asyncio.apply()
+                messages = await collect_messages(
+                    [
+                        "@SolanaMemeCalls",
+                        "@CryptoAlpha",
+                        "@binancekillers",
+                        "@cryptoclubpump",
+                        "@RavenProSupport",
+                        "@AltSignals",
+                        "@jamescpt",
+                        "@degeninvestor",
+                        "@ryder_reilly",
+                        "@iqcash_admin",
+                        "@gqsoul",
+                        "@Arpiner7",
+                        "@mikevazovskyi",
+                        "@robertus78",
+                        "@Fesions",
+                        "@BitcoinSmarts",
+                    ],
+                    limit=200,
+                )
+
+                telegram_data = {
+                    "messages": messages,
+                    "metadata": {
+                        "source": "telegram",
+                        "fetched_at": datetime.now(UTC).isoformat(),
+                        "count": len(messages),
+                        "status": "success",
+                    },
+                }
+
+                self.upload_to_gcs(telegram_data, "telegram")
+                logger.info(f"✅ Telegram crawl completed: {len(messages)} messages")
+            except ImportError:
+                logger.warning("nest_asyncio not available, skipping Telegram")
+                telegram_data = {
+                    "messages": [],
+                    "metadata": {
+                        "source": "telegram",
+                        "status": "error",
+                        "error": "nest_asyncio_not_available",
+                    },
+                }
         except Exception as e:
             logger.error(f"❌ Telegram crawl failed: {e}")
+            telegram_data = {
+                "messages": [],
+                "metadata": {"source": "telegram", "status": "error", "error": str(e)},
+            }
 
         # Update statistics
         self.session_stats["total_crawls"] += 1

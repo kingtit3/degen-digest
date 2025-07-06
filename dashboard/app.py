@@ -32,20 +32,20 @@ st.markdown(
 <style>
     .main-header {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
+        padding: 1.5rem;
         border-radius: 10px;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         text-align: center;
         color: white;
     }
 
     .metric-card {
         background: white;
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         text-align: center;
-        margin: 0.5rem 0;
+        margin: 0.25rem 0;
     }
 
     .metric-value {
@@ -63,17 +63,17 @@ st.markdown(
     .digest-container {
         background: white;
         border-radius: 10px;
-        padding: 2rem;
+        padding: 1.5rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        margin: 1rem 0;
+        margin: 0.5rem 0;
     }
 
     .tweet-card {
         background: white;
         border: 1px solid #e1e8ed;
         border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
+        padding: 1rem;
+        margin: 0.5rem 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         transition: all 0.3s ease;
     }
@@ -148,9 +148,9 @@ st.markdown(
 
     .section-header {
         background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 1rem;
+        padding: 0.75rem;
         border-radius: 10px;
-        margin: 2rem 0 1rem 0;
+        margin: 1rem 0 0.5rem 0;
         border-left: 4px solid #667eea;
     }
 
@@ -698,7 +698,7 @@ def main():
                         ❤️ {item['like_count']}
                     </div>
                     <div class="engagement-stat">
-                        📊 {item.get('sentiment', 0):.2f}
+                        📊 {float(item.get('sentiment', 0)):.2f}
                     </div>
                 </div>
             </div>
@@ -752,7 +752,7 @@ def main():
     # Footer
     st.markdown(
         """
-    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
+    <div style="text-align: center; margin-top: 1.5rem; padding: 1.5rem; background: #f8f9fa; border-radius: 10px;">
         <p><strong>🚀 Degen Digest</strong> - Powered by Google Cloud Platform</p>
         <p style="font-size: 0.9rem; color: #666;">
             Data sourced from Twitter, Reddit, Telegram, News APIs, and CoinGecko

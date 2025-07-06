@@ -56,7 +56,7 @@ def main():
     # Clean header
     st.markdown(
         """
-    <div style="text-align: center; margin-bottom: 2rem;">
+    <div style="text-align: center; margin-bottom: 1rem;">
         <h1>📰 Latest Digest</h1>
         <p style="color: #6c757d; font-size: 1.1rem;">Your daily crypto intelligence</p>
     </div>
@@ -82,7 +82,7 @@ def main():
     # Display file info
     st.markdown(
         f"""
-    <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin-bottom: 2rem;">
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
         <strong>File:</strong> {filename} |
         <strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} |
         <strong>Size:</strong> {len(content)} characters

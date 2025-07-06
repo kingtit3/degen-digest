@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FarmChecker.xyz - Crypto News & Analytics</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <h1>FarmChecker.xyz</h1>
+            <span class="tagline">Crypto Intelligence Platform</span>
+          </div>
+          <nav class="nav">
+            <a href="#home" class="nav-link active">Home</a>
+            <a href="#crypto" class="nav-link">Crypto</a>
+            <a href="#twitter" class="nav-link">Twitter</a>
+            <a href="#reddit" class="nav-link">Reddit</a>
+            <a href="#analytics" class="nav-link">Analytics</a>
+            <a href="#status" class="nav-link">Status</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Hero Section -->
+      <section id="home" class="hero">
+        <div class="container">
+          <div class="hero-content">
+            <h2>Real-time Crypto Intelligence</h2>
+            <p>
+              Aggregated insights from Twitter, Reddit, News, and market data
+              with live engagement metrics
+            </p>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <i class="fab fa-twitter"></i>
+                <span class="stat-number" id="twitter-count">-</span>
+                <span class="stat-label">Twitter Posts</span>
+              </div>
+              <div class="stat-card">
+                <i class="fab fa-reddit"></i>
+                <span class="stat-number" id="reddit-count">-</span>
+                <span class="stat-label">Reddit Posts</span>
+              </div>
+              <div class="stat-card">
+                <i class="fas fa-coins"></i>
+                <span class="stat-number" id="crypto-count">-</span>
+                <span class="stat-label">Crypto Tokens</span>
+              </div>
+              <div class="stat-card">
+                <i class="fas fa-chart-line"></i>
+                <span class="stat-number" id="total-engagement">-</span>
+                <span class="stat-label">Total Engagement</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Gainers Scrolling Banner -->
+      <section class="crypto-banner">
+        <div class="container">
+          <div class="banner-header">
+            <h3><i class="fas fa-rocket"></i> Top Gainers</h3>
+            <div class="banner-controls">
+              <button id="pause-banner" class="banner-btn">
+                <i class="fas fa-pause"></i>
+              </button>
+              <button id="play-banner" class="banner-btn" style="display: none">
+                <i class="fas fa-play"></i>
+              </button>
+            </div>
+          </div>
+          <div class="scrolling-banner" id="top-gainers-banner">
+            <div class="loading">Loading top gainers...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Latest Digest Section -->
+      <section class="latest-digest">
+        <div class="container">
+          <h3><i class="fas fa-file-alt"></i> Latest Digest</h3>
+          <div class="digest-content" id="latest-digest">
+            <div class="loading">Loading latest digest...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Crypto Market Section -->
+      <section id="crypto" class="crypto-market">
+        <div class="container">
+          <h3><i class="fas fa-coins"></i> Crypto Market</h3>
+          <div class="crypto-grid">
+            <div class="crypto-card">
+              <h4><i class="fas fa-fire"></i> Trending Tokens</h4>
+              <div class="crypto-list" id="trending-crypto">
+                <div class="loading">Loading trending tokens...</div>
+              </div>
+            </div>
+            <div class="crypto-card">
+              <h4><i class="fas fa-chart-bar"></i> Market Overview</h4>
+              <div class="market-overview" id="market-overview">
+                <div class="loading">Loading market data...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Twitter Feed Section -->
+      <section id="twitter" class="social-feed twitter-feed">
+        <div class="container">
+          <div class="section-header">
+            <h3><i class="fab fa-twitter"></i> Top Twitter Posts</h3>
+            <div class="filter-controls">
+              <select id="twitter-filter">
+                <option value="engagement">Sort by Engagement</option>
+                <option value="recent">Sort by Recent</option>
+              </select>
+            </div>
+          </div>
+          <div class="posts-grid" id="twitter-posts">
+            <div class="loading">Loading Twitter posts...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reddit Feed Section -->
+      <section id="reddit" class="social-feed reddit-feed">
+        <div class="container">
+          <div class="section-header">
+            <h3><i class="fab fa-reddit"></i> Top Reddit Posts</h3>
+            <div class="filter-controls">
+              <select id="reddit-filter">
+                <option value="engagement">Sort by Engagement</option>
+                <option value="recent">Sort by Recent</option>
+              </select>
+            </div>
+          </div>
+          <div class="posts-grid" id="reddit-posts">
+            <div class="loading">Loading Reddit posts...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Section -->
+      <section id="analytics" class="analytics">
+        <div class="container">
+          <h3><i class="fas fa-chart-pie"></i> Analytics Dashboard</h3>
+          <div class="analytics-grid">
+            <div class="chart-card">
+              <h4>Source Distribution</h4>
+              <canvas id="source-chart"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>Engagement Trends</h4>
+              <canvas id="engagement-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- System Status Section -->
+      <section id="status" class="system-status">
+        <div class="container">
+          <h3><i class="fas fa-server"></i> System Status</h3>
+          <div class="status-grid" id="system-status">
+            <div class="loading">Loading system status...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>
+          &copy; 2025 FarmChecker.xyz - Powered by real-time crypto intelligence
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 # 🚀 Degen Digest - 2025-07-05
 
 ## 📊 Executive Summary
-Generated on: 2025-07-05 12:02 UTC
+Generated on: 2025-07-05 12:14 UTC
 Total items analyzed: 79
 Sources: Twitter (0), Reddit (40), News (39))
 
@@ -41,38 +41,38 @@ Sources: Twitter (0), Reddit (40), News (39))
 
 ## 📰 Breaking News
 
-### 1. ➡️ BRICS Envoys Flock to Rio
+### 1. 🚀 RIPPLECOIN Mining launches smart cloud mining app, making crypto income easier t...
+- **Source:** GlobeNewswire
+- **Sentiment:** 0.96
+- **Published:** 2025-07-04T12:11:00Z
+- **Link:** https://www.globenewswire.com/news-release/2025/07/04/3110362/0/en/RIPPLECOIN-Mining-launches-smart-cloud-mining-app-making-crypto-income-easier-than-ever.html
+
+### 2. 🚀 How to buy a home with a crypto-backed loan
+- **Source:** Cointelegraph
+- **Sentiment:** 0.49
+- **Published:** 2025-07-04T12:10:00Z
+- **Link:** https://cointelegraph.com/news/how-to-buy-a-home-with-a-crypto-backed-loan
+
+### 3. 🚀 USDC and DRML Miner Announce Strategic Alliance to Launch Next-Gen Cloud Mining ...
+- **Source:** GlobeNewswire
+- **Sentiment:** 0.77
+- **Published:** 2025-07-04T12:05:00Z
+- **Link:** https://www.globenewswire.com/news-release/2025/07/04/3110353/0/en/USDC-and-DRML-Miner-Announce-Strategic-Alliance-to-Launch-Next-Gen-Cloud-Mining-and-Stabilize-the-Crypto-Market.html
+
+### 4. ➡️ BRICS Envoys Flock to Rio
 - **Source:** Foreign Policy
 - **Sentiment:** -0.03
 - **Published:** 2025-07-04T12:00:25Z
 - **Link:** http://foreignpolicy.com/2025/07/04/brics-leaders-summit-brazil-rio-economics-climate-lula/
 
-### 2. 🚀 How The IMF Prevents Global Bitcoin Adoption (And Why They Do It)
+### 5. 🚀 How The IMF Prevents Global Bitcoin Adoption (And Why They Do It)
 - **Source:** Activistpost.com
 - **Sentiment:** 0.60
 - **Published:** 2025-07-04T12:00:00Z
 - **Link:** https://www.activistpost.com/how-the-imf-prevents-global-bitcoin-adoption-and-why-they-do-it/
 
-### 3. 🚀 Bitcoin Solaris Unveils Nova App and Enters Final Presale Phase Ahead of July La...
-- **Source:** GlobeNewswire
-- **Sentiment:** 0.10
-- **Published:** 2025-07-04T11:55:00Z
-- **Link:** https://www.globenewswire.com/news-release/2025/07/04/3110351/0/en/Bitcoin-Solaris-Unveils-Nova-App-and-Enters-Final-Presale-Phase-Ahead-of-July-Launch.html
-
-### 4. 🚀 UPONLY Launches: The First-Ever Token That Can’t Go Down — $5,000,000 AirDrop No...
-- **Source:** GlobeNewswire
-- **Sentiment:** 0.66
-- **Published:** 2025-07-04T11:49:00Z
-- **Link:** https://www.globenewswire.com/news-release/2025/07/04/3110349/0/en/UPONLY-Launches-The-First-Ever-Token-That-Can-t-Go-Down-5-000-000-AirDrop-Now-Live.html
-
-### 5. 🚀 Sleeping beauty bitcoin wallets wake up after 14 years to the tune of $2 billion
-- **Source:** Biztoc.com
-- **Sentiment:** 0.59
-- **Published:** 2025-07-04T11:44:02Z
-- **Link:** https://biztoc.com/x/8046e7e5434e90aa
-
 ## 📈 Market Sentiment Overview
-- **Overall Sentiment:** 0.31
+- **Overall Sentiment:** 0.35
 - **Total Engagement:** 0
 - **Data Quality:** 79/79 items analyzed
 

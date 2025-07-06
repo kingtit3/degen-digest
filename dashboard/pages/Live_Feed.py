@@ -56,7 +56,7 @@ def remove_duplicates(data, similarity_threshold=0.8):
 def main():
     st.markdown(
         """
-    <div style="text-align: center; margin-bottom: 40px;">
+    <div style="text-align: center; margin-bottom: 15px;">
         <h1 class="gradient-text">📡 Live Feed</h1>
         <p style="color: #888; font-size: 18px;">Real-time crypto content with advanced filtering and analytics</p>
     </div>

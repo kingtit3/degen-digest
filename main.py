@@ -1,834 +1,1568 @@
-"""Entry point that orchestrates scraping outputs → digest.
-
-Adds a `run_id` (UUID) bound to the structured‐logging context so every log
-event coming from this process can be correlated end-to-end.
+#!/usr/bin/env python3
 """
-
+Enhanced Cloud Function - Improved Version with Rate Limiting
+"""
 import json
+import logging
 import os
-import uuid
-from datetime import date, datetime
-
-from dotenv import load_dotenv
-
-# Load environment variables first
-load_dotenv()
-
-from pathlib import Path
-
-from enrich.token_price import get_prices_sync
-from processor.classifier import classify
-from processor.content_clustering import clusterer
-from processor.scorer import degen_score
-from processor.summarizer import rewrite_content
-from processor.viral_predictor import predictor
-from utils.advanced_logging import get_logger
-from utils.logger import setup_logging
-
-setup_logging()
-
-# ---------------------------------------------------------------------------
-# Correlate this run via UUID (when structlog is available).  Import guarded so
-# the script still runs in environments that lack structlog.
-# ---------------------------------------------------------------------------
-
-run_id = str(uuid.uuid4())
-
-try:
-    import structlog.contextvars as ctx  # type: ignore
-
-    ctx.bind_contextvars(run_id=run_id)
-except (ModuleNotFoundError, AttributeError):
-    # Structlog missing or older version – skip context binding.
-    pass
-
-logger = get_logger(__name__)
-
-from utils.advanced_logging import _STRUCTLOG_AVAILABLE  # type: ignore
-
-if _STRUCTLOG_AVAILABLE:
-    logger.info("digest run start", run_id=run_id)
-else:
-    logger.info(f"digest run start run_id={run_id}")
-
-OUTPUT_DIR = Path("output")
-DIGEST_MD = OUTPUT_DIR / "digest.md"
-SEEN_IDS_FILE = OUTPUT_DIR / "seen_tweet_ids.json"
-
-# New human-friendly template
-TEMPLATE_HEADER = """# 🚀 Degen Digest - Your Daily Crypto Intelligence
-
-**Date:** {date} | **What's Hot in Crypto Today**
-
----
-
-## 🎯 **TL;DR - What You Need to Know**
-
-{executive_summary}
-
----
-
-## 🔥 **Today's Hottest Stories**
-
-{key_takeaways}
-
----
-
-## 📊 **Market Pulse**
-
-{market_overview}
-
----
-
-"""
-
-
-def load_raw_sources():
-    sources = {}
-    for filename in [
-        "twitter_raw.json",
-        "reddit_raw.json",
-        "telegram_raw.json",
-        "newsapi_raw.json",
-        "coingecko_raw.json",
-    ]:
-        path = OUTPUT_DIR / filename
-        if path.exists():
-            data = json.loads(path.read_text())
-            prefix = filename.split("_", 1)[0]
-            for d in data:
-                if isinstance(d, dict):
-                    d["_source"] = prefix
-            sources[filename] = data
-        else:
-            sources[filename] = []
-    return sources
-
-
-def load_seen_ids():
-    if SEEN_IDS_FILE.exists():
-        try:
-            return set(json.loads(SEEN_IDS_FILE.read_text()))
-        except Exception:
-            return set()
-    return set()
-
-
-def save_seen_ids(ids: set):
-    SEEN_IDS_FILE.write_text(json.dumps(sorted(ids)))
-
-
-def process_items(items: list[dict]) -> list[dict]:
-    """Process and score items with enhanced ML features"""
-    processed = []
-
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-
-        # Apply existing scoring
-        item["_engagement_score"] = degen_score(item)
-
-        # Add viral prediction
-        item["_predicted_viral_score"] = predictor.predict_viral_score(item)
-
-        processed.append(item)
-
-    # Sort by engagement score
-    processed.sort(key=lambda x: x.get("_engagement_score", 0), reverse=True)
-
-    # Run content clustering on top items
-    if len(processed) > 10:
-        top_items = processed[:100]  # Cluster top 100 items
-        try:
-            clusters = clusterer.cluster_content(top_items)
-            topics = clusterer.extract_topics(top_items)
-            logger.info(
-                f"Content clustering complete: {len(clusters)} clusters, {len(topics)} topics"
-            )
-        except Exception as e:
-            logger.warning(f"Content clustering failed: {e}")
-
-    return processed
-
-
-def create_executive_summary(chosen_items: list[dict]) -> str:
-    """Create a human-friendly, conversational executive summary"""
-    try:
-        from processor.summarizer import client as _llm_client
-
-        # Create a conversational summary prompt
-        stories = []
-        for i, item in enumerate(chosen_items[:5], 1):  # Top 5 stories
-            headline = item.get("headline", "Unknown story")
-            stories.append(f"{i}. {headline}")
-
-        prompt = f"""
-        Create a conversational, engaging summary (150-200 words) for crypto enthusiasts and content creators.
-
-        Write this as if you're talking to a friend about what's happening in crypto today. Make it:
-        - Conversational and easy to understand
-        - Actionable (what should people pay attention to?)
-        - Engaging and interesting to read
-        - Perfect for creating content around
-
-        Focus on:
-        - What's the biggest story everyone's talking about?
-        - What opportunities or risks should people know about?
-        - What's the overall mood in the crypto space?
-        - Any trends that content creators should focus on?
-
-        Use natural language, avoid jargon, and make it sound like a knowledgeable friend explaining what's up.
-
-        Top stories to summarize:
-        {chr(10).join(stories)}
-
-        Start with something engaging like "Here's what's shaking up the crypto world today..." and make it flow naturally.
-        """
-
-        _resp = _llm_client.chat.completions.create(
-            model=os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001"),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.8,
-            max_tokens=350,
-        )
-        return _resp.choices[0].message.content.strip()
-    except Exception as exc:
-        logger.warning("Executive summary generation failed: %s", exc)
-        return "Here's what's shaking up the crypto world today - we've got some interesting developments brewing, but technical issues are preventing us from getting the full picture right now."
-
-
-def create_key_takeaways(chosen_items: list[dict]) -> str:
-    """Create content-creation focused key takeaways"""
-    if not chosen_items:
-        return "No major stories to highlight today."
-
-    # Extract key themes and create content-friendly takeaways
-    themes = {}
-    for item in chosen_items[:8]:  # Top 8 items
-        tag = item.get("tag", "General")
-        headline = item.get("headline", "")
-
-        # Simplify tags for better content creation
-        if "Top CT Story" in tag:
-            simplified_tag = "🔥 Viral Story"
-        elif "Rug" in tag:
-            simplified_tag = "💀 Rug Alert"
-        elif "Meme Launch" in tag:
-            simplified_tag = "🚀 New Launch"
-        elif "Whale Move" in tag:
-            simplified_tag = "🐳 Whale Activity"
-        elif "Alpha Thread" in tag:
-            simplified_tag = "🧠 Alpha Leak"
-        elif "Quote" in tag:
-            simplified_tag = "💬 Hot Take"
-        else:
-            simplified_tag = "📰 General"
-
-        if simplified_tag not in themes:
-            themes[simplified_tag] = []
-        themes[simplified_tag].append(headline)
-
-    # Create content-friendly takeaways
-    takeaways = []
-
-    # Find the most viral story
-    if themes.get("🔥 Viral Story"):
-        viral_story = themes["🔥 Viral Story"][0]
-        takeaways.append(f"**🔥 The Viral Story:** {viral_story}")
-
-    # Find the biggest risk/opportunity
-    if themes.get("💀 Rug Alert"):
-        rug_story = themes["💀 Rug Alert"][0]
-        takeaways.append(f"**⚠️ Risk Alert:** {rug_story}")
-
-    # Find new opportunities
-    if themes.get("🚀 New Launch"):
-        launch_story = themes["🚀 New Launch"][0]
-        takeaways.append(f"**🚀 Opportunity:** {launch_story}")
-
-    # Find whale activity
-    if themes.get("🐳 Whale Activity"):
-        whale_story = themes["🐳 Whale Activity"][0]
-        takeaways.append(f"**🐳 Big Money Move:** {whale_story}")
-
-    # Find alpha/insights
-    if themes.get("🧠 Alpha Leak"):
-        alpha_story = themes["🧠 Alpha Leak"][0]
-        takeaways.append(f"**🧠 Alpha Insight:** {alpha_story}")
-
-    # Find community sentiment
-    if themes.get("💬 Hot Take"):
-        hot_take = themes["💬 Hot Take"][0]
-        takeaways.append(f"**💬 Community Buzz:** {hot_take}")
-
-    # Add market mood
-    bullish_count = len(
-        [
-            i
-            for i in chosen_items
-            if any(
-                word in i.get("headline", "").lower()
-                for word in ["bull", "moon", "pump", "green", "up"]
-            )
-        ]
-    )
-    bearish_count = len(
-        [
-            i
-            for i in chosen_items
-            if any(
-                word in i.get("headline", "").lower()
-                for word in ["bear", "dump", "red", "down", "crash"]
-            )
-        ]
-    )
-
-    if bullish_count > bearish_count:
-        mood = "optimistic and bullish"
-    elif bearish_count > bullish_count:
-        mood = "cautious and bearish"
-    else:
-        mood = "mixed and uncertain"
-
-    takeaways.append(
-        f"**📊 Overall Mood:** The crypto community is feeling {mood} today"
-    )
-
-    # Add content creation tips
-    takeaways.append(
-        f"**🎯 Content Ideas:** Focus on {themes.get('🔥 Viral Story', ['general crypto news'])[0][:50]}... for maximum engagement"
-    )
-
-    return "\n\n".join(takeaways)
-
-
-def create_market_overview(processed_items: list[dict]) -> str:
-    """Create a conversational market overview for content creators"""
-    if not processed_items:
-        return "Not enough data to analyze today's market activity."
-
-    total_stories = len(processed_items)
-    top_engagement = (
-        max([item.get("_engagement_score", 0) for item in processed_items])
-        if processed_items
-        else 0
-    )
-    avg_engagement = (
-        sum([item.get("_engagement_score", 0) for item in processed_items])
-        / len(processed_items)
-        if processed_items
-        else 0
-    )
-
-    # Get source breakdown
-    sources = {}
-    for item in processed_items:
-        source = item.get("_source", "unknown")
-        sources[source] = sources.get(source, 0) + 1
-
-    # Find trending topics
-    trending_topics = []
-    for item in processed_items[:5]:
-        headline = item.get("headline", "")
-        if headline and len(headline) > 10:
-            trending_topics.append(
-                headline[:40] + "..." if len(headline) > 40 else headline
-            )
-
-    # Determine market activity level
-    if total_stories > 1000:
-        activity_level = "🔥 Super Active"
-    elif total_stories > 500:
-        activity_level = "📈 Very Active"
-    elif total_stories > 200:
-        activity_level = "📊 Moderately Active"
-    else:
-        activity_level = "😴 Quiet"
-
-    # Find the most engaging content type
-    content_types = {}
-    for item in processed_items[:20]:
-        tag = item.get("tag", "General")
-        score = item.get("_engagement_score", 0)
-        if tag not in content_types:
-            content_types[tag] = {"count": 0, "total_score": 0}
-        content_types[tag]["count"] += 1
-        content_types[tag]["total_score"] += score
-
-    best_content_type = "general crypto news"
-    best_avg_score = 0
-    for tag, data in content_types.items():
-        avg_score = data["total_score"] / data["count"]
-        if avg_score > best_avg_score:
-            best_avg_score = avg_score
-            best_content_type = tag
-
-    return f"""
-### 📊 **What We're Seeing Today**
-
-**Market Activity:** {activity_level} - We analyzed {total_stories:,} stories from across the crypto space
-
-**Engagement Levels:**
-- Highest scoring story: {top_engagement:.1f}/100
-- Average engagement: {avg_engagement:.1f}/100
-
-**Where the Action Is:** Most engagement is coming from {best_content_type.lower()} content
-
-**Trending Topics:** {', '.join(trending_topics[:3]) if trending_topics else 'General market discussion'}
-
-### 🎯 **Content Creator Insights**
-
-**Best Performing Content:** {best_content_type} is getting the most love today
-
-**Engagement Sweet Spot:** Stories scoring above {avg_engagement + 10:.1f} are performing well
-
-**Source Breakdown:** {', '.join([f'{source} ({count})' for source, count in list(sources.items())[:3]])}
-
-**Pro Tip:** Focus on {best_content_type.lower()} content for maximum reach today
-"""
-
-
-def build_digest(processed_items):
-    # Import Solana classifier functions
-    from processor.classifier import is_solana_priority
-
-    # Separate Solana and general items
-    solana_items = []
-    general_items = []
-
-    for item in processed_items:
-        if is_solana_priority(item):
-            solana_items.append(item)
-        else:
-            general_items.append(item)
-
-    # Sort both lists by engagement score
-    solana_items.sort(key=lambda x: x["_engagement_score"], reverse=True)
-    general_items.sort(key=lambda x: x["_engagement_score"], reverse=True)
-
-    # Prioritize Solana items (70% Solana, 30% general market)
-    chosen = []
-    used_tags = set()
-
-    # Add Solana items first (up to 8 items)
-    for item in solana_items:
-        if item["tag"] not in used_tags:
-            chosen.append(item)
-            used_tags.add(item["tag"])
-        if len(chosen) >= 8:
-            break
-
-    # Add general market items (up to 4 items)
-    for item in general_items:
-        if item["tag"] not in used_tags:
-            chosen.append(item)
-            used_tags.add(item["tag"])
-        if len(chosen) >= 12:
-            break
-
-    # If we don't have enough Solana items, fill with general items
-    if len(chosen) < 12:
-        for item in general_items:
-            if item["tag"] not in used_tags:
-                chosen.append(item)
-                used_tags.add(item["tag"])
-            if len(chosen) >= 12:
-                break
-
-    from datetime import date
-
-    # Create executive summary
-    executive_summary = create_executive_summary(chosen)
-
-    # Create key takeaways
-    key_takeaways = create_key_takeaways(chosen)
-
-    # Create market overview
-    market_overview = create_market_overview(processed_items)
-
-    # Build the main digest content
-    md = TEMPLATE_HEADER.format(
-        date=date.today().strftime("%B %d, %Y"),
-        executive_summary=executive_summary,
-        key_takeaways=key_takeaways,
-        market_overview=market_overview,
-    )
-
-    # Stories section with conversational tone
-    md += "## 📰 **Deep Dive: Today's Top Stories**\n\n"
-
-    # Group stories by category for better organization with Solana focus
-    story_categories = {
-        "🌞 **Solana Spotlight** (Solana Ecosystem & Tokens)": [],
-        "🔥 **The Big Stories** (Everyone's Talking About)": [],
-        "🚀 **New Opportunities** (Projects & Launches)": [],
-        "🐳 **Big Money Moves** (Whale Activity)": [],
-        "🧠 **Alpha & Insights** (Inside Scoop)": [],
-        "💬 **Community Vibes** (What People Are Saying)": [],
-    }
-
-    for item in chosen:
-        tag = item.get("tag", "General")
-        # Prioritize Solana content
-        if any(
-            solana_word in tag
-            for solana_word in [
-                "Solana",
-                "🌞",
-                "🔥 Solana",
-                "🚀 Solana",
-                "💀 Solana",
-                "🔧 Solana",
-                "🎨 Solana",
-                "🏦 Solana",
-                "📈 Solana",
-                "📉 Solana",
-            ]
-        ):
-            story_categories[
-                "🌞 **Solana Spotlight** (Solana Ecosystem & Tokens)"
-            ].append(item)
-        elif "Top CT Story" in tag or "Rug" in tag:
-            story_categories[
-                "🔥 **The Big Stories** (Everyone's Talking About)"
-            ].append(item)
-        elif "Meme Launch" in tag or "Airdrop" in tag:
-            story_categories["🚀 **New Opportunities** (Projects & Launches)"].append(
-                item
-            )
-        elif "Whale Move" in tag:
-            story_categories["🐳 **Big Money Moves** (Whale Activity)"].append(item)
-        elif "Alpha Thread" in tag:
-            story_categories["🧠 **Alpha & Insights** (Inside Scoop)"].append(item)
-        else:
-            story_categories["💬 **Community Vibes** (What People Are Saying)"].append(
-                item
-            )
-
-    # Display stories by category with conversational tone
-    for category, stories in story_categories.items():
-        if stories:
-            md += f"### {category}\n\n"
-            for idx, item in enumerate(stories, 1):
-                # Make headlines more conversational
-                headline = item["headline"]
-                if headline.startswith("**") and headline.endswith("**"):
-                    headline = headline[2:-2]  # Remove markdown bold
-
-                md += f"**{idx}. {headline}**\n\n"
-
-                # Make the body more conversational
-                body = item["body"]
-                if body:
-                    # Add conversational transitions
-                    if not body.startswith(("Here", "This", "The", "A", "An")):
-                        body = f"Here's what's happening: {body}"
-                    md += f"{body}\n\n"
-
-                # Add engagement metrics in a friendly way
-                engagement_info = []
-                if item.get("likeCount"):
-                    engagement_info.append(f"❤️ {item['likeCount']:,} likes")
-                if item.get("retweetCount"):
-                    engagement_info.append(f"🔄 {item['retweetCount']:,} shares")
-                if item.get("replyCount"):
-                    engagement_info.append(f"💬 {item['replyCount']:,} comments")
-                if item.get("viewCount"):
-                    engagement_info.append(f"👁️ {item['viewCount']:,} views")
-                if item.get("_engagement_score"):
-                    score = item["_engagement_score"]
-                    if score > 80:
-                        engagement_info.append(f"🔥 Viral ({score:.1f}/100)")
-                    elif score > 60:
-                        engagement_info.append(f"📈 Hot ({score:.1f}/100)")
-                    else:
-                        engagement_info.append(f"📊 Score: {score:.1f}/100")
-
-                if engagement_info:
-                    md += f"*Engagement: {' | '.join(engagement_info)}*\n\n"
-
-                md += "---\n\n"
-
-    # Add actionable insights section
-    md += "## 💡 **What This Means for You**\n\n"
-
-    # Generate actionable insights
-
-    # Price movements (if available)
-    try:
-        prices = get_prices_sync()
-        if prices:
-            md += "### 💰 **Key Price Movements**\n\n"
-            for symbol, data in list(prices.items())[:5]:  # Top 5
-                change_24h = data.get("price_change_percentage_24h", 0)
-                emoji = "🟢" if change_24h > 0 else "🔴" if change_24h < 0 else "⚪"
-                md += f"{emoji} **{symbol.upper()}:** ${data.get('current_price', 0):,.2f} ({change_24h:+.2f}%)\n\n"
-    except Exception as e:
-        logger.warning(f"Price data unavailable: {e}")
-
-    # Add content creation insights
-    md += "### 🎯 **Content Creation Opportunities**\n\n"
-
-    # Find the most viral story for content ideas
-    viral_story = None
-    for item in chosen:
-        if item.get("_engagement_score", 0) > 80:
-            viral_story = item
-            break
-
-    if viral_story:
-        md += f"**🔥 Viral Topic:** {viral_story.get('headline', '')}\n\n"
-        md += "**Content Ideas:**\n"
-        md += "• Create a deep dive video on this topic\n"
-        md += "• Make a reaction video to the community response\n"
-        md += "• Write a thread explaining the implications\n"
-        md += "• Host a Twitter Space discussion\n\n"
-
-    # Add Solana-specific insights
-    solana_items = [
-        i
-        for i in chosen
-        if any(
-            solana_word in i.get("tag", "")
-            for solana_word in [
-                "Solana",
-                "🌞",
-                "🔥 Solana",
-                "🚀 Solana",
-                "💀 Solana",
-                "🔧 Solana",
-                "🎨 Solana",
-                "🏦 Solana",
-                "📈 Solana",
-                "📉 Solana",
-            ]
-        )
+import re
+import time
+from datetime import UTC, datetime, timedelta
+from typing import Any, Dict
+
+import functions_framework
+import requests
+from google.cloud import storage
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def extract_viral_keywords(text: str) -> list[str]:
+    """Extract viral keywords from text"""
+    viral_keywords = [
+        # Memecoin keywords
+        "moon",
+        "pump",
+        "100x",
+        "1000x",
+        "gem",
+        "next gem",
+        "pepe",
+        "doge",
+        "shib",
+        "floki",
+        "wojak",
+        "chad",
+        "based",
+        "degen",
+        "mooning",
+        "pumping",
+        "fomo",
+        "fud",
+        "hodl",
+        "diamond hands",
+        "wen",
+        "ser",
+        "ngmi",
+        "wagmi",
+        "gm",
+        "gn",
+        "gm fam",
+        "gm ser",
+        "gm king",
+        "gm queen",
+        # Launchpad keywords
+        "launchpad",
+        "ido",
+        "initial dex offering",
+        "token launch",
+        "presale",
+        "fair launch",
+        "stealth launch",
+        "pinksale",
+        "dxsale",
+        "bounce",
+        "polkastarter",
+        "daomaker",
+        "trustpad",
+        "seedify",
+        "gamefi",
+        "new token",
+        "ico",
+        "initial coin offering",
+        "whitelist",
+        "kyc",
+        # Airdrop keywords
+        "airdrop",
+        "free tokens",
+        "claim",
+        "eligibility",
+        "snapshot",
+        "whitelist",
+        "retroactive",
+        "community airdrop",
+        "token distribution",
+        "free crypto",
+        "claim now",
+        "don't miss out",
+        # Farming keywords
+        "yield farming",
+        "farming",
+        "liquidity mining",
+        "staking",
+        "apy",
+        "apr",
+        "rewards",
+        "harvest",
+        "compound",
+        "auto compound",
+        "vault",
+        "strategy",
+        "defi farming",
+        "liquidity provider",
+        "lp",
+        "amm",
+        "dex farming",
+        "impermanent loss",
+        "yield optimizer",
+        # Solana keywords
+        "solana",
+        "sol",
+        "phantom",
+        "solflare",
+        "raydium",
+        "orca",
+        "serum",
+        "jupiter",
+        "pyth",
+        "bonk",
+        "dogwifhat",
+        "samoyedcoin",
+        "marinade",
+        "jito",
+        "tensor",
+        "magic eden",
+        "saga",
+        "firedancer",
+        "solana mobile",
+        "solana pay",
+        "spl",
+        "spl token",
+        # Urgency keywords
+        "now",
+        "today",
+        "live",
+        "breaking",
+        "urgent",
+        "don't miss",
+        "last chance",
+        "limited time",
+        "expires",
+        "deadline",
+        "hurry",
+        "quick",
+        "fast",
+        "immediate",
+        "instant",
+        "right now",
+        # Viral keywords
+        "viral",
+        "trending",
+        "hot",
+        "fire",
+        "lit",
+        "savage",
+        "epic",
+        "legendary",
+        "insane",
+        "crazy",
+        "wild",
+        "amazing",
+        "incredible",
+        "unbelievable",
+        "mind blowing",
+        "game changer",
     ]
-    solana_count = len(solana_items)
 
-    if solana_count > 0:
-        md += f"**🌞 Solana Focus:** {solana_count} Solana stories featured today\n\n"
+    text_lower = text.lower()
+    found_keywords = []
 
-        # Solana sentiment
-        solana_bullish = len(
-            [
-                i
-                for i in solana_items
-                if any(
-                    word in i.get("headline", "").lower()
-                    for word in [
-                        "bull",
-                        "moon",
-                        "pump",
-                        "green",
-                        "up",
-                        "bonk",
-                        "wif",
-                        "bome",
-                    ]
-                )
-            ]
-        )
-        solana_bearish = len(
-            [
-                i
-                for i in solana_items
-                if any(
-                    word in i.get("headline", "").lower()
-                    for word in ["bear", "dump", "red", "down", "crash", "rug", "scam"]
-                )
-            ]
-        )
+    for keyword in viral_keywords:
+        if keyword.lower() in text_lower:
+            found_keywords.append(keyword)
 
-        if solana_bullish > solana_bearish:
-            md += "**🌞 Solana Sentiment:** Bullish on Solana ecosystem - focus on SOL, BONK, WIF, and ecosystem tokens\n\n"
-        elif solana_bearish > solana_bullish:
-            md += "**🌞 Solana Sentiment:** Cautious on Solana - watch for rugs and scams\n\n"
-        else:
-            md += "**🌞 Solana Sentiment:** Mixed signals in Solana ecosystem\n\n"
+    return found_keywords
 
-    # General market sentiment insights
-    general_items = [
-        i
-        for i in chosen
-        if not any(
-            solana_word in i.get("tag", "")
-            for solana_word in [
-                "Solana",
-                "🌞",
-                "🔥 Solana",
-                "🚀 Solana",
-                "💀 Solana",
-                "🔧 Solana",
-                "🎨 Solana",
-                "🏦 Solana",
-                "📈 Solana",
-                "📉 Solana",
-            ]
-        )
+
+def analyze_sentiment(text: str) -> str:
+    """Simple sentiment analysis"""
+    positive_words = [
+        "moon",
+        "pump",
+        "bull",
+        "bullish",
+        "mooning",
+        "pumping",
+        "gem",
+        "based",
+        "chad",
+        "wagmi",
+        "gm",
+        "fire",
+        "lit",
+        "savage",
+        "epic",
+        "legendary",
+        "insane",
+        "crazy",
+        "wild",
+        "amazing",
+        "incredible",
+        "unbelievable",
+        "mind blowing",
+        "game changer",
     ]
-    bullish_count = len(
-        [
-            i
-            for i in general_items
-            if any(
-                word in i.get("headline", "").lower()
-                for word in ["bull", "moon", "pump", "green", "up"]
-            )
-        ]
-    )
-    bearish_count = len(
-        [
-            i
-            for i in general_items
-            if any(
-                word in i.get("headline", "").lower()
-                for word in ["bear", "dump", "red", "down", "crash"]
-            )
-        ]
-    )
+    negative_words = [
+        "dump",
+        "bear",
+        "bearish",
+        "fud",
+        "ngmi",
+        "scam",
+        "rug",
+        "dead",
+        "failed",
+        "lose",
+        "loss",
+        "crash",
+        "dump",
+        "sell",
+        "panic",
+    ]
 
-    if bullish_count > bearish_count:
-        md += "**📈 General Market Sentiment:** Bullish vibes today - focus on opportunities and positive developments\n\n"
-    elif bearish_count > bullish_count:
-        md += "**📉 General Market Sentiment:** Cautious mood - focus on risk management and defensive strategies\n\n"
+    text_lower = text.lower()
+    positive_count = sum(1 for word in positive_words if word in text_lower)
+    negative_count = sum(1 for word in negative_words if word in text_lower)
+
+    if positive_count > negative_count:
+        return "positive"
+    elif negative_count > positive_count:
+        return "negative"
     else:
-        md += "**📊 General Market Sentiment:** Mixed signals - balanced approach recommended\n\n"
-
-    # Add footer with more conversational tone
-    md += "---\n\n"
-    md += "## 📋 **About This Report**\n\n"
-    md += f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
-    md += "**Data Sources:** Twitter, Reddit, Telegram, NewsAPI, CoinGecko\n\n"
-    md += "**Analysis Method:** AI-powered content analysis with engagement scoring\n\n"
-    md += "---\n\n"
-    md += "## 🎬 **Daily Degen Digest Script Template**\n\n"
-    md += "Here's a daily script generation template for Daily Degen Digest — designed to give you a fast, repeatable way to plug in new data each day and generate short-form video scripts that hit hard and stay on brand:\n\n"
-    md += "⸻\n\n"
-    md += "🧠 **Daily Degen Digest Script Template**\n\n"
-    md += "⏱ **Target Length:** ~60–90 seconds  \n"
-    md += "📆 **Use:** Reusable daily for your crypto Solana video content\n\n"
-    md += "⸻\n\n"
-    md += "🎬 **Prompt Template (for AI or manual scripting):**\n\n"
-    md += "**Prompt:**  \n"
-    md += 'Write a 60–90 second script for a short-form video episode of "Daily Degen Digest", a fast-paced Solana-focused series.\n\n'
-    md += "The tone should be casual, sharp, and crypto-native — filled with memes, slang, and sarcasm, like a Twitter degen giving the daily rundown.\n\n"
-    md += "Include the following sections:\n\n"
-    md += "⸻\n\n"
-    md += "**1. Cold Open / Hook (1–2 lines):**  \n"
-    md += "Grab attention fast with something wild, funny, or stats-based.\n\n"
-    md += "**2. Top 3 Memecoin Movers (3–4 sentences):**  \n"
-    md += "For each coin, give the name, % change, market cap, and vibe.  \n"
-    md += "Optional: Mention a tweet, community reaction, or rug warning.  \n"
-    md += "Example format:\n\n"
-    md += '*"$PEEPORUG did a 45x from 3k to 140k before dumping harder than SBF\'s PR team. Classic."*\n\n'
-    md += "**3. Launch Radar (1–2 new tokens):**  \n"
-    md += "Mention new launches from Pump.fun or LetsBonk.fun.  \n"
-    md += "Call out launch speed, wallet count, or any signs of going viral.\n\n"
-    md += "**4. Solana Ecosystem Update (1 highlight):**  \n"
-    md += "Cover any dev news, dapp/tool releases, partnerships, or weird events.  \n"
-    md += "Keep it snappy — you're talking to degens, not VCs.\n\n"
-    md += "**5. Outro Call-to-Action:**  \n"
-    md += "Sign off in-character with a strong closer.\n\n"
-    md += (
-        '*"That\'s your hit of hopium for today — like, follow, and stay wrecked."*\n\n'
-    )
-    md += "⸻\n\n"
-    md += "✅ **Example Inputs**\n"
-    md += "- **Top movers:**\n"
-    md += "  - $RIBBIT: +230%, 9k mcap\n"
-    md += "  - $FUDGOD: +120%, rugged at 20k\n"
-    md += "  - $JANKDOG: +80%, still climbing\n"
-    md += "- **New launches:** $LICKCOIN, $420WAGMI\n"
-    md += "- **Ecosystem news:** Phantom adds multi-wallet drag feature\n\n"
-    md += "⸻\n\n"
-    md += "*Let me know if you want a version that pulls real data from your Cabal ECA Alerts bot or Twitter scrapers — I can auto-fill this daily.*\n\n"
-    md += "---\n\n"
-    md += "*This report is generated automatically and should not be considered as financial advice. Always do your own research and never invest more than you can afford to lose.*\n\n"
-    md += "🚀 **Degen Digest** - Your daily crypto intelligence companion"
-
-    return md
+        return "neutral"
 
 
-def main():
-    """Main orchestration function."""
-    logger.info("Starting digest generation")
+def detect_urgency(text: str) -> str:
+    """Detect urgency level in text"""
+    urgent_words = [
+        "now",
+        "today",
+        "live",
+        "breaking",
+        "urgent",
+        "don't miss",
+        "last chance",
+        "limited time",
+        "expires",
+        "deadline",
+        "hurry",
+        "quick",
+        "fast",
+        "immediate",
+        "instant",
+        "right now",
+    ]
 
-    # Load raw data
-    sources = load_raw_sources()
-    all_items = []
-    for _source_name, items in sources.items():
-        all_items.extend(items)
+    text_lower = text.lower()
+    urgent_count = sum(1 for word in urgent_words if word in text_lower)
 
-    logger.info(f"Processing {len(all_items)} items from raw sources")
+    if urgent_count >= 3:
+        return "high"
+    elif urgent_count >= 1:
+        return "medium"
+    else:
+        return "low"
 
-    # Load seen IDs for deduplication
-    seen_ids = load_seen_ids()
 
-    # Filter out already processed items
-    new_items = []
-    for item in all_items:
-        item_id = item.get("id") or item.get("tweetId") or item.get("_id")
-        if item_id and str(item_id) not in seen_ids:
-            new_items.append(item)
-
-    logger.info(f"Found {len(new_items)} new items to process")
-
-    if not new_items:
-        logger.info("No new items to process")
-        return
-
-    # Process items
-    processed_items = process_items(new_items)
-
-    # Classify and rewrite content
-    for item in processed_items:
-        # Classify
-        item["tag"] = classify(item)
-
-        # Rewrite content
-        rewritten = rewrite_content(item)
-        item["headline"] = rewritten["headline"]
-        item["body"] = rewritten["body"]
-
-    # Build digest
-    digest_content = build_digest(processed_items)
-
-    # Save digest
-    DIGEST_MD.write_text(digest_content)
-    logger.info(f"Digest saved to {DIGEST_MD}")
-
-    # Automatically rename digest with today's date
+def crawl_reddit_with_rate_limiting() -> dict[str, Any]:
+    """Enhanced Reddit crawl with distributed search strategy over 24 hours"""
     try:
-        from rename_digest import rename_digest
+        logger.info(
+            "🔄 Starting Enhanced Reddit crawl with distributed search strategy..."
+        )
 
-        rename_digest()
-        logger.info("Digest automatically renamed with date")
+        # Get current hour to determine which searches to run
+        current_hour = datetime.now(UTC).hour
+        current_minute = datetime.now(UTC).minute
+
+        # Calculate which searches to run based on current time
+        # Spread 100 searches over 24 hours = ~4 searches per hour
+        searches_per_hour = 4
+        current_search_batch = current_hour % 6  # 6 different batches per day
+
+        # Comprehensive list of Reddit sources (100 total)
+        all_feeds = [
+            # Batch 1: Major Crypto Subreddits (0-5 hours)
+            {
+                "name": "CryptoCurrency",
+                "url": "https://www.reddit.com/r/CryptoCurrency/hot.json",
+                "category": "general",
+                "type": "json",
+                "batch": 0,
+            },
+            {
+                "name": "Bitcoin",
+                "url": "https://www.reddit.com/r/Bitcoin/hot.json",
+                "category": "bitcoin",
+                "type": "json",
+                "batch": 0,
+            },
+            {
+                "name": "Ethereum",
+                "url": "https://www.reddit.com/r/Ethereum/hot.json",
+                "category": "ethereum",
+                "type": "json",
+                "batch": 0,
+            },
+            {
+                "name": "Solana",
+                "url": "https://www.reddit.com/r/Solana/hot.json",
+                "category": "solana",
+                "type": "json",
+                "batch": 0,
+            },
+            {
+                "name": "CryptoCurrency",
+                "url": "https://www.reddit.com/r/CryptoCurrency/new.json",
+                "category": "general",
+                "type": "json",
+                "batch": 1,
+            },
+            {
+                "name": "Bitcoin",
+                "url": "https://www.reddit.com/r/Bitcoin/new.json",
+                "category": "bitcoin",
+                "type": "json",
+                "batch": 1,
+            },
+            # Batch 2: DeFi and Trading (6-11 hours)
+            {
+                "name": "defi",
+                "url": "https://www.reddit.com/r/defi/hot.json",
+                "category": "defi",
+                "type": "json",
+                "batch": 2,
+            },
+            {
+                "name": "CryptoMarkets",
+                "url": "https://www.reddit.com/r/CryptoMarkets/hot.json",
+                "category": "trading",
+                "type": "json",
+                "batch": 2,
+            },
+            {
+                "name": "CryptoCurrencyTrading",
+                "url": "https://www.reddit.com/r/CryptoCurrencyTrading/hot.json",
+                "category": "trading",
+                "type": "json",
+                "batch": 2,
+            },
+            {
+                "name": "defi",
+                "url": "https://www.reddit.com/r/defi/new.json",
+                "category": "defi",
+                "type": "json",
+                "batch": 3,
+            },
+            {
+                "name": "CryptoMarkets",
+                "url": "https://www.reddit.com/r/CryptoMarkets/new.json",
+                "category": "trading",
+                "type": "json",
+                "batch": 3,
+            },
+            # Batch 3: Memecoins and Viral Content (12-17 hours)
+            {
+                "name": "CryptoMoonShots",
+                "url": "https://www.reddit.com/r/CryptoMoonShots/hot.json",
+                "category": "memecoin",
+                "type": "json",
+                "batch": 4,
+            },
+            {
+                "name": "shitcoin",
+                "url": "https://www.reddit.com/r/shitcoin/hot.json",
+                "category": "memecoin",
+                "type": "json",
+                "batch": 4,
+            },
+            {
+                "name": "SatoshiStreetBets",
+                "url": "https://www.reddit.com/r/SatoshiStreetBets/hot.json",
+                "category": "memecoin",
+                "type": "json",
+                "batch": 4,
+            },
+            {
+                "name": "CryptoMoonShots",
+                "url": "https://www.reddit.com/r/CryptoMoonShots/new.json",
+                "category": "memecoin",
+                "type": "json",
+                "batch": 5,
+            },
+            {
+                "name": "shitcoin",
+                "url": "https://www.reddit.com/r/shitcoin/new.json",
+                "category": "memecoin",
+                "type": "json",
+                "batch": 5,
+            },
+            # Batch 4: NFTs and Gaming (18-23 hours)
+            {
+                "name": "NFT",
+                "url": "https://www.reddit.com/r/NFT/hot.json",
+                "category": "nft",
+                "type": "json",
+                "batch": 6,
+            },
+            {
+                "name": "NFTsMarketplace",
+                "url": "https://www.reddit.com/r/NFTsMarketplace/hot.json",
+                "category": "nft",
+                "type": "json",
+                "batch": 6,
+            },
+            {
+                "name": "CryptoGaming",
+                "url": "https://www.reddit.com/r/CryptoGaming/hot.json",
+                "category": "gaming",
+                "type": "json",
+                "batch": 6,
+            },
+            {
+                "name": "NFT",
+                "url": "https://www.reddit.com/r/NFT/new.json",
+                "category": "nft",
+                "type": "json",
+                "batch": 7,
+            },
+            {
+                "name": "NFTsMarketplace",
+                "url": "https://www.reddit.com/r/NFTsMarketplace/new.json",
+                "category": "nft",
+                "type": "json",
+                "batch": 7,
+            },
+            # Batch 5: Airdrops and Opportunities (0-5 hours)
+            {
+                "name": "CryptoAirdrops",
+                "url": "https://www.reddit.com/r/CryptoAirdrops/hot.json",
+                "category": "airdrop",
+                "type": "json",
+                "batch": 8,
+            },
+            {
+                "name": "CryptoMoonShots",
+                "url": "https://www.reddit.com/r/CryptoMoonShots/rising.json",
+                "category": "memecoin",
+                "type": "json",
+                "batch": 8,
+            },
+            {
+                "name": "CryptoCurrency",
+                "url": "https://www.reddit.com/r/CryptoCurrency/rising.json",
+                "category": "general",
+                "type": "json",
+                "batch": 8,
+            },
+            {
+                "name": "CryptoAirdrops",
+                "url": "https://www.reddit.com/r/CryptoAirdrops/new.json",
+                "category": "airdrop",
+                "type": "json",
+                "batch": 9,
+            },
+            # Batch 6: Technology and Development (6-11 hours)
+            {
+                "name": "CryptoTechnology",
+                "url": "https://www.reddit.com/r/CryptoTechnology/hot.json",
+                "category": "technology",
+                "type": "json",
+                "batch": 10,
+            },
+            {
+                "name": "CryptoDevs",
+                "url": "https://www.reddit.com/r/CryptoDevs/hot.json",
+                "category": "development",
+                "type": "json",
+                "batch": 10,
+            },
+            {
+                "name": "Blockchain",
+                "url": "https://www.reddit.com/r/Blockchain/hot.json",
+                "category": "blockchain",
+                "type": "json",
+                "batch": 10,
+            },
+            {
+                "name": "CryptoTechnology",
+                "url": "https://www.reddit.com/r/CryptoTechnology/new.json",
+                "category": "technology",
+                "type": "json",
+                "batch": 11,
+            },
+            # RSS Fallbacks for each batch
+            {
+                "name": "CryptoCurrency",
+                "url": "https://www.reddit.com/r/CryptoCurrency/hot/.rss",
+                "category": "general",
+                "type": "rss",
+                "batch": 0,
+            },
+            {
+                "name": "Bitcoin",
+                "url": "https://www.reddit.com/r/Bitcoin/hot/.rss",
+                "category": "bitcoin",
+                "type": "rss",
+                "batch": 0,
+            },
+            {
+                "name": "Solana",
+                "url": "https://www.reddit.com/r/Solana/hot/.rss",
+                "category": "solana",
+                "type": "rss",
+                "batch": 0,
+            },
+            {
+                "name": "defi",
+                "url": "https://www.reddit.com/r/defi/hot/.rss",
+                "category": "defi",
+                "type": "rss",
+                "batch": 2,
+            },
+            {
+                "name": "CryptoMoonShots",
+                "url": "https://www.reddit.com/r/CryptoMoonShots/hot/.rss",
+                "category": "memecoin",
+                "type": "rss",
+                "batch": 4,
+            },
+            {
+                "name": "NFT",
+                "url": "https://www.reddit.com/r/NFT/hot/.rss",
+                "category": "nft",
+                "type": "rss",
+                "batch": 6,
+            },
+            {
+                "name": "CryptoAirdrops",
+                "url": "https://www.reddit.com/r/CryptoAirdrops/hot/.rss",
+                "category": "airdrop",
+                "type": "rss",
+                "batch": 8,
+            },
+        ]
+
+        # Filter feeds for current batch
+        current_feeds = [
+            feed for feed in all_feeds if feed.get("batch", 0) == current_search_batch
+        ]
+
+        # If no feeds for current batch, use a default set
+        if not current_feeds:
+            current_feeds = [
+                {
+                    "name": "CryptoCurrency",
+                    "url": "https://www.reddit.com/r/CryptoCurrency/hot.json",
+                    "category": "general",
+                    "type": "json",
+                },
+                {
+                    "name": "Bitcoin",
+                    "url": "https://www.reddit.com/r/Bitcoin/hot.json",
+                    "category": "bitcoin",
+                    "type": "json",
+                },
+                {
+                    "name": "Solana",
+                    "url": "https://www.reddit.com/r/Solana/hot.json",
+                    "category": "solana",
+                    "type": "json",
+                },
+            ]
+
+        logger.info(
+            f"🕐 Current hour: {current_hour}, batch: {current_search_batch}, processing {len(current_feeds)} feeds"
+        )
+
+        # Use diverse user agents
+        user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+        ]
+
+        all_posts = []
+        category_stats = {}
+        successful_feeds = 0
+
+        for i, feed in enumerate(current_feeds):
+            try:
+                logger.info(
+                    f"  📥 Fetching {feed['name']} ({feed['category']}) via {feed['type']}... [{i+1}/{len(current_feeds)}]"
+                )
+
+                # Add delay between requests
+                if i > 0:
+                    time.sleep(2)  # 2 second delay between requests
+
+                # Rotate user agents
+                user_agent = user_agents[i % len(user_agents)]
+
+                headers = {
+                    "User-Agent": user_agent,
+                    "Accept": "application/json, text/html, */*",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Connection": "keep-alive",
+                    "Upgrade-Insecure-Requests": "1",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Cache-Control": "max-age=0",
+                }
+
+                response = requests.get(feed["url"], timeout=20, headers=headers)
+
+                if response.status_code == 200:
+                    posts = []
+
+                    if feed["type"] == "json":
+                        # Parse JSON response
+                        try:
+                            data = response.json()
+                            if "data" in data and "children" in data["data"]:
+                                for child in data["data"]["children"][
+                                    :15
+                                ]:  # Increased to 15 posts per feed
+                                    post_data = child.get("data", {})
+                                    if post_data:
+                                        post = {
+                                            "title": post_data.get("title", ""),
+                                            "link": f"https://reddit.com{post_data.get('permalink', '')}",
+                                            "description": post_data.get(
+                                                "selftext", ""
+                                            ),
+                                            "subreddit": feed["name"],
+                                            "category": feed["category"],
+                                            "source": "reddit",
+                                            "published": datetime.fromtimestamp(
+                                                post_data.get(
+                                                    "created_utc", time.time()
+                                                ),
+                                                UTC,
+                                            ).isoformat(),
+                                            "engagement": {
+                                                "upvotes": post_data.get("score", 0),
+                                                "comments": post_data.get(
+                                                    "num_comments", 0
+                                                ),
+                                                "score": post_data.get("score", 0),
+                                            },
+                                            "viral_potential": {
+                                                "keywords": extract_viral_keywords(
+                                                    post_data.get("title", "")
+                                                    + " "
+                                                    + post_data.get("selftext", "")
+                                                ),
+                                                "sentiment": analyze_sentiment(
+                                                    post_data.get("title", "")
+                                                    + " "
+                                                    + post_data.get("selftext", "")
+                                                ),
+                                                "urgency": detect_urgency(
+                                                    post_data.get("title", "")
+                                                    + " "
+                                                    + post_data.get("selftext", "")
+                                                ),
+                                            },
+                                        }
+                                        posts.append(post)
+                        except json.JSONDecodeError:
+                            logger.warning(
+                                f"  ⚠️ Failed to parse JSON for {feed['name']}"
+                            )
+                            continue
+
+                    elif feed["type"] == "rss":
+                        # Parse RSS response
+                        content = response.text
+
+                        # Check if we got blocked
+                        if (
+                            "You've been blocked by network security" in content
+                            or "blocked" in content.lower()
+                        ):
+                            logger.warning(
+                                f"  ⚠️ Blocked by Reddit for {feed['name']}, skipping..."
+                            )
+                            continue
+
+                        # Extract posts using regex
+                        titles = re.findall(r"<title>(.*?)</title>", content)
+                        links = re.findall(r"<link>(.*?)</link>", content)
+                        descriptions = re.findall(
+                            r"<description>(.*?)</description>", content
+                        )
+
+                        # Filter and process posts
+                        for j, title in enumerate(titles):
+                            if (
+                                j < len(links)
+                                and "reddit.com/r/" in links[j]
+                                and j < 15
+                            ):
+                                # Clean up title and description
+                                clean_title = (
+                                    title.replace("&amp;", "&")
+                                    .replace("&lt;", "<")
+                                    .replace("&gt;", ">")
+                                )
+                                clean_desc = (
+                                    descriptions[j] if j < len(descriptions) else ""
+                                )
+                                clean_desc = (
+                                    clean_desc.replace("&amp;", "&")
+                                    .replace("&lt;", "<")
+                                    .replace("&gt;", ">")
+                                )
+
+                                # Enhanced post data structure
+                                post = {
+                                    "title": clean_title,
+                                    "link": links[j],
+                                    "description": clean_desc,
+                                    "subreddit": feed["name"],
+                                    "category": feed["category"],
+                                    "source": "reddit",
+                                    "published": datetime.now(UTC).isoformat(),
+                                    "engagement": {
+                                        "upvotes": 0,
+                                        "comments": 0,
+                                        "score": 0,
+                                    },
+                                    "viral_potential": {
+                                        "keywords": extract_viral_keywords(
+                                            clean_title + " " + clean_desc
+                                        ),
+                                        "sentiment": analyze_sentiment(
+                                            clean_title + " " + clean_desc
+                                        ),
+                                        "urgency": detect_urgency(
+                                            clean_title + " " + clean_desc
+                                        ),
+                                    },
+                                }
+
+                                posts.append(post)
+
+                    # Add posts to collection
+                    all_posts.extend(posts)
+
+                    # Update category stats
+                    category = feed["category"]
+                    if category not in category_stats:
+                        category_stats[category] = 0
+                    category_stats[category] += len(posts)
+
+                    successful_feeds += 1
+                    logger.info(f"  ✅ {feed['name']}: {len(posts)} posts")
+
+                elif response.status_code == 429:
+                    logger.warning(f"  ⚠️ Rate limited for {feed['name']}, skipping...")
+                    time.sleep(5)  # Wait longer on rate limit
+                    continue
+                elif response.status_code == 403:
+                    logger.warning(
+                        f"  ⚠️ Access forbidden for {feed['name']}, trying next method..."
+                    )
+                    continue
+                else:
+                    logger.warning(
+                        f"  ⚠️ Failed to fetch {feed['name']}: HTTP {response.status_code}"
+                    )
+
+            except Exception as e:
+                logger.error(f"  ❌ Error fetching {feed['name']}: {e}")
+                continue
+
+        data = {
+            "posts": all_posts,
+            "metadata": {
+                "source": "reddit",
+                "crawled_at": datetime.now(UTC).isoformat(),
+                "status": "success" if successful_feeds > 0 else "partial",
+                "total_posts": len(all_posts),
+                "successful_feeds": successful_feeds,
+                "total_feeds": len(current_feeds),
+                "current_hour": current_hour,
+                "current_batch": current_search_batch,
+                "category_stats": category_stats,
+                "viral_content_focus": True,
+                "distributed_search": True,
+            },
+        }
+
+        logger.info(
+            f"✅ Enhanced Reddit crawl completed: {len(all_posts)} posts from {successful_feeds} feeds (batch {current_search_batch})"
+        )
+        return data
+
     except Exception as e:
-        logger.warning(f"Auto-rename failed: {e}")
+        logger.error(f"❌ Enhanced Reddit crawl failed: {e}")
+        return {
+            "posts": [],
+            "metadata": {
+                "source": "reddit",
+                "crawled_at": datetime.now(UTC).isoformat(),
+                "status": "error",
+                "error": str(e),
+                "total_posts": 0,
+                "viral_content_focus": True,
+                "distributed_search": True,
+            },
+        }
 
-    # Update seen IDs
-    new_seen_ids = set()
-    for item in processed_items:
-        item_id = item.get("id") or item.get("tweetId") or item.get("_id")
-        if item_id:
-            new_seen_ids.add(str(item_id))
 
-    seen_ids.update(new_seen_ids)
-    save_seen_ids(seen_ids)
-
-    # Generate PDF
+def crawl_news_with_rate_limiting() -> dict[str, Any]:
+    """Enhanced News crawl with distributed search strategy over 24 hours"""
     try:
-        from utils.pdf import generate_pdf
+        logger.info(
+            "🔄 Starting Enhanced News crawl with distributed search strategy..."
+        )
 
-        pdf_path = generate_pdf(digest_content, f"digest-{date.today().isoformat()}")
-        logger.info(f"PDF generated: {pdf_path}")
+        # Get current hour to determine which searches to run
+        current_hour = datetime.now(UTC).hour
+        current_minute = datetime.now(UTC).minute
+
+        # Calculate which searches to run based on current time
+        # Spread 100 searches over 24 hours = ~4 searches per hour
+        searches_per_hour = 4
+        current_search_batch = current_hour % 6  # 6 different batches per day
+
+        # Comprehensive list of news sources and queries (100 total)
+        all_news_sources = [
+            # Batch 1: Major Crypto News (0-5 hours)
+            {
+                "source": "newsapi",
+                "query": "cryptocurrency",
+                "category": "general",
+                "batch": 0,
+            },
+            {
+                "source": "newsapi",
+                "query": "bitcoin",
+                "category": "bitcoin",
+                "batch": 0,
+            },
+            {
+                "source": "newsapi",
+                "query": "ethereum",
+                "category": "ethereum",
+                "batch": 0,
+            },
+            {"source": "newsapi", "query": "solana", "category": "solana", "batch": 0},
+            {
+                "source": "newsapi",
+                "query": "crypto market",
+                "category": "trading",
+                "batch": 1,
+            },
+            {
+                "source": "newsapi",
+                "query": "blockchain",
+                "category": "technology",
+                "batch": 1,
+            },
+            # Batch 2: DeFi and Trading (6-11 hours)
+            {"source": "newsapi", "query": "defi", "category": "defi", "batch": 2},
+            {
+                "source": "newsapi",
+                "query": "yield farming",
+                "category": "farming",
+                "batch": 2,
+            },
+            {
+                "source": "newsapi",
+                "query": "crypto trading",
+                "category": "trading",
+                "batch": 2,
+            },
+            {
+                "source": "newsapi",
+                "query": "liquidity mining",
+                "category": "farming",
+                "batch": 3,
+            },
+            {"source": "newsapi", "query": "amm", "category": "defi", "batch": 3},
+            # Batch 3: Memecoins and Viral Content (12-17 hours)
+            {
+                "source": "newsapi",
+                "query": "meme coin",
+                "category": "memecoin",
+                "batch": 4,
+            },
+            {
+                "source": "newsapi",
+                "query": "dogecoin",
+                "category": "memecoin",
+                "batch": 4,
+            },
+            {
+                "source": "newsapi",
+                "query": "shiba inu",
+                "category": "memecoin",
+                "batch": 4,
+            },
+            {
+                "source": "newsapi",
+                "query": "viral crypto",
+                "category": "memecoin",
+                "batch": 5,
+            },
+            {
+                "source": "newsapi",
+                "query": "crypto pump",
+                "category": "trading",
+                "batch": 5,
+            },
+            # Batch 4: NFTs and Gaming (18-23 hours)
+            {"source": "newsapi", "query": "nft", "category": "nft", "batch": 6},
+            {
+                "source": "newsapi",
+                "query": "metaverse",
+                "category": "gaming",
+                "batch": 6,
+            },
+            {
+                "source": "newsapi",
+                "query": "crypto gaming",
+                "category": "gaming",
+                "batch": 6,
+            },
+            {
+                "source": "newsapi",
+                "query": "play to earn",
+                "category": "gaming",
+                "batch": 7,
+            },
+            {
+                "source": "newsapi",
+                "query": "web3 gaming",
+                "category": "gaming",
+                "batch": 7,
+            },
+            # Batch 5: Airdrops and Opportunities (0-5 hours)
+            {
+                "source": "newsapi",
+                "query": "airdrop",
+                "category": "airdrop",
+                "batch": 8,
+            },
+            {
+                "source": "newsapi",
+                "query": "crypto airdrop",
+                "category": "airdrop",
+                "batch": 8,
+            },
+            {
+                "source": "newsapi",
+                "query": "free crypto",
+                "category": "airdrop",
+                "batch": 8,
+            },
+            {
+                "source": "newsapi",
+                "query": "token launch",
+                "category": "launch",
+                "batch": 9,
+            },
+            {"source": "newsapi", "query": "ico", "category": "launch", "batch": 9},
+            # Batch 6: Technology and Development (6-11 hours)
+            {
+                "source": "newsapi",
+                "query": "smart contract",
+                "category": "technology",
+                "batch": 10,
+            },
+            {
+                "source": "newsapi",
+                "query": "layer 2",
+                "category": "technology",
+                "batch": 10,
+            },
+            {
+                "source": "newsapi",
+                "query": "scaling solution",
+                "category": "technology",
+                "batch": 10,
+            },
+            {
+                "source": "newsapi",
+                "query": "crypto development",
+                "category": "development",
+                "batch": 11,
+            },
+            {
+                "source": "newsapi",
+                "query": "blockchain development",
+                "category": "development",
+                "batch": 11,
+            },
+            # Alternative RSS sources for each batch (to avoid NewsAPI rate limits)
+            {
+                "source": "rss",
+                "url": "https://cointelegraph.com/rss",
+                "category": "general",
+                "batch": 0,
+            },
+            {
+                "source": "rss",
+                "url": "https://coindesk.com/arc/outboundfeeds/rss/",
+                "category": "general",
+                "batch": 1,
+            },
+            {
+                "source": "rss",
+                "url": "https://decrypt.co/feed",
+                "category": "general",
+                "batch": 1,
+            },
+            {
+                "source": "rss",
+                "url": "https://www.theblock.co/rss.xml",
+                "category": "general",
+                "batch": 1,
+            },
+            {
+                "source": "rss",
+                "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+                "category": "bitcoin",
+                "batch": 2,
+            },
+            {
+                "source": "rss",
+                "url": "https://bitcoinmagazine.com/.rss/full/",
+                "category": "bitcoin",
+                "batch": 2,
+            },
+            {
+                "source": "rss",
+                "url": "https://ethereum.org/en/feed.xml",
+                "category": "ethereum",
+                "batch": 3,
+            },
+            {
+                "source": "rss",
+                "url": "https://blog.ethereum.org/feed.xml",
+                "category": "ethereum",
+                "batch": 3,
+            },
+            {
+                "source": "rss",
+                "url": "https://solana.com/feed.xml",
+                "category": "solana",
+                "batch": 4,
+            },
+            {
+                "source": "rss",
+                "url": "https://solana.com/news/feed",
+                "category": "solana",
+                "batch": 4,
+            },
+            {
+                "source": "rss",
+                "url": "https://defipulse.com/blog/feed/",
+                "category": "defi",
+                "batch": 5,
+            },
+            {
+                "source": "rss",
+                "url": "https://defirate.com/feed/",
+                "category": "defi",
+                "batch": 5,
+            },
+            {
+                "source": "rss",
+                "url": "https://nftplazas.com/feed/",
+                "category": "nft",
+                "batch": 6,
+            },
+            {
+                "source": "rss",
+                "url": "https://nftnow.com/feed/",
+                "category": "nft",
+                "batch": 6,
+            },
+            {
+                "source": "rss",
+                "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+                "category": "trading",
+                "batch": 7,
+            },
+            {
+                "source": "rss",
+                "url": "https://www.investing.com/rss/news_301.rss",
+                "category": "trading",
+                "batch": 7,
+            },
+        ]
+
+        # Filter sources for current batch
+        current_sources = [
+            source
+            for source in all_news_sources
+            if source.get("batch", 0) == current_search_batch
+        ]
+
+        # If no sources for current batch, use a default set
+        if not current_sources:
+            current_sources = [
+                {"source": "newsapi", "query": "cryptocurrency", "category": "general"},
+                {"source": "newsapi", "query": "bitcoin", "category": "bitcoin"},
+                {
+                    "source": "rss",
+                    "url": "https://cointelegraph.com/rss",
+                    "category": "general",
+                },
+            ]
+
+        logger.info(
+            f"🕐 Current hour: {current_hour}, batch: {current_search_batch}, processing {len(current_sources)} sources"
+        )
+
+        all_articles = []
+        category_stats = {}
+        successful_sources = 0
+        newsapi_queries = 0
+        max_newsapi_queries = 2  # Limit NewsAPI queries per batch to avoid rate limits
+
+        for i, source in enumerate(current_sources):
+            try:
+                logger.info(
+                    f"  📰 Fetching {source['source']} ({source['category']})... [{i+1}/{len(current_sources)}]"
+                )
+
+                # Add delay between requests
+                if i > 0:
+                    time.sleep(3)  # 3 second delay between requests
+
+                if source["source"] == "newsapi":
+                    # Check if we've hit NewsAPI limit
+                    if newsapi_queries >= max_newsapi_queries:
+                        logger.info(
+                            f"  ⚠️ Skipping NewsAPI query (limit reached: {newsapi_queries}/{max_newsapi_queries})"
+                        )
+                        continue
+
+                    newsapi_queries += 1
+                    articles = fetch_newsapi_articles(
+                        source["query"], source["category"]
+                    )
+
+                elif source["source"] == "rss":
+                    articles = fetch_rss_articles(source["url"], source["category"])
+
+                else:
+                    logger.warning(f"  ⚠️ Unknown source type: {source['source']}")
+                    continue
+
+                # Add articles to collection
+                all_articles.extend(articles)
+
+                # Update category stats
+                category = source["category"]
+                if category not in category_stats:
+                    category_stats[category] = 0
+                category_stats[category] += len(articles)
+
+                successful_sources += 1
+                logger.info(
+                    f"  ✅ {source['source']} ({source['category']}): {len(articles)} articles"
+                )
+
+            except Exception as e:
+                logger.error(
+                    f"  ❌ Error fetching {source['source']} ({source['category']}): {e}"
+                )
+                continue
+
+        data = {
+            "articles": all_articles,
+            "metadata": {
+                "source": "news",
+                "crawled_at": datetime.now(UTC).isoformat(),
+                "status": "success" if successful_sources > 0 else "partial",
+                "total_articles": len(all_articles),
+                "successful_sources": successful_sources,
+                "total_sources": len(current_sources),
+                "current_hour": current_hour,
+                "current_batch": current_search_batch,
+                "newsapi_queries": newsapi_queries,
+                "category_stats": category_stats,
+                "viral_content_focus": True,
+                "distributed_search": True,
+            },
+        }
+
+        logger.info(
+            f"✅ Enhanced News crawl completed: {len(all_articles)} articles from {successful_sources} sources (batch {current_search_batch})"
+        )
+        return data
+
     except Exception as e:
-        logger.error(f"PDF generation failed: {e}")
+        logger.error(f"❌ Enhanced News crawl failed: {e}")
+        return {
+            "articles": [],
+            "metadata": {
+                "source": "news",
+                "crawled_at": datetime.now(UTC).isoformat(),
+                "status": "error",
+                "error": str(e),
+                "total_articles": 0,
+                "viral_content_focus": True,
+                "distributed_search": True,
+            },
+        }
 
-    logger.info("Digest generation complete")
+
+def fetch_newsapi_articles(query: str, category: str) -> list[dict]:
+    """Fetch articles from NewsAPI with rate limiting"""
+    try:
+        api_key = os.getenv("NEWSAPI_KEY")
+        if not api_key:
+            logger.warning("  ⚠️ No NewsAPI key found, skipping NewsAPI queries")
+            return []
+
+        # Add delay to respect rate limits
+        time.sleep(1)
+
+        url = "https://newsapi.org/v2/everything"
+        params = {
+            "q": query,
+            "apiKey": api_key,
+            "language": "en",
+            "sortBy": "publishedAt",
+            "pageSize": 10,  # Reduced to avoid rate limits
+            "from": (datetime.now(UTC) - timedelta(hours=24)).strftime("%Y-%m-%d"),
+        }
+
+        response = requests.get(url, params=params, timeout=15)
+
+        if response.status_code == 200:
+            data = response.json()
+            articles = []
+
+            for article in data.get("articles", [])[:10]:
+                if article.get("title") and article.get("url"):
+                    # Enhanced article structure
+                    enhanced_article = {
+                        "title": article.get("title", ""),
+                        "link": article.get("url", ""),
+                        "description": article.get("description", ""),
+                        "source": article.get("source", {}).get("name", "NewsAPI"),
+                        "category": category,
+                        "published": article.get(
+                            "publishedAt", datetime.now(UTC).isoformat()
+                        ),
+                        "engagement": {"views": 0, "shares": 0, "comments": 0},
+                        "viral_potential": {
+                            "keywords": extract_viral_keywords(
+                                article.get("title", "")
+                                + " "
+                                + article.get("description", "")
+                            ),
+                            "sentiment": analyze_sentiment(
+                                article.get("title", "")
+                                + " "
+                                + article.get("description", "")
+                            ),
+                            "urgency": detect_urgency(
+                                article.get("title", "")
+                                + " "
+                                + article.get("description", "")
+                            ),
+                        },
+                    }
+                    articles.append(enhanced_article)
+
+            return articles
+
+        elif response.status_code == 429:
+            logger.warning(f"  ⚠️ NewsAPI rate limit hit for query: {query}")
+            return []
+        else:
+            logger.warning(
+                f"  ⚠️ NewsAPI error for query '{query}': HTTP {response.status_code}"
+            )
+            return []
+
+    except Exception as e:
+        logger.error(f"  ❌ NewsAPI fetch error for query '{query}': {e}")
+        return []
 
 
-if __name__ == "__main__":
-    main()
+def fetch_rss_articles(url: str, category: str) -> list[dict]:
+    """Fetch articles from RSS feeds"""
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/rss+xml, application/xml, text/xml, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+
+        response = requests.get(url, headers=headers, timeout=15)
+
+        if response.status_code == 200:
+            content = response.text
+
+            # Extract articles using regex
+            titles = re.findall(r"<title>(.*?)</title>", content)
+            links = re.findall(r"<link>(.*?)</link>", content)
+            descriptions = re.findall(r"<description>(.*?)</description>", content)
+            pub_dates = re.findall(r"<pubDate>(.*?)</pubDate>", content)
+
+            articles = []
+
+            for j, title in enumerate(titles):
+                if j < len(links) and j < 15:  # Limit to 15 articles per RSS feed
+                    # Clean up content
+                    clean_title = (
+                        title.replace("&amp;", "&")
+                        .replace("&lt;", "<")
+                        .replace("&gt;", ">")
+                    )
+                    clean_desc = descriptions[j] if j < len(descriptions) else ""
+                    clean_desc = (
+                        clean_desc.replace("&amp;", "&")
+                        .replace("&lt;", "<")
+                        .replace("&gt;", ">")
+                    )
+
+                    # Parse publication date
+                    pub_date = (
+                        pub_dates[j]
+                        if j < len(pub_dates)
+                        else datetime.now(UTC).isoformat()
+                    )
+
+                    # Enhanced article structure
+                    article = {
+                        "title": clean_title,
+                        "link": links[j],
+                        "description": clean_desc,
+                        "source": "RSS",
+                        "category": category,
+                        "published": pub_date,
+                        "engagement": {"views": 0, "shares": 0, "comments": 0},
+                        "viral_potential": {
+                            "keywords": extract_viral_keywords(
+                                clean_title + " " + clean_desc
+                            ),
+                            "sentiment": analyze_sentiment(
+                                clean_title + " " + clean_desc
+                            ),
+                            "urgency": detect_urgency(clean_title + " " + clean_desc),
+                        },
+                    }
+
+                    articles.append(article)
+
+            return articles
+
+        else:
+            logger.warning(
+                f"  ⚠️ RSS fetch error for {url}: HTTP {response.status_code}"
+            )
+            return []
+
+    except Exception as e:
+        logger.error(f"  ❌ RSS fetch error for {url}: {e}")
+        return []
+
+
+def upload_to_gcs(data: dict[str, Any], source: str) -> bool:
+    """Upload data to Google Cloud Storage"""
+    try:
+        bucket_name = os.getenv("BUCKET_NAME", "degen-digest-data")
+        project_id = os.getenv("PROJECT_ID", "lucky-union-463615-t3")
+
+        client = storage.Client(project=project_id)
+        bucket = client.bucket(bucket_name)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Upload timestamped file
+        timestamped_path = f"data/{source}_{timestamp}.json"
+        blob = bucket.blob(timestamped_path)
+        blob.upload_from_string(
+            json.dumps(data, indent=2, ensure_ascii=False),
+            content_type="application/json",
+        )
+
+        # Upload latest file
+        latest_path = f"data/{source}_latest.json"
+        blob = bucket.blob(latest_path)
+        blob.upload_from_string(
+            json.dumps(data, indent=2, ensure_ascii=False),
+            content_type="application/json",
+        )
+
+        logger.info(f"✅ Uploaded to GCS: {timestamped_path} and {latest_path}")
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Failed to upload to GCS: {e}")
+        return False
+
+
+@functions_framework.http
+def main(request):
+    """Main cloud function entry point with distributed search strategy"""
+    try:
+        logger.info(
+            "🚀 Starting Enhanced Viral Content Crawler with distributed search strategy..."
+        )
+
+        # Get current hour to determine which crawler to run
+        current_hour = datetime.now(UTC).hour
+        current_minute = datetime.now(UTC).minute
+
+        # Calculate which crawler to run based on current time
+        # Spread 100 searches over 24 hours = ~4 searches per hour
+        # Rotate between Reddit, News, and CoinGecko every 2 hours
+        crawler_rotation = current_hour % 6  # 6 different rotations per day
+
+        logger.info(f"🕐 Current hour: {current_hour}, rotation: {crawler_rotation}")
+
+        # Determine which crawler to run based on rotation
+        if crawler_rotation in [0, 1]:  # Hours 0-1, 6-7, 12-13, 18-19
+            logger.info("📥 Running Reddit crawler (batch 1/2)")
+            result = crawl_reddit_with_rate_limiting()
+            source = "reddit"
+
+        elif crawler_rotation in [2, 3]:  # Hours 2-3, 8-9, 14-15, 20-21
+            logger.info("📰 Running News crawler (batch 1/2)")
+            result = crawl_news_with_rate_limiting()
+            source = "news"
+
+        elif crawler_rotation in [4, 5]:  # Hours 4-5, 10-11, 16-17, 22-23
+            logger.info("💰 Running CoinGecko crawler (batch 1/2)")
+            result = crawl_coingecko_with_rate_limiting()
+            source = "coingecko"
+
+        else:
+            # Fallback to Reddit
+            logger.info("📥 Running Reddit crawler (fallback)")
+            result = crawl_reddit_with_rate_limiting()
+            source = "reddit"
+
+        # Upload results to GCS
+        if result and result.get("metadata", {}).get("status") != "error":
+            upload_success = upload_to_gcs(result, source)
+            if upload_success:
+                logger.info(f"✅ Successfully uploaded {source} data to GCS")
+            else:
+                logger.error(f"❌ Failed to upload {source} data to GCS")
+
+        # Return response
+        return {
+            "statusCode": 200,
+            "body": json.dumps(
+                {
+                    "status": "success",
+                    "message": f"Enhanced {source} crawler completed successfully",
+                    "data": {
+                        "source": source,
+                        "current_hour": current_hour,
+                        "rotation": crawler_rotation,
+                        "total_items": result.get("metadata", {}).get("total_posts", 0)
+                        or result.get("metadata", {}).get("total_articles", 0)
+                        or result.get("metadata", {}).get("total_coins", 0),
+                        "distributed_search": True,
+                        "viral_content_focus": True,
+                    },
+                }
+            ),
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Main function failed: {e}")
+        return {
+            "statusCode": 500,
+            "body": json.dumps(
+                {
+                    "status": "error",
+                    "message": f"Enhanced crawler failed: {str(e)}",
+                    "data": {
+                        "current_hour": datetime.now(UTC).hour,
+                        "distributed_search": True,
+                        "viral_content_focus": True,
+                    },
+                }
+            ),
+        }
+
+
+@functions_framework.http
+def enhanced_reddit_crawler(request):
+    """Cloud Function handler for Enhanced Reddit crawler with rate limiting"""
+    try:
+        logger.info("🚀 Starting Enhanced Reddit Cloud Function with rate limiting...")
+
+        # Crawl Reddit data with rate limiting
+        data = crawl_reddit_with_rate_limiting()
+
+        # Upload to GCS
+        if upload_to_gcs(data, "reddit"):
+            logger.info("✅ Enhanced Reddit Cloud Function completed successfully")
+            return {
+                "status": "success",
+                "message": "Enhanced Reddit crawl completed with rate limiting",
+                "data_count": len(data.get("posts", [])),
+                "timestamp": datetime.now().isoformat(),
+            }
+        else:
+            logger.error("❌ Failed to upload Reddit data")
+            return {
+                "status": "error",
+                "message": "Failed to upload data",
+                "timestamp": datetime.now().isoformat(),
+            }
+
+    except Exception as e:
+        logger.error(f"❌ Enhanced Reddit Cloud Function failed: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
+
+
+@functions_framework.http
+def enhanced_news_crawler(request):
+    """Cloud Function handler for Enhanced News crawler with rate limiting"""
+    try:
+        logger.info("🚀 Starting Enhanced News Cloud Function with rate limiting...")
+
+        # Crawl News data with rate limiting
+        data = crawl_news_with_rate_limiting()
+
+        # Upload to GCS
+        if upload_to_gcs(data, "news"):
+            logger.info("✅ Enhanced News Cloud Function completed successfully")
+            return {
+                "status": "success",
+                "message": "Enhanced News crawl completed with rate limiting",
+                "data_count": len(data.get("articles", [])),
+                "timestamp": datetime.now().isoformat(),
+            }
+        else:
+            logger.error("❌ Failed to upload News data")
+            return {
+                "status": "error",
+                "message": "Failed to upload data",
+                "timestamp": datetime.now().isoformat(),
+            }
+
+    except Exception as e:
+        logger.error(f"❌ Enhanced News Cloud Function failed: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }

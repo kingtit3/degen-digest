@@ -68,7 +68,7 @@ def main():
     # Display the digest
     st.markdown(
         f"""
-    <div style="text-align: center; margin-bottom: 30px;">
+    <div style="text-align: center; margin-bottom: 15px;">
         <h1 style="color: #00d4ff; font-size: 2.5em;">🚀 Degen Digest</h1>
         <p style="color: #888; font-size: 1.2em;">Latest Crypto Intelligence</p>
         <p style="color: #666; font-size: 0.9em;">File: {filename} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>

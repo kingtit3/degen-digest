@@ -7,6 +7,7 @@ Collects comprehensive data including engagement velocity, user influence, and c
 import asyncio
 import json
 import os
+import sys
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -16,6 +17,7 @@ from typing import Any
 
 from dotenv import load_dotenv
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.advanced_logging import get_logger
 
 load_dotenv()
