@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEX Data - FarmChecker.xyz</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="/">
+                    <i class="fas fa-chart-line"></i>
+                    <span>FarmChecker.xyz</span>
+                </a>
+            </div>
+            
+            <div class="nav-menu" id="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/crypto" class="nav-link">Crypto</a>
+                <a href="/dex" class="nav-link active">DEX</a>
+                <a href="/twitter" class="nav-link">Twitter</a>
+                <a href="/reddit" class="nav-link">Reddit</a>
+                <a href="/news" class="nav-link">News</a>
+                <a href="/analytics" class="nav-link">Analytics</a>
+                <a href="/status" class="nav-link">Status</a>
+            </div>
+
+            <div class="nav-controls">
+                <button id="dark-mode-toggle" class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="mobile-menu-btn" class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobile-nav">
+        <a href="/" class="mobile-nav-link">Home</a>
+        <a href="/crypto" class="mobile-nav-link">Crypto</a>
+        <a href="/dex" class="mobile-nav-link">DEX</a>
+        <a href="/twitter" class="mobile-nav-link">Twitter</a>
+        <a href="/reddit" class="mobile-nav-link">Reddit</a>
+        <a href="/news" class="mobile-nav-link">News</a>
+        <a href="/analytics" class="mobile-nav-link">Analytics</a>
+        <a href="/status" class="mobile-nav-link">Status</a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="header-content">
+                <h1><i class="fas fa-exchange-alt"></i> DEX Data</h1>
+                <p>Real-time decentralized exchange data from DexScreener and DexPaprika</p>
+            </div>
+        </header>
+
+        <!-- DEX Controls -->
+        <div class="dex-controls">
+            <div class="control-group">
+                <label for="dex-source-filter">Data Source:</label>
+                <select id="dex-source-filter" class="filter-select">
+                    <option value="all">All Sources</option>
+                    <option value="dexscreener">DexScreener</option>
+                    <option value="dexpaprika">DexPaprika</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="dex-sort-filter">Sort By:</label>
+                <select id="dex-sort-filter" class="filter-select">
+                    <option value="volume">Volume (24h)</option>
+                    <option value="price_change">Price Change (24h)</option>
+                    <option value="liquidity">Liquidity</option>
+                    <option value="recent">Most Recent</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- DEX Overview -->
+        <section class="dex-overview">
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="overview-content">
+                        <div class="overview-value" id="total-pairs">-</div>
+                        <div class="overview-label">Total Pairs</div>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="overview-content">
+                        <div class="overview-value" id="total-volume">-</div>
+                        <div class="overview-label">Total Volume (24h)</div>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <div class="overview-content">
+                        <div class="overview-value" id="total-liquidity">-</div>
+                        <div class="overview-label">Total Liquidity</div>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="overview-content">
+                        <div class="overview-value" id="last-updated">-</div>
+                        <div class="overview-label">Last Updated</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEX Data Tabs -->
+        <section class="dex-tabs">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="dexscreener">
+                    <i class="fas fa-chart-bar"></i>
+                    DexScreener
+                </button>
+                <button class="tab-button" data-tab="dexpaprika">
+                    <i class="fas fa-chart-pie"></i>
+                    DexPaprika
+                </button>
+                <button class="tab-button" data-tab="combined">
+                    <i class="fas fa-layer-group"></i>
+                    Combined
+                </button>
+            </div>
+
+            <!-- DexScreener Tab -->
+            <div class="tab-content active" id="dexscreener-tab">
+                <div class="dex-data-container">
+                    <div class="loading" id="dexscreener-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Loading DexScreener data...
+                    </div>
+                    <div id="dexscreener-data" class="dex-data-grid"></div>
+                </div>
+            </div>
+
+            <!-- DexPaprika Tab -->
+            <div class="tab-content" id="dexpaprika-tab">
+                <div class="dex-data-container">
+                    <div class="loading" id="dexpaprika-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Loading DexPaprika data...
+                    </div>
+                    <div id="dexpaprika-data" class="dex-data-grid"></div>
+                </div>
+            </div>
+
+            <!-- Combined Tab -->
+            <div class="tab-content" id="combined-tab">
+                <div class="dex-data-container">
+                    <div class="loading" id="combined-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Loading combined data...
+                    </div>
+                    <div id="combined-data" class="dex-data-grid"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 FarmChecker.xyz - Real-time crypto data and analytics</p>
+        </div>
+    </footer>
+
+    <script src="dex.js"></script>
+</body>
+</html> 

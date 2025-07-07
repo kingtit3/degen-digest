@@ -97,6 +97,9 @@ class EnhancedMultiSourceCrawler:
         self.cloud_only = True
         self.gcs_bucket = "degen-digest-data"
         self.project_id = "lucky-union-463615-t3"
+        
+        # Initialize logger
+        self.logger = logger
 
     def get_gcs_client(self):
         """Get GCS client if available"""
@@ -770,7 +773,8 @@ class EnhancedMultiSourceCrawler:
                 logger.info("🛑 Received interrupt signal, shutting down...")
                 break
             except Exception as e:
-                logger.error(f"❌ Unexpected error in main loop: {e}")
+                logger.error(f"❌ Unexpected error in main loop: {str(e)}")
+                logger.error(f"❌ Error type: {type(e).__name__}")
                 await asyncio.sleep(60)  # Wait before retrying
 
         self.is_running = False

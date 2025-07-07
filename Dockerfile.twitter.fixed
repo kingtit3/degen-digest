@@ -1,0 +1,83 @@
+# Enhanced Twitter Crawler Dockerfile - Optimized for Cloud Run with Display Server
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for Playwright with display server support
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    ca-certificates \
+    procps \
+    # Core display and graphics libraries
+    xvfb \
+    x11-utils \
+    x11-apps \
+    xauth \
+    # Playwright dependencies
+    libxss1 \
+    libnss3 \
+    libnspr4 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libatspi2.0-0 \
+    libgtk-3-0 \
+    libgdk-pixbuf2.0-0 \
+    fonts-liberation \
+    libappindicator3-1 \
+    xdg-utils \
+    libxtst6 \
+    libx11-xcb1 \
+    libxcb-dri3-0 \
+    # Additional Cloud Run optimizations
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy requirements first for better caching
+COPY requirements-crawler.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements-crawler.txt
+
+# Install Playwright browsers with optimizations
+RUN playwright install chromium --with-deps
+RUN playwright install-deps chromium
+
+# Copy application code
+COPY . .
+
+# Create logs directory
+RUN mkdir -p logs
+
+# Set environment variables for Cloud Run optimization
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+# Display server environment variables
+ENV DISPLAY=:99
+ENV XAUTHORITY=/tmp/.Xauthority
+# Additional Playwright optimizations
+ENV PLAYWRIGHT_HEADLESS=1
+ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
+
+# Create startup script with display server
+RUN echo '#!/bin/bash\n\
+# Start virtual display server\n\
+Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset &\n\
+# Wait for display to be ready\n\
+sleep 2\n\
+# Start the application\n\
+exec python twitter_crawler_server.py' > /app/start.sh && chmod +x /app/start.sh
+
+# Default command with display server
+CMD ["/app/start.sh"] 

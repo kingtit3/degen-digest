@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FarmChecker.xyz - Crypto News & Analytics</title>
+    <title>Twitter Feed - FarmChecker.xyz</title>
     <link rel="stylesheet" href="styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
@@ -23,11 +23,10 @@
             <span class="tagline">Crypto Intelligence Platform</span>
           </div>
           <nav class="nav">
-            <a href="/" class="nav-link active">Home</a>
+            <a href="/" class="nav-link">Home</a>
             <a href="/crypto" class="nav-link">Crypto</a>
             <a href="/dex" class="nav-link">DEX</a>
-            <a href="/dex" class="nav-link">DEX</a>
-            <a href="/twitter" class="nav-link">Twitter</a>
+            <a href="/twitter" class="nav-link active">Twitter</a>
             <a href="/reddit" class="nav-link">Reddit</a>
             <a href="/news" class="nav-link">News</a>
             <a href="/analytics" class="nav-link">Analytics</a>
@@ -37,17 +36,16 @@
             <button id="dark-mode-toggle" class="dark-mode-btn" title="Toggle Dark Mode">
               <i class="fas fa-moon"></i>
             </button>
-            <button id="mobile-menu-toggle" class="mobile-menu-btn" title="Menu">
+            <button id="mobile-menu-btn" class="mobile-menu-btn" title="Menu">
               <i class="fas fa-bars"></i>
             </button>
           </div>
         </div>
         <div class="mobile-nav" id="mobile-nav">
-          <a href="/" class="nav-link active">Home</a>
+          <a href="/" class="nav-link">Home</a>
           <a href="/crypto" class="nav-link">Crypto</a>
             <a href="/dex" class="nav-link">DEX</a>
-          <a href="/dex" class="nav-link">DEX</a>
-          <a href="/twitter" class="nav-link">Twitter</a>
+          <a href="/twitter" class="nav-link active">Twitter</a>
           <a href="/reddit" class="nav-link">Reddit</a>
           <a href="/news" class="nav-link">News</a>
           <a href="/analytics" class="nav-link">Analytics</a>
@@ -57,45 +55,22 @@
     </header>
 
     <main class="main">
-      <!-- Hero Section -->
-      <section class="hero">
+      <!-- Twitter Feed Section -->
+      <section class="social-feed twitter-feed">
         <div class="container">
-          <div class="hero-content">
-            <h2>Real-time Crypto Intelligence</h2>
-            <p>
-              Aggregated insights from Twitter, Reddit, News, and market data
-              with live engagement metrics
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Top Gainers Scrolling Banner -->
-      <section class="crypto-banner">
-        <div class="container">
-          <div class="banner-header">
-            <h3><i class="fas fa-rocket"></i> Top Gainers</h3>
-            <div class="banner-controls">
-              <button id="pause-banner" class="banner-btn">
-                <i class="fas fa-pause"></i>
-              </button>
-              <button id="play-banner" class="banner-btn" style="display: none">
-                <i class="fas fa-play"></i>
-              </button>
+          <div class="section-header">
+            <h3><i class="fab fa-twitter"></i> Top Twitter Posts</h3>
+            <div class="filter-controls">
+              <select id="twitter-filter">
+                <option value="recent">Sort by Recent</option>
+                <option value="engagement">Sort by Engagement</option>
+                <option value="likes">Sort by Likes</option>
+                <option value="retweets">Sort by Retweets</option>
+              </select>
             </div>
           </div>
-          <div class="scrolling-banner" id="top-gainers-banner">
-            <div class="loading">Loading top gainers...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Latest Digest Section -->
-      <section class="latest-digest">
-        <div class="container">
-          <h3><i class="fas fa-file-alt"></i> Latest Digest</h3>
-          <div class="digest-content" id="latest-digest">
-            <div class="loading">Loading latest digest...</div>
+          <div class="posts-grid" id="twitter-posts">
+            <div class="loading">Loading Twitter posts...</div>
           </div>
         </div>
       </section>
@@ -109,6 +84,6 @@
       </div>
     </footer>
 
-    <script src="home.js"></script>
+    <script src="twitter.js"></script>
   </body>
-</html>
+</html> 

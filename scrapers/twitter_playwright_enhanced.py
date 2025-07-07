@@ -310,63 +310,78 @@ class EnhancedTwitterPlaywrightCrawler:
                     "[setup_browser] Using default browser path (auto-detected)"
                 )
 
+                # Enhanced browser launch configuration for Cloud Run
+                browser_args = [
+                    # Core sandbox and security (Cloud Run optimized)
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-web-security",
+                    "--disable-features=VizDisplayCompositor",
+                    # Display and graphics (Cloud Run specific)
+                    "--disable-gpu",
+                    "--disable-software-rasterizer",
+                    "--disable-background-timer-throttling",
+                    "--disable-backgrounding-occluded-windows",
+                    "--disable-renderer-backgrounding",
+                    "--disable-background-networking",
+                    # Memory optimization for Cloud Run
+                    "--memory-pressure-off",
+                    "--max_old_space_size=512",
+                    "--disable-background-timer-throttling",
+                    "--disable-backgrounding-occluded-windows",
+                    "--disable-renderer-backgrounding",
+                    # Anti-detection measures
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-extensions-except",
+                    "--disable-plugins-discovery",
+                    "--disable-default-apps",
+                    "--disable-sync",
+                    "--disable-translate",
+                    "--disable-client-side-phishing-detection",
+                    "--disable-component-extensions-with-background-pages",
+                    "--disable-component-update",
+                    "--disable-domain-reliability",
+                    "--disable-features=TranslateUI",
+                    "--disable-ipc-flooding-protection",
+                    "--no-default-browser-check",
+                    "--disable-hang-monitor",
+                    "--disable-prompt-on-repost",
+                    "--force-color-profile=srgb",
+                    "--metrics-recording-only",
+                    "--no-first-run",
+                    "--password-store=basic",
+                    "--use-mock-keychain",
+                    "--no-service-autorun",
+                    "--export-tagged-pdf",
+                    "--disable-search-engine-choice-screen",
+                    "--unsafely-disable-devtools-self-xss-warnings",
+                    "--enable-automation",
+                    "--hide-scrollbars",
+                    "--mute-audio",
+                    # Additional stealth measures
+                    "--disable-accelerated-2d-canvas",
+                    "--no-zygote",
+                    "--disable-field-trial-config",
+                    "--disable-back-forward-cache",
+                    "--disable-breakpad",
+                    "--allow-pre-commit-input",
+                    "--disable-popup-blocking",
+                    "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+                ]
+
+                # Add Cloud Run specific environment variables
+                env = {
+                    "DISPLAY": os.environ.get("DISPLAY", ":99"),
+                    "XAUTHORITY": os.environ.get("XAUTHORITY", "/tmp/.Xauthority"),
+                    "PLAYWRIGHT_HEADLESS": "1",
+                    "PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS": "1",
+                }
+
                 self.browser = await self.playwright.chromium.launch(
-                    headless=self.headless,
-                    args=[
-                        # Core sandbox and security
-                        "--no-sandbox",
-                        "--disable-setuid-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--disable-web-security",
-                        "--disable-features=VizDisplayCompositor",
-                        # Anti-detection measures
-                        "--disable-blink-features=AutomationControlled",
-                        "--disable-extensions-except",
-                        "--disable-plugins-discovery",
-                        "--disable-default-apps",
-                        "--disable-sync",
-                        "--disable-translate",
-                        "--disable-background-networking",
-                        "--disable-background-timer-throttling",
-                        "--disable-backgrounding-occluded-windows",
-                        "--disable-renderer-backgrounding",
-                        "--disable-client-side-phishing-detection",
-                        "--disable-component-extensions-with-background-pages",
-                        "--disable-component-update",
-                        "--disable-domain-reliability",
-                        "--disable-features=TranslateUI",
-                        "--disable-ipc-flooding-protection",
-                        "--no-default-browser-check",
-                        "--disable-hang-monitor",
-                        "--disable-prompt-on-repost",
-                        "--force-color-profile=srgb",
-                        "--metrics-recording-only",
-                        "--no-first-run",
-                        "--password-store=basic",
-                        "--use-mock-keychain",
-                        "--no-service-autorun",
-                        "--export-tagged-pdf",
-                        "--disable-search-engine-choice-screen",
-                        "--unsafely-disable-devtools-self-xss-warnings",
-                        "--enable-automation",
-                        "--hide-scrollbars",
-                        "--mute-audio",
-                        # Additional stealth measures
-                        "--disable-accelerated-2d-canvas",
-                        "--no-zygote",
-                        "--disable-field-trial-config",
-                        "--disable-back-forward-cache",
-                        "--disable-breakpad",
-                        "--allow-pre-commit-input",
-                        "--disable-popup-blocking",
-                        "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
-                        # Memory and performance
-                        "--memory-pressure-off",
-                        "--max_old_space_size=128",
-                        "--disable-background-timer-throttling",
-                        "--disable-backgrounding-occluded-windows",
-                        "--disable-renderer-backgrounding",
-                    ],
+                    headless=True,  # Force headless for Cloud Run
+                    args=browser_args,
+                    env=env,
                 )
                 logger.info("[setup_browser] After browser launch")
 

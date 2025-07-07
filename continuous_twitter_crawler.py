@@ -231,8 +231,8 @@ class ContinuousTwitterCrawler:
             logger.warning("❌ No tweets collected in this cycle")
 
     async def run_continuous(self):
-        """Run the continuous crawler for 20 hours a day"""
-        logger.info("🚀 Starting Continuous Twitter Crawler (20 hours/day)")
+        """Run the continuous crawler from 4 AM to 12 AM (20 hours/day)"""
+        logger.info("🚀 Starting Continuous Twitter Crawler (4 AM - 12 AM daily)")
 
         if not await self.setup_crawler():
             logger.error("❌ Failed to setup crawler, exiting")
@@ -243,22 +243,42 @@ class ContinuousTwitterCrawler:
 
         try:
             while self.running:
-                cycle_count += 1
-                logger.info(f"🔄 Starting cycle #{cycle_count}")
+                current_hour = datetime.now().hour
+                
+                # Check if we're in the active crawling window (4 AM to 12 AM)
+                if 4 <= current_hour < 24:  # 4 AM to 11:59 PM
+                    cycle_count += 1
+                    logger.info(f"🔄 Starting cycle #{cycle_count} (Hour: {current_hour})")
 
-                start_time = time.time()
-                await self.run_crawl_cycle()
-                cycle_duration = time.time() - start_time
+                    start_time = time.time()
+                    await self.run_crawl_cycle()
+                    cycle_duration = time.time() - start_time
 
-                logger.info(f"⏱️ Cycle #{cycle_count} took {cycle_duration:.1f} seconds")
+                    logger.info(f"⏱️ Cycle #{cycle_count} took {cycle_duration:.1f} seconds")
 
-                # Wait before next cycle (4 hours between cycles = 6 cycles per day)
-                # This gives us ~20 hours of crawling per day
-                wait_time = 4 * 60 * 60  # 4 hours
-                logger.info(
-                    f"😴 Sleeping for {wait_time/3600:.1f} hours before next cycle..."
-                )
-                await asyncio.sleep(wait_time)
+                    # Shorter wait time during active hours (30 minutes between cycles)
+                    # This gives us more frequent crawling during the day
+                    wait_time = 30 * 60  # 30 minutes
+                    logger.info(
+                        f"😴 Sleeping for {wait_time/60:.1f} minutes before next cycle..."
+                    )
+                    await asyncio.sleep(wait_time)
+                else:
+                    # Outside active hours (12 AM to 4 AM) - sleep longer
+                    logger.info(f"🌙 Outside active hours (Hour: {current_hour}). Sleeping until 4 AM...")
+                    
+                    # Calculate time until 4 AM
+                    now = datetime.now()
+                    if current_hour < 4:
+                        # It's between 12 AM and 4 AM, wait until 4 AM
+                        target_time = now.replace(hour=4, minute=0, second=0, microsecond=0)
+                    else:
+                        # It's after 12 AM, wait until next day 4 AM
+                        target_time = (now + timedelta(days=1)).replace(hour=4, minute=0, second=0, microsecond=0)
+                    
+                    sleep_seconds = (target_time - now).total_seconds()
+                    logger.info(f"😴 Sleeping for {sleep_seconds/3600:.1f} hours until 4 AM...")
+                    await asyncio.sleep(sleep_seconds)
 
         except KeyboardInterrupt:
             logger.info("🛑 Received interrupt signal, stopping crawler...")

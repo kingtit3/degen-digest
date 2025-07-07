@@ -193,10 +193,10 @@ class ContinuousDexPaprikaCrawler:
 
                 logger.info(f"⏱️ Cycle #{cycle_count} took {cycle_duration:.1f} seconds")
 
-                # Wait before next cycle (2 hours between cycles = 12 cycles per day)
-                wait_time = 2 * 60 * 60  # 2 hours
+                # Wait before next cycle (7 minutes between cycles = 12 cycles per day)
+                wait_time = 7 * 60  # 7 minutes
                 logger.info(
-                    f"😴 Sleeping for {wait_time/3600:.1f} hours before next cycle..."
+                    f"😴 Sleeping for {wait_time/60:.1f} minutes before next cycle..."
                 )
                 await asyncio.sleep(wait_time)
 

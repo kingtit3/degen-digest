@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FarmChecker.xyz - Crypto News & Analytics</title>
+    <title>Analytics - FarmChecker.xyz</title>
     <link rel="stylesheet" href="styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
@@ -23,79 +23,76 @@
             <span class="tagline">Crypto Intelligence Platform</span>
           </div>
           <nav class="nav">
-            <a href="/" class="nav-link active">Home</a>
+            <a href="/" class="nav-link">Home</a>
             <a href="/crypto" class="nav-link">Crypto</a>
-            <a href="/dex" class="nav-link">DEX</a>
             <a href="/dex" class="nav-link">DEX</a>
             <a href="/twitter" class="nav-link">Twitter</a>
             <a href="/reddit" class="nav-link">Reddit</a>
             <a href="/news" class="nav-link">News</a>
-            <a href="/analytics" class="nav-link">Analytics</a>
+            <a href="/analytics" class="nav-link active">Analytics</a>
             <a href="/status" class="nav-link">Status</a>
           </nav>
           <div class="header-controls">
             <button id="dark-mode-toggle" class="dark-mode-btn" title="Toggle Dark Mode">
               <i class="fas fa-moon"></i>
             </button>
-            <button id="mobile-menu-toggle" class="mobile-menu-btn" title="Menu">
+            <button id="mobile-menu-btn" class="mobile-menu-btn" title="Menu">
               <i class="fas fa-bars"></i>
             </button>
           </div>
         </div>
         <div class="mobile-nav" id="mobile-nav">
-          <a href="/" class="nav-link active">Home</a>
+          <a href="/" class="nav-link">Home</a>
           <a href="/crypto" class="nav-link">Crypto</a>
             <a href="/dex" class="nav-link">DEX</a>
-          <a href="/dex" class="nav-link">DEX</a>
           <a href="/twitter" class="nav-link">Twitter</a>
           <a href="/reddit" class="nav-link">Reddit</a>
           <a href="/news" class="nav-link">News</a>
-          <a href="/analytics" class="nav-link">Analytics</a>
+          <a href="/analytics" class="nav-link active">Analytics</a>
           <a href="/status" class="nav-link">Status</a>
         </div>
       </div>
     </header>
 
     <main class="main">
-      <!-- Hero Section -->
-      <section class="hero">
+      <!-- Analytics Section -->
+      <section class="analytics">
         <div class="container">
-          <div class="hero-content">
-            <h2>Real-time Crypto Intelligence</h2>
-            <p>
-              Aggregated insights from Twitter, Reddit, News, and market data
-              with live engagement metrics
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Top Gainers Scrolling Banner -->
-      <section class="crypto-banner">
-        <div class="container">
-          <div class="banner-header">
-            <h3><i class="fas fa-rocket"></i> Top Gainers</h3>
-            <div class="banner-controls">
-              <button id="pause-banner" class="banner-btn">
-                <i class="fas fa-pause"></i>
-              </button>
-              <button id="play-banner" class="banner-btn" style="display: none">
-                <i class="fas fa-play"></i>
-              </button>
+          <h3><i class="fas fa-chart-pie"></i> Analytics Dashboard</h3>
+          
+          <!-- Stats Overview -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <i class="fab fa-twitter"></i>
+              <span class="stat-number" id="twitter-count">-</span>
+              <span class="stat-label">Twitter Posts</span>
+            </div>
+            <div class="stat-card">
+              <i class="fab fa-reddit"></i>
+              <span class="stat-number" id="reddit-count">-</span>
+              <span class="stat-label">Reddit Posts</span>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-coins"></i>
+              <span class="stat-number" id="crypto-count">-</span>
+              <span class="stat-label">Crypto Tokens</span>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-chart-line"></i>
+              <span class="stat-number" id="total-engagement">-</span>
+              <span class="stat-label">Total Engagement</span>
             </div>
           </div>
-          <div class="scrolling-banner" id="top-gainers-banner">
-            <div class="loading">Loading top gainers...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Latest Digest Section -->
-      <section class="latest-digest">
-        <div class="container">
-          <h3><i class="fas fa-file-alt"></i> Latest Digest</h3>
-          <div class="digest-content" id="latest-digest">
-            <div class="loading">Loading latest digest...</div>
+          
+          <div class="analytics-grid">
+            <div class="chart-card">
+              <h4>Source Distribution</h4>
+              <canvas id="source-chart"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>Engagement Trends</h4>
+              <canvas id="engagement-chart"></canvas>
+            </div>
           </div>
         </div>
       </section>
@@ -109,6 +106,7 @@
       </div>
     </footer>
 
-    <script src="home.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="analytics.js"></script>
   </body>
-</html>
+</html> 
